@@ -115,3 +115,172 @@ bra_country_full_smooth <- dtfinal %>% filter(GID_0 == "BRA")
 write.csv(bra_country_full_smooth, "./UMD/Full Survey Data/country/smoothed/bra_country_full_smoothed_new.csv")
 
 ##################### Full survey data region ##############
+dt_april <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/04_april_reg_full.csv",
+                     as.is = T)
+dt_may <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/05_may_reg_full.csv",
+                   as.is = T)
+dt_june <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/06_june_reg_full.csv",
+                    as.is = T)
+dt_july <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/07_july_reg_full.csv",
+                    as.is = T)
+dt_august <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/08_august_reg_full.csv",
+                      as.is = T)
+dt_sept <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/09_sept_reg_full.csv",
+                    as.is = T)
+
+dtfinal <- dt_april %>%
+  bind_rows(dt_may) %>%
+  bind_rows(dt_june) %>%
+  bind_rows(dt_july) %>%
+  bind_rows(dt_august) %>%
+  bind_rows(dt_sept)
+
+#extract for Spain
+esp_region_full <- dtfinal %>% filter(GID_0 == "ESP")
+write.csv(esp_region_full, "./UMD/Full Survey Data/region/esp_region_full.csv")
+bra_region_full <- dtfinal %>% filter(GID_0 == "BRA")
+write.csv(bra_region_full, "./UMD/Full Survey Data/region/bra_region_full.csv")
+
+##################### Full survey data region smoothed ##############
+# dt_april <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/04_april_reg_full.csv",
+#                      as.is = T)
+dt_may <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/smoothed/05_may_reg_full_smoothed.csv",
+                   as.is = T)
+dt_june <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/smoothed/06_june_reg_full_smoothed.csv",
+                    as.is = T)
+dt_july <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/smoothed/07_july_reg_full_smoothed.csv",
+                    as.is = T)
+dt_august <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/smoothed/08_august_reg_full_smoothed.csv",
+                      as.is = T)
+dt_sept <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/smoothed/09_sept_reg_full_smoothed.csv",
+                    as.is = T)
+
+dtfinal <- dt_may %>%
+  bind_rows(dt_june) %>%
+  bind_rows(dt_july) %>%
+  bind_rows(dt_august) %>%
+  bind_rows(dt_sept)
+
+#extract for Spain
+esp_region_full_smoothed <- dtfinal %>% filter(GID_0 == "ESP")
+write.csv(esp_region_full_smoothed, "./UMD/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv")
+bra_region_full_smoothed <- dtfinal %>% filter(GID_0 == "BRA")
+write.csv(bra_region_full_smoothed, "./UMD/Full Survey Data/region/smoothed/bra_region_full_smoothed.csv")
+
+##################Part A Survey ################
+## Get data full survey data country
+library(dplyr)
+
+dt_april <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/04_april_country_parta.csv",
+                     as.is = T)
+dt_may <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/05_may_country_parta.csv",
+                   as.is = T)
+dt_june <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/06_june_country_parta.csv",
+                    as.is = T)
+dt_july <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/07_july_country_parta.csv",
+                    as.is = T)
+dt_august <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/08_august_country_parta.csv",
+                      as.is = T)
+dt_sept <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/09_sept_country_parta.csv",
+                    as.is = T)
+
+# row_bind
+
+dtfull <-  dt_april %>% 
+  bind_rows(dt_may)  %>%
+  bind_rows(dt_june) %>% 
+  bind_rows(dt_july) %>%
+  bind_rows(dt_august) %>% 
+  bind_rows(dt_sept)
+
+
+
+## extract for Spain
+esp_country_parta <- dtfull %>% filter(GID_0 == "ESP")
+write.csv(esp_country_parta, "./UMD/Part-A Survey Data/country/esp_country_parta.csv")
+bra_country_parta <- dtfull %>% filter(GID_0 == "BRA")
+write.csv(bra_country_parta, "./UMD/Part-A Survey Data/country/bra_country_parta.csv")
+
+
+## smoothed data
+dt_april <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/smoothed/04_april_country_parta_smoothed.csv",
+                     as.is = T)
+dt_may <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/smoothed/05_may_country_parta_smoothed.csv",
+                   as.is = T)
+dt_june <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/smoothed/06_june_country_parta_smoothed.csv",
+                    as.is = T)
+dt_july <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/smoothed/07_july_country_parta_smoothed.csv",
+                    as.is = T)
+dt_august <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/smoothed/08_august_country_parta_smoothed.csv",
+                      as.is = T)
+dt_sept <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/country/smoothed/09_sept_country_parta_smoothed.csv",
+                    as.is = T)
+
+dtfinal <- dt_april %>%
+  bind_rows(dt_may) %>%
+  bind_rows(dt_june) %>%
+  bind_rows(dt_july) %>%
+  bind_rows(dt_august) %>%
+  bind_rows(dt_sept)
+
+#extract for Spain
+esp_country_parta_smooth <- dtfinal %>% filter(GID_0 == "ESP")
+write.csv(esp_country_parta_smooth, "./UMD/Part-A Survey Data/country/smoothed/esp_country_parta_smoothed.csv")
+bra_country_parta_smooth <- dtfinal %>% filter(GID_0 == "BRA")
+write.csv(bra_country_parta_smooth, "./UMD/Part-A Survey Data/country/smoothed/bra_country_parta_smoothed.csv")
+
+
+##################### parta survey data region ##############
+dt_april <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/04_april_reg_parta.csv",
+                     as.is = T)
+dt_may <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/05_may_reg_parta.csv",
+                   as.is = T)
+dt_june <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/06_june_reg_parta.csv",
+                    as.is = T)
+dt_july <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/07_july_reg_parta.csv",
+                    as.is = T)
+dt_august <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/08_august_reg_parta.csv",
+                      as.is = T)
+dt_sept <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/09_sept_reg_parta.csv",
+                    as.is = T)
+
+dtfinal <- dt_april %>%
+  bind_rows(dt_may) %>%
+  bind_rows(dt_june) %>%
+  bind_rows(dt_july) %>%
+  bind_rows(dt_august) %>%
+  bind_rows(dt_sept)
+
+#extract for Spain
+esp_region_parta <- dtfinal %>% filter(GID_0 == "ESP")
+write.csv(esp_region_parta, "./UMD/Part-A Survey Data/region/esp_region_parta.csv")
+bra_region_parta <- dtfinal %>% filter(GID_0 == "BRA")
+write.csv(bra_region_parta, "./UMD/Part-A Survey Data/region/bra_region_parta.csv")
+
+##################### Full survey data region smoothed ##############
+# dt_april <- read.csv("https://covidmap.umd.edu/umdcsvs/Full%20Survey%20Data/region/04_april_reg_full.csv",
+#                      as.is = T)
+dt_may <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/smoothed/05_may_reg_parta_smoothed.csv",
+                   as.is = T)
+dt_june <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/smoothed/06_june_reg_parta_smoothed.csv",
+                    as.is = T)
+dt_july <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/smoothed/07_july_reg_parta_smoothed.csv",
+                    as.is = T)
+dt_august <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/smoothed/08_august_reg_parta_smoothed.csv",
+                      as.is = T)
+dt_sept <- read.csv("https://covidmap.umd.edu/umdcsvs/Part-A%20Survey%20Data/region/smoothed/09_sept_reg_parta_smoothed.csv",
+                    as.is = T)
+
+dtfinal <- dt_may %>%
+  bind_rows(dt_june) %>%
+  bind_rows(dt_july) %>%
+  bind_rows(dt_august) %>%
+  bind_rows(dt_sept)
+
+#extract for Spain
+esp_region_parta_smoothed <- dtfinal %>% filter(GID_0 == "ESP")
+write.csv(esp_region_parta_smoothed, "./UMD/Part-A Survey Data/region/smoothed/esp_region_parta_smoothed.csv")
+bra_region_parta_smoothed <- dtfinal %>% filter(GID_0 == "BRA")
+write.csv(bra_region_parta_smoothed, "./UMD/Part-A Survey Data/region/smoothed/bra_region_parta_smoothed.csv")
+
+
