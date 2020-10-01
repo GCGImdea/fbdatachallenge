@@ -84,6 +84,36 @@ df_out <- df_out %>%
   mutate(cum_cases_smooth = cumsum(cases_smooth), 
          cum_deads_smooth = cumsum(deads_smooth))
 
+## Add 'region' code
+df_out$region <- NA
+
+df_out$region[df_out$ccaa == "Andalucía"] <- "ESAN"
+df_out$region[df_out$ccaa == "Aragón"] <- "ESAR"
+df_out$region[df_out$ccaa == "Asturias"] <- "ESAS"
+df_out$region[df_out$ccaa == "Cantabria"] <- "ESCB"
+df_out$region[df_out$ccaa == "Ceuta"] <- "ESMC"
+df_out$region[df_out$ccaa == "Castilla y León"] <- "ESCL"
+df_out$region[df_out$ccaa == "Castilla La Mancha"] <- "ESCM"
+df_out$region[df_out$ccaa == "Canarias"] <- "ESCN"
+df_out$region[df_out$ccaa == "Cataluña"] <- "ESCT"
+df_out$region[df_out$ccaa == "Extremadura"] <- "ESEX"
+df_out$region[df_out$ccaa == "Galicia"] <- "ESGA"
+df_out$region[df_out$ccaa == "Baleares"] <- "ESIB"
+df_out$region[df_out$ccaa == "Murcia"] <- "ESMC"
+df_out$region[df_out$ccaa == "Madrid"] <- "ESMD"
+df_out$region[df_out$ccaa == "Melilla"] <- "ESMC"
+df_out$region[df_out$ccaa == "Navarra"] <- "ESNC"
+df_out$region[df_out$ccaa == "País Vasco"] <- "ESPV"
+df_out$region[df_out$ccaa == "La Rioja"] <- "ESRI"
+df_out$region[df_out$ccaa == "C. Valenciana"] <- "ESVC"
+
+## rearrange the columns:
+df_out <- df_out %>% group_by(region) %>% 
+  select(date, region, cases, cases_smooth, 
+                            cum_cases, cum_cases_smooth,
+                            deads, deads_smooth,
+                            cum_deads, cum_deads_smooth)
+
 write.csv(df_out,
           "../data/datadista_regional/smooth_cases_fatalities.csv", 
           row.names = FALSE)
@@ -93,39 +123,39 @@ some_plots = F
 
 if (some_plots) {
   ## Raw data
-  p1 <- ggplot(data = df_cases, aes(x = date, y = cases, color = ccaa)) +
-    facet_wrap(~ ccaa, scales = "free") +
+  p1 <- ggplot(data = df_cases, aes(x = date, y = cases, color = region)) +
+    facet_wrap(~ region, scales = "free") +
     geom_line() + 
     theme_bw()
   p1
   
-  p2 <- ggplot(data = df_fatalities, aes(x = date, y = deads, color = ccaa)) +
-    facet_wrap(~ ccaa, scales = "free") +
+  p2 <- ggplot(data = df_fatalities, aes(x = date, y = deads, color = region)) +
+    facet_wrap(~ region, scales = "free") +
     geom_line() + 
     theme_bw()
   p2
   
   ## Raw vs. smooth data
-  p3 <- ggplot(data = df_out, aes(x = date, color = ccaa)) +
-    facet_wrap(~ ccaa, scales = "free") +
+  p3 <- ggplot(data = df_out, aes(x = date, color = region)) +
+    facet_wrap(~ region, scales = "free") +
     geom_point(aes(y = cases), size = 0.5) +
     geom_line(aes(y = cases_smooth), size = 1) + 
     theme_bw() + ggtitle("Number of cases per day")
   p3
   
-  p4 <- ggplot(data = df_out, aes(x = date, color = ccaa)) +
-    facet_wrap(~ ccaa, scales = "free") +
+  p4 <- ggplot(data = df_out, aes(x = date, color = region)) +
+    facet_wrap(~ region, scales = "free") +
     geom_point(aes(y = deads), size = 0.5) +
     geom_line(aes(y = deads_smooth), size = 1) + 
     theme_bw() + ggtitle("Fatalities per day")
   p4
   
   ## Plot of specific regions
-  ## check possible values with: unique(df_cases$ccaa)
-  region_code = "Madrid"
-  # region_code = "Andalucía" 
+  ## check possible values with: unique(df_out$region)
+  region_code = "ESMD"
+  # region_code = "ESAN" 
   
-  df_region <- df_out %>% filter(ccaa == region_code)
+  df_region <- df_out %>% filter(region == region_code)
   
   p5 <-  ggplot(data = df_region, aes(x = date)) +
     geom_point(aes(y = cases), size = 0.5, colour = "blue") +
