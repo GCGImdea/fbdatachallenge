@@ -64,7 +64,6 @@ dt$date <- as.Date(dt$date)
 ## Consider data starting on 2020-05-08
 # dt <- dt %>% filter(date > "2020-05-07")
 
-
 ## Get region population
 regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv", as.is = T) %>%
   filter(countrycode == "ES") %>% 
@@ -73,60 +72,98 @@ regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv
 
 dt$population <- sum(regions_tree$population)
 
-## Batched-estimated-cases
+## Batched-estimated-cases ----
 
-b_size <- dt[1, "population"]/1000
-
-dt$batched_pct_cli <- NA
-
-dt$cum_responses <- cumsum(dt$total_responses)
-dt$cum_number_cli <- cumsum(dt$number_cli)
-
-for (i in 1:(nrow(dt)-1)) {
-  if (dt[i, "cum_responses"] >= b_size) {
-    dt[i, "batched_pct_cli"] <- dt[i, "cum_number_cli"]/dt[i, "cum_responses"]*100
+batch_effect <- function(df_batch_in, denom2try){
+  df_out <- data.frame()
+  for (denom in denom2try) { # different denominators for batch size
     
-    dt[(i+1):nrow(dt), "cum_responses"] <- dt[(i+1):nrow(dt), "cum_responses"] - dt[i, "cum_responses"]
-    dt[(i+1):nrow(dt), "cum_number_cli"] <- dt[(i+1):nrow(dt), "cum_number_cli"] - dt[i, "cum_number_cli"]
-  } # if-cum_responses-greater-b_size
-} # for-rows-dt
+    df_temp <- df_batch_in
+    
+    b_size <- df_temp[1, "population"]/denom
+    
+    df_temp$batched_pct_cli <- NA
+    
+    # df_temp <- df_temp %>%  arrange(desc(date) )
+    
+    df_temp$cum_responses <- cumsum(df_temp$total_responses)
+    df_temp$cum_number_cli <- cumsum(df_temp$number_cli)
+    
+    i_past = 1 # where last batch size was reached
+    for (i in 1:(nrow(df_temp)-1)) {
+      if (df_temp[i, "cum_responses"] >= b_size) {
+        
+        df_temp[ceiling((i+i_past)/2), "batched_pct_cli"] <- df_temp[i, "cum_number_cli"]/df_temp[i, "cum_responses"]*100
+        
+        i_past = i
+        
+        df_temp[(i+1):nrow(df_temp), "cum_responses"] <- df_temp[(i+1):nrow(df_temp), "cum_responses"] - df_temp[i, "cum_responses"]
+        df_temp[(i+1):nrow(df_temp), "cum_number_cli"] <- df_temp[(i+1):nrow(df_temp), "cum_number_cli"] - df_temp[i, "cum_number_cli"]
+        
+      } # if-cum_responses-greater-b_size
+    } # for-rows-df_temp
+    
+    df_temp <- smooth_column(df_temp, "batched_pct_cli", 
+                             basis_dim = min(sum(!is.na(df_temp$batched_pct_cli)), 25))
+    
+    df_temp <- smooth_column(df_temp, "pct_cli", 
+                             basis_dim = min(sum(!is.na(df_temp$batched_pct_cli)), 40))
+    
+    df_temp <- df_temp %>% 
+      select(date, population, total_responses, pct_cli, pct_cli_smooth,
+             number_cli, batched_pct_cli, batched_pct_cli_smooth) %>% 
+      mutate(estimate_cli = population*(batched_pct_cli_smooth/100),
+             cum_estimate_cli = cumsum(estimate_cli),
+             number_cli_smooth = population*(pct_cli_smooth/100),
+             cum_number_cli_smooth = cumsum(number_cli_smooth))
+    
+    df_temp$b_size_denom <- denom 
+    
+    df_out <- rbind(df_out, df_temp)
+  }
+  
+  return(df_out)
+}
 
-dt <- smooth_column(dt, "batched_pct_cli", 
-                         basis_dim = min(sum(!is.na(dt$batched_pct_cli)), 25))
+df_out <- batch_effect(df_batch_in = dt, 
+                       denom2try = seq(1000, 5000, by = 500))
 
-dt <- smooth_column(dt, "pct_cli", 
-              basis_dim = min(sum(!is.na(dt$batched_pct_cli)), 40))
+## Savings ----
 
-dt <- dt %>% 
-  select(date, population, total_responses, pct_cli, pct_cli_smooth,
-         number_cli, batched_pct_cli, batched_pct_cli_smooth) %>% 
-  mutate(estimate_cli = population*(batched_pct_cli_smooth/100),
-         cum_estimate_cli = cumsum(estimate_cli),
-         number_cli_smooth = population*(pct_cli_smooth/100),
-         cum_number_cli_smooth = cumsum(number_cli_smooth))
-
-write.csv(dt,
-          "../data/estimates-umd-batches/spain/ES_UMD_country_data.csv", 
+write.csv(df_out,
+          "../data/estimates-umd-batches/spain/ES_UMD_country_data_by_batch_size.csv",
           row.names = FALSE)
 
-## Some plots 
-p1 <- ggplot(data = dt, aes(x = date)) +
-  geom_point(aes(y = batched_pct_cli)) +
-  geom_line(aes(y = batched_pct_cli_smooth)) + 
-  theme_bw()
+# select a single batch size:
+df_save <- df_out %>% filter(b_size_denom == 1000)
+
+write.csv(df_save,
+          "../data/estimates-umd-batches/spain/ES_UMD_country_data.csv",
+          row.names = FALSE)
+
+## Some plots ----
+cols <- c("pct_cli_smooth" = "red", "batched_pct_cli_smooth" = "blue")
+
+p1 <- ggplot(data = df_out, aes(x = date, group = b_size_denom)) +
+  geom_point(aes(y = pct_cli, colour = "pct_cli_smooth"), alpha = 0.2, size = 2) +
+  geom_line(aes(y = pct_cli_smooth, colour = "pct_cli_smooth")) + 
+  geom_point(aes(y = batched_pct_cli, colour = "batched_pct_cli_smooth"), alpha = 0.5, size = 2) +
+  geom_line(aes(y = batched_pct_cli_smooth, colour = "batched_pct_cli_smooth")) +
+  facet_wrap( ~ b_size_denom ) +
+  theme_bw() + scale_colour_manual(name = "Legend", values = cols)
 p1
 
-p2 <- ggplot(data = dt, aes(x = date)) +
-  geom_point(aes(y = pct_cli)) +
-  geom_line(aes(y = pct_cli_smooth)) + 
-  theme_bw()
-p2
 
-# I think this is producing a TIME SHIFT!!!
-cols <- c("pct_cli_smooth" = "red", "batched_pct_cli_smooth" = "blue")
-p3 <- ggplot(data = dt, aes(x = date)) +
-  geom_line(aes(y = pct_cli_smooth, colour = "pct_cli_smooth")) + 
-  geom_line(aes(y = batched_pct_cli_smooth, colour = "batched_pct_cli_smooth")) +
-  theme_bw() + scale_colour_manual(name = "Legend", values = cols)
-p3
-
+## Animated
+# library(gganimate)
+# library(gapminder)
+# 
+# p2 <- ggplot(data = df_out, aes(x = date, y = batched_pct_cli_smooth)) +
+#   geom_point(colour = "blue") +
+#   labs(title = 'Batch Size Denominator: {frame_time}', 
+#        y = "Batched pct_cli (Smooth)", x = "date") +
+#   transition_time(b_size_denom) +
+#   ease_aes('linear') +
+#   theme_bw()
+# p2
+# anim_save("batch_size_effect_ES_country.gif")
