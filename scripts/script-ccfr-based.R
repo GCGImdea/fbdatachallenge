@@ -137,7 +137,8 @@ plot_estimates <- function(region_ine = 1,
   
   dir.create("../data/estimates-ccfr-based/spain/", showWarnings = F)
   cat("::- script-ccfr-based: Writing data for", dt$reg_code[1], "::\n")
-  write.csv(dt_w, paste0("../data/estimates-ccfr-based/spain/", dt$ccaa[1], "-estimate.csv"))
+  write.csv(dt_w, paste0("../data/estimates-ccfr-based/spain/",
+                         dt$reg_code[1], "-estimate.csv"))
   
 } 
 
