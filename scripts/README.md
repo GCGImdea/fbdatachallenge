@@ -6,7 +6,7 @@ The above script invokes:
 - script-W: Computes estimates from the CoronaSurveys responses as described in Section 9.2 in the master document (W estimate). This script uses smooth_column.R
 
 Other scripts:
-- smooth_column.R: Contains a function to smooth a column in a data frame, generating a new column with the smoothed values.
+- smooth_column.R: Contains a function to smooth a column in a data frame, generating a new column with the smoothed values. This smoothing is for *monotonically increasing* data.
 
 ????:
 
