@@ -152,6 +152,9 @@ p1 <- ggplot(data = df_out, aes(x = date, group = b_size_denom)) +
   facet_wrap( ~ b_size_denom ) +
   theme_bw() + scale_colour_manual(name = "Legend", values = cols)
 p1
+ggsave(plot = p1, 
+       filename =  "../data/estimates-umd-batches/spain/plots_by_region/country_pct_cli_by_batch_size.png", 
+       width = 9, height = 6)
 
 
 ## Animated
