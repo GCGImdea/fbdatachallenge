@@ -6,7 +6,7 @@
 
     ![CFR formula](./assets/cfr-ongoing.png)
 
-    - CFR calculated using the above [traditional] formula during ongoing epidemics provides a conditional, estimate of CFR and is influenced by lags in report dates for cases and deaths. This leads to a wide variation in CFR estimates over the course of an epidemic, which tends toward a stable, final estimate of CFR as active cases are resolved.
+    - CFR calculated using the [traditional] formula during ongoing epidemics provides a conditional, estimate of CFR and is influenced by lags in report dates for cases and deaths. This leads to a wide variation in CFR estimates over the course of an epidemic, which tends toward a stable, final estimate of CFR as active cases are resolved.
     - One simple solution to mitigating the bias due to delays to case resolution during an ongoing outbreak is to restrict the analysis to resolved cases:
     - Resource: https://www.who.int/news-room/commentaries/detail/estimating-mortality-from-covid-19
 
