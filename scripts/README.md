@@ -14,7 +14,7 @@ The above script invokes:
 
 - ES_UMD_country_analysis_batches.R: computes the **batched_pct_cli** estimates using the Spanish UMD data, at *country level*. Details in README file at "data/estimates-umd-batches/spain/".
 
-- ES_datadista_cases_fatalities.R: Merges cases and fatalities from "data/datadista_regional/". Smoothed quatities are also computed and stored in a single file: "/data/datadista_regional/smooth_cases_fatalities.csv"
+- ES_datadista_cases_fatalities.R: Merges cases and fatalities from "data/datadista_regional/". Smoothed quantities are also computed and stored in a single file: "/data/datadista_regional/smooth_cases_fatalities.csv"
 
 - analysis.R
 
