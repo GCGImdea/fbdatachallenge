@@ -1,8 +1,8 @@
 library(dplyr) 
 
 # smoothed p_cases and CI:
-source("smooth_column.R")
-smooth_param <- 25
+# source("smooth_column.R")
+# smooth_param <- 25
 
 #######
 
@@ -364,8 +364,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   write.csv(x = dwhole, file = paste0(estimates_path, countrycode, "/", countrycode,
                                       "-region-estimate.csv"), row.names = FALSE)
   
-  # for (j in regions){
-  #   df_aux <- dwhole[dwhole$region == j,]
+  for (j in regions){
+  df_aux <- dwhole[dwhole$region == j,]
   #   df_aux[["p_cases"]][is.na(df_aux[["p_cases"]])] <- 0
   #   if (sum(df_aux$p_cases != 0) > smooth_param) {
   #     df_aux <- smooth_column(df_aux, "p_cases", smooth_param)
@@ -374,9 +374,9 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   #   if (sum(df_aux$p_cases_recent != 0) > smooth_param) {
   #     df_aux <- smooth_column(df_aux, "p_cases_recent", smooth_param)
   #   }
-  #   write.csv(x = df_aux, file = paste0(estimates_path, countrycode, "/", j,
-  #                                       "-region-estimate.csv"), row.names = FALSE)
-  # }
+  write.csv(x = df_aux, file = paste0(estimates_path, countrycode, "/", j,
+                                      "-region-estimate.csv"), row.names = FALSE)
+  }
   
   region_based_estimate <- data.frame(date = dates,
                                       #r_c = r_c,
@@ -398,14 +398,14 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   
 #---------------------------------------
   
-  region_based_estimate[["p_cases"]][is.na(region_based_estimate[["p_cases"]])] <- 0
-  if (sum(region_based_estimate$p_cases != 0) > smooth_param) {
-    region_based_estimate <- smooth_column(region_based_estimate, "p_cases", smooth_param)
-  }
-  region_based_estimate[["p_cases_recent"]][is.na(region_based_estimate[["p_cases_recent"]])] <- 0
-  if (sum(region_based_estimate$p_cases_recent != 0) > smooth_param) {
-    region_based_estimate <- smooth_column(region_based_estimate, "p_cases_recent", smooth_param)
-  }
+  # region_based_estimate[["p_cases"]][is.na(region_based_estimate[["p_cases"]])] <- 0
+  # if (sum(region_based_estimate$p_cases != 0) > smooth_param) {
+  #   region_based_estimate <- smooth_column(region_based_estimate, "p_cases", smooth_param)
+  # }
+  # region_based_estimate[["p_cases_recent"]][is.na(region_based_estimate[["p_cases_recent"]])] <- 0
+  # if (sum(region_based_estimate$p_cases_recent != 0) > smooth_param) {
+  #   region_based_estimate <- smooth_column(region_based_estimate, "p_cases_recent", smooth_param)
+  # }
   
 
 #-------------------------------------------
