@@ -10,8 +10,7 @@ active_window <- 12
 estimates_path <- "../data/estimates-W/"
 # estimates_path <- "./estimates-W/"
 
-country <- "ES"
-
+do_smoothing <- function(country = "ES"){
 dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
 
 # --- Smoothing
@@ -40,3 +39,11 @@ dt$p_active_smooth <- cumsum(c(dt$p_daily_smooth[1:active_window],
 dir.create(paste0(estimates_path, "PlotData/"), showWarnings = F)
 cat(paste0("::- script-W: Writing the smoothed region based estimate summary for ", country, "..\n"))
 write.csv(dt, paste0(estimates_path, "PlotData/", country, "-estimate.csv"))
+}
+
+cat("Smoothing ES\n")
+do_smoothing("ES")
+cat("Smoothing BR\n")
+do_smoothing("BR")
+cat("Smoothing US\n")
+do_smoothing("US")
