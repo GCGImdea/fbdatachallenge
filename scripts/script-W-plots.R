@@ -31,7 +31,9 @@ plot(dt$fecha, dt$p_cases_recent*100000, type="l", xlab = "Date",
 lines(dt$fecha, dt$p_cases_recent_smooth*100000,lty=1,col="red")
 lines(dt$fecha, dt$p_active*100000,lty=1,col="blue")
 lines(dt$fecha, dt$p_active_smooth*100000,lty=1,col="magenta")
-legend("topright", legend=c("Recent", "Recent smoothed", "Active", "Active from smooth"), 
+legend("topright", 
+       legend=c("Recent", "Recent smoothed", 
+                "Active from cumulative", "Active from smoothed cumulative"), 
        col=c("black", "red", "blue", "magenta"), lty = 1, cex=0.8)
 
 # Save the file.
