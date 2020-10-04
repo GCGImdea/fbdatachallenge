@@ -1,5 +1,9 @@
 library(dplyr)
 
+active_window <- 12
+cfr_baseline <- 1.38
+
+
 ###################################################################
 calculate_ci <- function(p_est, level, pop_size) {
   z <- qnorm(level+(1-level)/2)
@@ -13,13 +17,15 @@ hosp_to_death_trunc <- function(x, mu_hdt, sigma_hdt){
 
 scale_cfr <- function(data_1_in, delay_fun, mu_hdt, sigma_hdt){
   case_incidence <- data_1_in$cases
+  case_incidence[is.na(case_incidence)] <- 0
   death_incidence <- data_1_in$deaths
   cumulative_known_t <- 0 # cumulative cases with known outcome at time tt
   # Sum over cases up to time tt
   for(ii in 1:length(case_incidence)){
     known_i <- 0 # number of cases with known outcome at time ii
     for(jj in 0:(ii - 1)){
-      known_jj <- case_incidence[ii - jj] * delay_fun(jj, mu_hdt = mu_hdt, sigma_hdt = sigma_hdt)
+      known_jj <- case_incidence[ii - jj] * delay_fun(jj, mu_hdt = mu_hdt, 
+                                                      sigma_hdt = sigma_hdt)
       known_i <- known_i + known_jj
     }
     cumulative_known_t <- cumulative_known_t + known_i # Tally cumulative known
@@ -148,7 +154,8 @@ plot_estimates <- function(region_ine = 1,
 
 
 
-generate_estimates <- function(active_window_cases = 12){
+generate_estimates <- function(active_window_cases,
+                               cfr_baseline){
   casesurl <- "https://raw.githubusercontent.com/datadista/datasets/master/COVID%2019/ccaa_covid19_datos_isciii_nueva_serie.csv"
   deathsurl <- "https://raw.githubusercontent.com/datadista/datasets/master/COVID%2019/ccaa_covid19_fallecidos_por_fecha_defuncion_nueva_serie_long.csv"
   dtcases <- read.csv(casesurl, as.is = T)
@@ -169,9 +176,10 @@ generate_estimates <- function(active_window_cases = 12){
   data <- full_join(dtcases, dtdeaths, by = c("fecha", "cod_ine", "ccaa")) %>% 
     left_join(ine_dict, by = "cod_ine") %>% left_join(regsdata, by = c("reg_code" = "regioncode"))
   
-  go <- sapply(1:19, plot_estimates, dts =  data, ac_window = active_window_cases)
+  go <- sapply(1:19, plot_estimates, dts =  data, ac_window = active_window_cases, 
+               c_cfr_baseline = cfr_baseline)
   
 }
-generate_estimates()
+generate_estimates(active_window,cfr_baseline)
 
 #plot_estimates(country_geoid = "ES", dts =  data_ecdc, ac_window = active_window_cases)
