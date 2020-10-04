@@ -139,9 +139,9 @@ plot_estimates <- function(region_code = "BRAC",
            "p_cases", "p_cases_low", "p_cases_high", "p_cases_daily", "p_cases_active", "p_cases_active_undetected", 
            "population")
   
-  dir.create("../data/estimates-ccfr-based/BRA/", showWarnings = F)
+  dir.create("../data/estimates-ccfr-based/BR/", showWarnings = F)
   cat("::- script-ccfr-based: Writing data for", dt_w$regioncode[1], "::\n")
-  write.csv(dt_w, paste0("../data/estimates-ccfr-based/BRA/",
+  write.csv(dt_w, paste0("../data/estimates-ccfr-based/BR/",
                          dt_w$regioncode[1], "-estimate.csv"))
   
 } 
