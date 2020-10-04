@@ -34,7 +34,7 @@ smooth_column <- function(df_in, col_s, basis_dim = 15){
 }
 
 ## Load data
-data <- read.csv("../data/UMD/Full Survey Data/country/esp_country_full_new.csv", 
+data <- read.csv("../data/UMD/Full Survey Data/country/bra_country_full_new.csv", 
                  fileEncoding = "UTF-8")
 
 # data_s <- read.csv("../data/UMD/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv", 
@@ -66,7 +66,7 @@ dt$date <- as.Date(dt$date)
 
 ## Get region population
 regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv", as.is = T) %>%
-  filter(countrycode == "ES") %>% 
+  filter(countrycode == "BR") %>% 
   group_by(regioncode) %>% 
   summarise(population = sum(population))
 
@@ -131,14 +131,14 @@ df_out <- batch_effect(df_batch_in = dt,
 ## Savings ----
 
 write.csv(df_out,
-          "../data/estimates-umd-batches/spain/ES_UMD_country_data_by_batch_size.csv",
+          "../data/estimates-umd-batches/brazil/BR_UMD_country_data_by_batch_size.csv",
           row.names = FALSE)
 
 # select a single batch size:
 df_save <- df_out %>% filter(b_size_denom == 1000)
 
 write.csv(df_save,
-          "../data/estimates-umd-batches/spain/ES_UMD_country_data.csv",
+          "../data/estimates-umd-batches/brazil/BR_UMD_country_data.csv",
           row.names = FALSE)
 
 ## Some plots ----
@@ -153,7 +153,7 @@ p1 <- ggplot(data = df_out, aes(x = date, group = b_size_denom)) +
   theme_bw() + scale_colour_manual(name = "Legend", values = cols)
 p1
 ggsave(plot = p1, 
-       filename =  "../data/estimates-umd-batches/spain/plots_by_batch_size/country_pct_cli_by_batch_size.png", 
+       filename =  "../data/estimates-umd-batches/brazil/plots_by_batch_size/country_pct_cli_by_batch_size.png", 
        width = 9, height = 6)
 
 
@@ -169,4 +169,4 @@ p2 <- ggplot(data = df_out, aes(x = date, y = batched_pct_cli_smooth)) +
   ease_aes('linear') +
   theme_bw()
 p2
-anim_save("../data/estimates-umd-batches/spain/plots_by_batch_size/batch_size_effect_ES_country.gif")
+anim_save("../data/estimates-umd-batches/brazil/plots_by_batch_size/batch_size_effect_BR_country.gif")
