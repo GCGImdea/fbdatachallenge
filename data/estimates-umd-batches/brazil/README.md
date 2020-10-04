@@ -12,7 +12,7 @@
 ## Datasets
 
 We have 5 different data files:
-* **BRXX_UMD_data.csv**: where **XX** is the ISO code for each spanish region.
+* **BRXX_UMD_data.csv**: where **XX** is the ISO code for each brazilian region.
   + contains the **batched_pct_cli** estimates for region **XX** and a fixed **b_size_denom** (check current value in the corresponding column).
 * **BR_UMD_data.csv**:  
   + aggreagates all the **BRXX_UMD_data** for a fixed **b_size_denom**.
