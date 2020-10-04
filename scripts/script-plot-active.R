@@ -1,50 +1,80 @@
 library(dplyr)
 
-estimates_path <- "../data/estimates-W/"
-# estimates_path <- "./estimates-W/"
+estimates_W_path <- "../data/estimates-W/PlotData/"
+estimates_ccfr_path <- "https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/data/estimates-ccfr-based/PlotData/"
+estimates_UMD_path <- "../data/estimates-umd-batches/spain/ES_UMD_country_data.csv"
+output_path <- "../data/all-estimates/PlotData/"
 
+#do_plotting <-function(country ="ES"){
+country <- "ES"
 
-do_plotting <-function(country ="ES"){
+dt_W <- read.csv(paste0(estimates_W_path, country, "-estimate.csv"), as.is = T)
+dt_W$date <- as.Date(dt_W$date, format = "%Y/%m/%d")
+dt_ccfr <- read.csv(paste0(estimates_ccfr_path, country, "-estimate.csv"), as.is = T)
+dt_ccfr$date <- as.Date(dt_ccfr$date, format = "%Y/%m/%d")
+dt_UMD <- read.csv(estimates_UMD_path, as.is = T)
+dt_UMD$date <- as.Date(dt_UMD$date, format = "%Y-%m-%d")
 
-dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
-
-# --- Ploting and saving
-
-dt$fecha <- as.Date(dt$date, format = "%Y/%m/%d")
-
-# -- Cummulative
-png(file = paste0(estimates_path, "PlotData/", country, "-cumulative-estimate.png"))
-
-plot(dt$fecha, dt$p_cases*100000, type="l", xlab = "Date", 
-     ylab = "Cum. incidence per 100,000", main = "Cumulative incidence")
-lines(dt$fecha, dt$p_cases_smooth*100000,lty=1,col="red")
-legend("bottomright", legend=c("Original", "Smoothed"), 
-       col=c("red", "blue"), lty = 1, cex=0.8)
-
-# Save the file.
-dev.off()
+dtwhole <- merge(dt_W, dt_ccfr, by="date")
+dtwhole <- merge(dtwhole, dt_UMD, by="date")
 
 # -- Active cases
-png(file = paste0(estimates_path, "PlotData/", country, "-active-estimate.png"))
+png(file = paste0(output_path, country, "-active.png"))
 
-plot(dt$fecha, dt$p_active*100000, type="l", xlab = "Date", 
-     ylab = "Active cases per 100,000", main = "Active cases")
-lines(dt$fecha, dt$p_cases_recent*100000,lty=1,col="blue")
-lines(dt$fecha, dt$p_active_smooth*100000,lty=1,col="magenta")
-#lines(dt$fecha, dt$p_cases_recent_smooth*100000,lty=1,col="red")
+ymax <- max(dtwhole$p_active*100000, na.rm = TRUE)
+
+plot(dtwhole$date, dtwhole$p_cases_recent*100000, type="l", xlab = "Date", 
+     ylab = "Active cases per 100,000", main = "Active cases",
+     # xlim=c(xmin, xmax), 
+     ylim=c(0, ymax))
+lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
+lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
+lines(dtwhole$date, dtwhole$p_cases_active*100000,lty=1,col="red")
+lines(dtwhole$date, dtwhole$pct_cli_smooth*1000,lty=1,col="brown")
 legend("topright", 
-       legend=c("Active from cumulative", "Recent", "Active from smoothed cumulative"
-                #, "Recent smoothed"
-                ), 
-       col=c("black", "blue", "magenta", "red"), lty = 1, cex=0.8)
+       legend=c("Recent", "Active from cumulative", "Active from smoothed cumulative"
+                , "Active CCFR", "UMD CLI"
+       ), 
+       col=c("black", "blue", "magenta", "red", "brown"), lty = 1, cex=0.8)
 
 # Save the file.
 dev.off()
-}
 
-cat("Plotting ES\n")
-do_plotting("ES")
-cat("Plotting BR\n")
-do_plotting("BR")
-cat("Plotting US\n")
-do_plotting("US")
+#do_plotting <-function(country ="BR"){
+country <- "BR"
+
+dt_W <- read.csv(paste0(estimates_W_path, country, "-estimate.csv"), as.is = T)
+dt_W$date <- as.Date(dt_W$date, format = "%Y/%m/%d")
+dt_ccfr <- read.csv(paste0(estimates_ccfr_path, country, "-estimate.csv"), as.is = T)
+dt_ccfr$date <- as.Date(dt_ccfr$date, format = "%Y/%m/%d")
+# dt_UMD <- read.csv(estimates_UMD_path, as.is = T)
+# dt_UMD$date <- as.Date(dt_UMD$date, format = "%Y-%m-%d")
+
+dtwhole <- merge(dt_W, dt_ccfr, by="date")
+# dtwhole <- merge(dtwhole, dt_UMD, by="date")
+
+# -- Active cases
+png(file = paste0(output_path, country, "-active.png"))
+
+ymax <- max(dtwhole$p_active*100000, na.rm = TRUE)
+
+plot(dtwhole$date, dtwhole$p_cases_recent*100000, type="l", xlab = "Date", 
+     ylab = "Active cases per 100,000", main = "Active cases",
+     # xlim=c(xmin, xmax), 
+     ylim=c(0, ymax))
+lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
+lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
+lines(dtwhole$date, dtwhole$p_cases_active*100000,lty=1,col="red")
+# lines(dtwhole$date, dtwhole$pct_cli_smooth*1000,lty=1,col="brown")
+legend("topright", 
+       legend=c("Recent", "Active from cumulative", "Active from smoothed cumulative"
+                , "Active CCFR", "UMD CLI"
+       ), 
+       col=c("black", "blue", "magenta", "red", "brown"), lty = 1, cex=0.8)
+
+# Save the file.
+dev.off()
+
+
+
+

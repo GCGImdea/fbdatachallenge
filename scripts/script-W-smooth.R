@@ -3,7 +3,7 @@ library(dplyr)
 # smoothed p_cases and CI:
 source("smooth_column.R")
 smooth_param <- 25
-active_window <- 12
+active_window <- 18 #https://patient.info/news-and-features/coronavirus-how-quickly-do-covid-19-symptoms-develop-and-how-long-do-they-last
 
 #######
 
@@ -27,6 +27,7 @@ if (sum(dt$p_cases_recent != 0) > smooth_param) {
 # --- Computing the daily differences of cases
 
 dt$p_daily <- c(0 , diff(dt$p_cases))
+dt[["p_cases_smooth"]][is.na(dt[["p_cases_smooth"]])] <- 0
 dt$p_daily_smooth <- c(0 , diff(dt$p_cases_smooth))
 
 #total active cases
