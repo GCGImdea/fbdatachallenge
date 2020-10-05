@@ -32,6 +32,8 @@ smooth_column_cum <- function(df_in, col_s, basis_dim = 15){
   # first non zero element to be smoothed:
   frst_n_zero <- head(to.smooth[to.smooth$y!=0, "day"], 1)
   
+  cat("Smoothing starting at row ", frst_n_zero, "..\n")
+  
   # data to be smoothed:
   to.smooth <- to.smooth[frst_n_zero:nrow(df_in), ]
   
@@ -48,7 +50,19 @@ smooth_column_cum <- function(df_in, col_s, basis_dim = 15){
 }
 
 smooth_column <- function(df_in, col_s, basis_dim = 15){
-  require(mgcv)
+  
+  ## List of packages
+  packages = c("scam")
+  ## Install&load all
+  package.check <- lapply(
+    packages,
+    FUN = function(x) {
+      if (!require(x, character.only = TRUE)) {
+        install.packages(x, dependencies = TRUE)
+        library(x, character.only = TRUE)
+      }
+    }
+  )
   
   # add a number of "day" column:
   to.smooth <- df_in
@@ -57,25 +71,58 @@ smooth_column <- function(df_in, col_s, basis_dim = 15){
   # change the name of column to be smoothed:
   colnames(to.smooth)[colnames(to.smooth) == col_s] = "y"
   
-  # not NA elements to be smoothed:
-  ind_not_na <- !is.na(to.smooth$y)
+  # first non zero element to be smoothed:
+  frst_n_zero <- head(to.smooth[to.smooth$y!=0, "day"], 1)
+  
+  cat("Smoothing starting at row ", frst_n_zero, "..\n")
   
   # data to be smoothed:
-  to.smooth <- to.smooth[ind_not_na, c("y", "day")]
+  to.smooth <- to.smooth[frst_n_zero:nrow(df_in), ]
   
   # Mono-smoothing with scam ----
-  b1 <- gam(y ~ s(day, k = basis_dim, bs="ps"),
-            data=to.smooth)
+  # b1 <- scam(y ~ s(day, k = basis_dim, bs="mpi",m=2),
+  #            family=gaussian(link="identity"), data=to.smooth)
+    b1 <- gam(y ~ s(day, k = basis_dim, bs="ps"),
+              data=to.smooth)
   
   # save to column "xxx_smooth":
   df_in$y_smooth <- NA
-  # df_in[frst_n_zero:nrow(df_in) , "y_smooth"] <- b1$fitted.values
-  newd <- data.frame(day = 1:nrow(df_in))
-  df_in[ , "y_smooth"] <- predict(b1, newd)
+  df_in[frst_n_zero:nrow(df_in) , "y_smooth"] <- b1$fitted.values
   colnames(df_in)[colnames(df_in) == "y_smooth"] <- paste0(col_s, 
                                                            "_smooth")
   return(df_in)
 }
+
+
+# smooth_column <- function(df_in, col_s, basis_dim = 15){
+#   require(mgcv)
+#   
+#   # add a number of "day" column:
+#   to.smooth <- df_in
+#   to.smooth$day <- 1:nrow(to.smooth)
+#   
+#   # change the name of column to be smoothed:
+#   colnames(to.smooth)[colnames(to.smooth) == col_s] = "y"
+#   
+#   # not NA elements to be smoothed:
+#   ind_not_na <- !is.na(to.smooth$y)
+#   
+#   # data to be smoothed:
+#   to.smooth <- to.smooth[ind_not_na, c("y", "day")]
+#   
+#   # Mono-smoothing with scam ----
+#   b1 <- gam(y ~ s(day, k = basis_dim, bs="ps"),
+#             data=to.smooth)
+#   
+#   # save to column "xxx_smooth":
+#   df_in$y_smooth <- NA
+#   # df_in[frst_n_zero:nrow(df_in) , "y_smooth"] <- b1$fitted.values
+#   newd <- data.frame(day = 1:nrow(df_in))
+#   df_in[ , "y_smooth"] <- predict(b1, newd)
+#   colnames(df_in)[colnames(df_in) == "y_smooth"] <- paste0(col_s, 
+#                                                            "_smooth")
+#   return(df_in)
+# }
 
 
 estimates_path <- "../data/estimates-W/"

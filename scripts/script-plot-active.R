@@ -40,21 +40,21 @@ write.csv(dtplot, paste0(output_path, country, "-active.csv"))
 # -- Active cases
 png(file = paste0(output_path, country, "-active.png"))
 
-ymax <- 3
+ymax <- 2.5
 
 plot(dtplot$date, dtplot$cs_recent, type="l", xlab = "Date", 
-     ylab = "% active cases", main = "Active cases",
+     ylab = "% symptomatic cases", main = paste0("Symptomatic cases: ", country),
      # xlim=c(xmin, xmax), 
      ylim=c(0, ymax))
 # lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
 # lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
 lines(dtplot$date, dtplot$ccfr,lty=1,col="red")
-lines(dtplot$date, dtplot$fb_umd,lty=1,col="brown")
+lines(dtplot$date, dtplot$fb_umd,lty=1,col="blue")
 legend("topright", 
-       legend=c("Recent", 
+       legend=c("CS-Recent", 
                 # "Active from cumulative", "Active from smoothed cumulative", 
-                "Active CCFR", "FB UMD CLI"), 
-       col=c("black", "blue", "magenta", "red", "brown"), lty = 1, cex=0.8)
+                "CCFR-based", "CSDC CLI"), 
+       col=c("black", "red", "blue", "magenta", "brown"), lty = 1, cex=0.8)
 
 # Save the file.
 dev.off()

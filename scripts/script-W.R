@@ -17,7 +17,7 @@ data_path <- "https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/da
 ci_level <- 0.95
 max_ratio <- 1/3
 num_responses <- 30
-W <- 100
+W <- 60
 
 #with recent cases
 provincial_regional_estimate_w_only <- function(countrycode = "ES",
@@ -36,6 +36,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   dt <- dt[, c("timestamp","region","reach","cases", "recentcases", "iso.3166.1.a2", "iso.3166.2", "cookie")]
   dt$date <- substr(dt$timestamp, 1, 10)
   
+  cat(" Using ", nrow(dt), " responses\n")
+  
   # outlier detection
   dt <- dt[!is.na(dt$reach),]
   reach_cutoff <- boxplot.stats(dt$reach)$stats[5] # changed cutoff to upper fence
@@ -44,6 +46,12 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   dt$ratio <- dt$cases/dt$reach    # remove outlier based on 0.3
   dt <- dt[is.finite(dt$ratio), ]  # discard cases with zero reach
   dt <- dt[dt$ratio <= max_ratio, ]
+  
+  cat(" Using ", nrow(dt), " responses after outlier removal\n")
+  
+  cat(" Total reach: ", sum(dt$reach), " rows\n")
+  
+  cat(" Total reach: ", sum(dt$reach), " rows\n")
   
   #change region name to province name for single-province regions
   #dt <- change_region_province(dt)
@@ -93,8 +101,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
     if (province == T){
       dtprovs <- na.omit(dt_region2)
       provs <- unique(dtprovs$provincecode)
-      p_w_provs <- p_m_provs <- recent_p_w_provs <- recent_p_m_provs <- 
-        sumreach_provs <- n_obs_provs <- rep(0, length(provs))
+      p_w_provs <- p_m_provs <- sumreach_provs <- n_obs_provs <- rep(0, length(provs))
+      recent_p_w_provs <- recent_p_m_provs <- rep(NA, length(provs))
       for (i in seq_along(provs)) {
         provpop <- dtprovs$population[dtprovs$provincecode == provs[i]]
         dt_prov <- dt_date[dt_date$iso.3166.2 == provs[i], ]
@@ -112,9 +120,10 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
           sumreach_provs[i] <- sum(dt_prov$reach)
           n_obs_provs[i] <- nrow(dt_prov)
         }
-        # else{
-        #   p_w_provs[i] <- p_m_provs[i]  <- recent_p_w_provs[i] <- recent_p_m_provs[i] <- sumreach_provs[i] <- n_obs_provs[i] <- 0
-        # }
+        else{
+          # p_w_provs[i] <- p_m_provs[i]  <- sumreach_provs[i] <- n_obs_provs[i] <- 0
+          recent_p_w_provs[i] <- recent_p_m_provs[i] <- 0
+        }
         
       }
       dtestpropprovs <- data.frame(provincecode = provs,
@@ -139,8 +148,9 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
                  })
     dtregs <- do.call(rbind, dtregs)
     regions <- unique(dtregs$regioncode)
-    p_w_regs_only <- p_m_regs_only <- recent_p_w_regs_only <- recent_p_m_regs_only <- 
-      sumreach_regs <- n_obs_regs <-  rep(0, length(regions))
+    p_w_regs_only <- p_m_regs_only <- sumreach_regs <- n_obs_regs <- rep(0, length(regions))
+    recent_p_w_regs_only <- recent_p_m_regs_only <- rep(NA, length(regions))
+      
     for (k in seq_along(regions)) {
       regpop <- dtregs$population_region[dtregs$regioncode == regions[k]]
       dt_reg <- dt_date[dt_date$iso.3166.2 == regions[k], ]
@@ -158,10 +168,10 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
         sumreach_regs[k] <- sum(dt_reg$reach)
         n_obs_regs[k] <- nrow(dt_reg)
       }
-      # else{
-      #   p_w_regs_only[k] <- p_m_regs_only[k] <- recent_p_w_regs_only[k] <- 
-      #     recent_p_m_regs_only[k] <- sumreach_regs[k] <- n_obs_regs[k] <- 0
-      # }
+      else{
+        # p_w_regs_only[k] <- p_m_regs_only[k] <- sumreach_regs[k] <- n_obs_regs[k] <- 0
+        recent_p_w_regs_only[k] <- recent_p_m_regs_only[k] <- 0
+      }
       
     }
     
@@ -181,8 +191,9 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
       dt_est_prov_reg <- merge(dtprovs, dtregs, all = T, by = c("countrycode", "regioncode")) 
       # go over regions and computed aggregated means
       uregions <- unique(dt_est_prov_reg$regioncode)
-      p_w_regs_rhs <-  p_m_regs_rhs <- recent_p_w_regs_rhs <- recent_p_m_regs_rhs <- 
-        sumreach_regs_rhs1 <- sumreach_regs_rhs2 <- rep(0, length(uregions))
+      p_w_regs_rhs <-  p_m_regs_rhs <- sumreach_regs_rhs1 <- sumreach_regs_rhs2 <- rep(0, length(uregions))
+      recent_p_w_regs_rhs <- recent_p_m_regs_rhs <- rep(NA, length(uregions))
+        
       for (l in seq_along(uregions)) {
         dt_est_reg <- dt_est_prov_reg[dt_est_prov_reg$regioncode == uregions[l], ]
         dt_est_reg1 <- na.omit(dt_est_reg[, c(1:6, 9:15)])
@@ -239,8 +250,9 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
     nr <- nrow(dt_country[as.Date(dt_country$date) == as.Date(j), ])
     dt_country <- tail(dt_country, max(num_responses,nr))
     
-    p_w_country_only <- p_m_country_only <- recent_p_w_country_only <- recent_p_m_country_only <- 
-      sumreach_country <- n_obs_country <- 0
+    p_w_country_only <- p_m_country_only <- sumreach_country <- n_obs_country <- 0
+    recent_p_w_country_only <- recent_p_m_country_only <- NA
+      
     if(nrow(dt_country) != 0){
       p_w_country_only <- sum(dt_country$cases)/sum(dt_country$reach)
       p_m_country_only <- mean(dt_country$cases/dt_country$reach)
@@ -251,10 +263,10 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
       sumreach_country <- sum(dt_country$reach) 
       n_obs_country <- nrow(dt_country)
     }
-    # else{
-    #   p_w_country_only <- p_m_country_only <- recent_p_w_country_only <- recent_p_m_country_only <-
-    #     sumreach_country <- n_obs_country <- 0
-    # }
+    else{
+      # p_w_country_only <- p_m_country_only <- sumreach_country <- n_obs_country <- 0
+      recent_p_w_country_only <- recent_p_m_country_only <- 0
+    }
     
     dt_est_reg_count <- by(dt_est_prov_reg,
                            list(dt_est_prov_reg$countrycode, dt_est_prov_reg$regioncode), # groupby country and region and compute population
