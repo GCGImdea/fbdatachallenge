@@ -17,7 +17,7 @@ data_path <- "https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/da
 ci_level <- 0.95
 max_ratio <- 1/3
 num_responses <- 30
-W <- 10000
+W <- 30
 
 #with recent cases
 provincial_regional_estimate_w_only <- function(countrycode = "ES",
@@ -80,7 +80,7 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   
   for (j in dates){
     # get data from the past up to W days earlier
-    subcondition <- (as.Date(dt$date) >= (as.Date(j)-W)  & as.Date(dt$date) <= as.Date(j) )
+    subcondition <- (as.Date(dt$date) >= (as.Date(j)-(W/2))  & as.Date(dt$date) <= (as.Date(j)+(W/2)) )
     dt_date <- dt[subcondition, ]
     
     #Remove duplicated cookies keeping the most recent response

@@ -1,11 +1,42 @@
 library(dplyr)
 
 # smoothed p_cases and CI:
-source("smooth_column.R")
-smooth_param <- 25
+# source("smooth_column.R")
+smooth_param <- 15
 active_window <- 18 #https://patient.info/news-and-features/coronavirus-how-quickly-do-covid-19-symptoms-develop-and-how-long-do-they-last
 
 #######
+
+smooth_column <- function(df_in, col_s, basis_dim = 15){
+  require(mgcv)
+  
+  # add a number of "day" column:
+  to.smooth <- df_in
+  to.smooth$day <- 1:nrow(to.smooth)
+  
+  # change the name of column to be smoothed:
+  colnames(to.smooth)[colnames(to.smooth) == col_s] = "y"
+  
+  # not NA elements to be smoothed:
+  ind_not_na <- !is.na(to.smooth$y)
+  
+  # data to be smoothed:
+  to.smooth <- to.smooth[ind_not_na, c("y", "day")]
+  
+  # Mono-smoothing with scam ----
+  b1 <- gam(y ~ s(day, k = basis_dim, bs="ps"),
+            data=to.smooth)
+  
+  # save to column "xxx_smooth":
+  df_in$y_smooth <- NA
+  # df_in[frst_n_zero:nrow(df_in) , "y_smooth"] <- b1$fitted.values
+  newd <- data.frame(day = 1:nrow(df_in))
+  df_in[ , "y_smooth"] <- predict(b1, newd)
+  colnames(df_in)[colnames(df_in) == "y_smooth"] <- paste0(col_s, 
+                                                           "_smooth")
+  return(df_in)
+}
+
 
 estimates_path <- "../data/estimates-W/"
 # estimates_path <- "./estimates-W/"

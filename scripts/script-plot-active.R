@@ -21,15 +21,15 @@ dtwhole <- merge(dtwhole, dt_UMD, by="date")
 # -- Active cases
 png(file = paste0(output_path, country, "-active.png"))
 
-ymax <- max(dtwhole$p_active*100000, na.rm = TRUE)
+ymax <- max(dtwhole$p_cases_recent*100000, na.rm = TRUE)
 
-plot(dtwhole$date, dtwhole$p_cases_recent*100000, type="l", xlab = "Date", 
+plot(dtwhole$date, dtwhole$p_cases_recent_smooth*100000*18/7, type="l", xlab = "Date", 
      ylab = "Active cases per 100,000", main = "Active cases",
      # xlim=c(xmin, xmax), 
      ylim=c(0, ymax))
 # lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
 # lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
-lines(dtwhole$date, dtwhole$p_cases_active*100000,lty=1,col="red")
+lines(dtwhole$date, dtwhole$p_cases_active*100000*18/12,lty=1,col="red")
 lines(dtwhole$date, dtwhole$pct_cli_smooth*1000,lty=1,col="brown")
 legend("topright", 
        legend=c("Recent", "Active from cumulative", "Active from smoothed cumulative"
@@ -58,13 +58,13 @@ png(file = paste0(output_path, country, "-active.png"))
 
 ymax <- max(dtwhole$p_active*100000, na.rm = TRUE)
 
-plot(dtwhole$date, dtwhole$p_cases_recent*100000, type="l", xlab = "Date", 
+plot(dtwhole$date, dtwhole$p_cases_recent_smooth*100000*18/7, type="l", xlab = "Date", 
      ylab = "Active cases per 100,000", main = "Active cases",
      # xlim=c(xmin, xmax), 
      ylim=c(0, ymax))
 # lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
 # lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
-lines(dtwhole$date, dtwhole$p_cases_active*100000,lty=1,col="red")
+lines(dtwhole$date, dtwhole$p_cases_active*100000*18/12,lty=1,col="red")
 lines(dtwhole$date, dtwhole$pct_cli_smooth*1000,lty=1,col="brown")
 legend("topright", 
        legend=c("Recent", "Active from cumulative", "Active from smoothed cumulative"
