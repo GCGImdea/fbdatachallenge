@@ -1,6 +1,6 @@
 library(dplyr)
 active_window <- 18
-cfr_baseline <- 1.38
+cfr_baseline <- 1.36
 
 ###################################################################
 calculate_ci <- function(p_est, level, pop_size) {
