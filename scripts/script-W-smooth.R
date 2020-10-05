@@ -4,6 +4,9 @@ library(dplyr)
 # source("smooth_column.R")
 smooth_param <- 15
 active_window <- 18 #https://patient.info/news-and-features/coronavirus-how-quickly-do-covid-19-symptoms-develop-and-how-long-do-they-last
+path_W <- "../data/estimates-W/"
+path_W_dunbar <- "../data/estimates-W-dunbar/"
+# estimates_path <- "./estimates-W/"
 
 #######
 
@@ -124,11 +127,11 @@ smooth_column <- function(df_in, col_s, basis_dim = 15){
 #   return(df_in)
 # }
 
+#------------------------------------------------------------------------------
 
-estimates_path <- "../data/estimates-W/"
-# estimates_path <- "./estimates-W/"
 
-do_smoothing <- function(country = "ES"){
+do_smoothing <- function(country = "ES",
+                         estimates_path){
 dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
 
 # --- Smoothing
@@ -163,8 +166,12 @@ write.csv(dt, paste0(estimates_path, "PlotData/", country, "-estimate.csv"))
 }
 
 cat("Smoothing ES\n")
-do_smoothing("ES")
+do_smoothing("ES", path_W)
+do_smoothing("ES", path_W_dunbar)
 cat("Smoothing BR\n")
-do_smoothing("BR")
+do_smoothing("BR", path_W)
+do_smoothing("BR", path_W_dunbar)
 cat("Smoothing US\n")
-do_smoothing("US")
+do_smoothing("US", path_W)
+do_smoothing("US", path_W_dunbar)
+

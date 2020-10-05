@@ -1,10 +1,12 @@
 library(dplyr)
 
-estimates_path <- "../data/estimates-W/"
+path_W <- "../data/estimates-W/"
+path_W_dunbar <- "../data/estimates-W-dunbar/"
 # estimates_path <- "./estimates-W/"
 
 
-do_plotting <-function(country ="ES"){
+do_plotting <-function(country ="ES",
+                       estimates_path){
 
 dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
 
@@ -42,8 +44,12 @@ dev.off()
 }
 
 cat("Plotting ES\n")
-do_plotting("ES")
+do_plotting("ES", path_W)
+do_plotting("ES", path_W_dunbar)
 cat("Plotting BR\n")
-do_plotting("BR")
+do_plotting("BR", path_W)
+do_plotting("BR", path_W_dunbar)
 cat("Plotting US\n")
-do_plotting("US")
+do_plotting("US", path_W)
+do_plotting("US", path_W_dunbar)
+
