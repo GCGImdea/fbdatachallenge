@@ -195,20 +195,20 @@ df_out <- df_out %>% select(date, region, population, total_responses,
 for (region_code in unique(df_out$region)){
   
   write.csv(df_out %>% filter(region == region_code, b_size_denom == 2000),
-            paste0("../data/estimates-umd-batches/brazil/", region_code  , "_UMD_data.csv"), 
+            paste0("../data/estimates-umd-batches/BR/", region_code  , "_UMD_data.csv"), 
             row.names = FALSE)
   
 }
 
 ## All regions and selected batch size:
 write.csv(df_out %>% filter(b_size_denom == 2000) ,
-          "../data/estimates-umd-batches/brazil/BR_UMD_data.csv", 
+          "../data/estimates-umd-batches/BR/BR_UMD_data.csv", 
           row.names = FALSE)
 
 
 ## All regions and all batch sizes in a single file:
 write.csv(df_out,
-          "../data/estimates-umd-batches/brazil/BR_UMD_data_by_batch_size.csv", 
+          "../data/estimates-umd-batches/BR/BR_UMD_data_by_batch_size.csv", 
           row.names = FALSE)
 
 ## Plot by batch size ----
@@ -224,7 +224,7 @@ for (batch_size in unique(df_out$b_size_denom)){
     theme_bw() + ggtitle(paste0("Batched ( divided by ", batch_size,  ") percentage covid-like-illness"))
   # print(p1)
   ggsave(plot = p1,
-         filename =  paste0("../data/estimates-umd-batches/brazil/plots_by_batch_size/pct_cli_batch_size_", batch_size,".png"),
+         filename =  paste0("../data/estimates-umd-batches/BR/plots_by_batch_size/pct_cli_batch_size_", batch_size,".png"),
          width = 7, height = 5)
   
 }
@@ -244,7 +244,7 @@ for (region_code in unique(df_out$region)){
     theme_bw() + ggtitle(paste0(region_code, ": Batched percentage covid-like-illness"))
   # print(p2)
   ggsave(plot = p2, 
-         filename =  paste0("../data/estimates-umd-batches/brazil/plots_by_region/", 
+         filename =  paste0("../data/estimates-umd-batches/BR/plots_by_region/", 
                             region_code, "_pct_cli_by_batch_size.png"), 
          width = 7, height = 5)
   
