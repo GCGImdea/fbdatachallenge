@@ -219,7 +219,10 @@ for (batch_size in unique(df_out$b_size_denom)){
     geom_point(aes(y = batched_pct_cli), size = 1, colour = "red", alpha = 0.5) +
     geom_line(aes(y = batched_pct_cli_smooth), size = 1, colour = "blue") +
     facet_wrap(~region) +
-    theme_bw() + ggtitle(paste0("Batched ( divided by ", batch_size,  ") percentage covid-like-illness"))
+    theme_bw() + 
+    xlab("Date") + ylab("% symptomatic cases") + 
+    labs(title = "Spain: batched CSDC CLI (smooth)",
+         subtitle = paste0("batch size = population / ", batch_size))
   # print(p1)
   ggsave(plot = p1,
          filename =  paste0("../data/estimates-umd-batches/ES/plots_by_batch_size/ES-pct_cli_batch_size_", batch_size,".png"),
@@ -233,13 +236,16 @@ for (batch_size in unique(df_out$b_size_denom)){
 for (region_code in unique(df_out$region)){
   
   df_region <- df_out %>% filter(region == region_code)
-  # b_size <- as.numeric(regions_tree[regions_tree$regioncode == region_code, "population"]/10000)
+  df_region$d = paste0("d = ", df_region$b_size_denom)
   
   p2 <-  ggplot(data = df_region, aes(x = date)) +
     geom_point(aes(y = batched_pct_cli), size = 1, colour = "red", alpha = 0.5) +
     geom_line(aes(y = batched_pct_cli_smooth), size = 1, colour = "blue") +
-    facet_wrap(~b_size_denom) +
-    theme_bw() + ggtitle(paste0(region_code, ": Batched percentage covid-like-illness"))
+    facet_wrap(~d) +
+    theme_bw() + 
+    xlab("Date") + ylab("% symptomatic cases") + 
+    labs(title = paste0(region_code, ": batched CSDC CLI (smooth)"),
+         subtitle = "d = population / batch size")
   # print(p2)
   ggsave(plot = p2, 
          filename =  paste0("../data/estimates-umd-batches/ES/plots_by_region/", 

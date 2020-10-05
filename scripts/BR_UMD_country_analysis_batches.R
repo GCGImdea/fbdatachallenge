@@ -142,15 +142,21 @@ write.csv(df_save,
           row.names = FALSE)
 
 ## Some plots ----
-cols <- c("pct_cli_smooth" = "red", "batched_pct_cli_smooth" = "blue")
+df_out$d = paste0("d = ", df_out$b_size_denom)
 
-p1 <- ggplot(data = df_out, aes(x = date, group = b_size_denom)) +
-  geom_point(aes(y = pct_cli, colour = "pct_cli_smooth"), alpha = 0.2, size = 2) +
-  geom_line(aes(y = pct_cli_smooth, colour = "pct_cli_smooth")) + 
-  geom_point(aes(y = batched_pct_cli, colour = "batched_pct_cli_smooth"), alpha = 0.5, size = 2) +
-  geom_line(aes(y = batched_pct_cli_smooth, colour = "batched_pct_cli_smooth")) +
-  facet_wrap( ~ b_size_denom ) +
-  theme_bw() + scale_colour_manual(name = "Legend", values = cols)
+p1 <- ggplot(data = df_out, aes(x = date, group = d, colour = Legend)) +
+  geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
+  geom_line(aes(y = pct_cli_smooth, colour = "CSDC CLI (smooth)"), linetype = "solid", size = 1, alpha = 0.6) + 
+  geom_point(aes(y = batched_pct_cli, colour = "Batched CSDC CLI"), alpha = 0.5, size = 2) +
+  geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CSDC CLI (smooth)"), linetype = "solid", size =1, alpha = 0.6) +
+  geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
+  facet_wrap( ~ d ) +
+  theme_bw() + #scale_colour_manual(name = "Legend", values = cols) +
+  scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
+                      guide = guide_legend(override.aes = list(
+                        linetype = c("blank", "solid", "blank", "solid", "blank"),
+                        shape = c(1, NA, 1, NA, NA)))) + 
+  xlab("Date") + ylab("% symptomatic cases") + ggtitle("Brazil") 
 p1
 ggsave(plot = p1, 
        filename =  "../data/estimates-umd-batches/BR/plots_by_batch_size/BR-country_pct_cli_by_batch_size.png", 
@@ -163,8 +169,8 @@ library(gapminder)
 
 p2 <- ggplot(data = df_out, aes(x = date, y = batched_pct_cli_smooth)) +
   geom_point(colour = "blue") +
-  labs(title = 'Batch Size Denominator: {frame_time}',
-       y = "Batched pct_cli (Smooth)", x = "date") +
+  labs(title = 'Brazil batched CSDC CLI (smooth): d = {frame_time}',
+       y = "% symptomatic cases", x = "Date") +
   transition_time(b_size_denom) +
   ease_aes('linear') +
   theme_bw()
