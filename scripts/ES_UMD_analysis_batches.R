@@ -222,7 +222,7 @@ for (batch_size in unique(df_out$b_size_denom)){
     theme_bw() + ggtitle(paste0("Batched ( divided by ", batch_size,  ") percentage covid-like-illness"))
   # print(p1)
   ggsave(plot = p1,
-         filename =  paste0("../data/estimates-umd-batches/ES/plots_by_batch_size/pct_cli_batch_size_", batch_size,".png"),
+         filename =  paste0("../data/estimates-umd-batches/ES/plots_by_batch_size/ES-pct_cli_batch_size_", batch_size,".png"),
          width = 7, height = 5)
   
 }
