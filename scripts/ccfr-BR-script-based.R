@@ -1,5 +1,5 @@
 library(dplyr)
-active_window <- 12
+active_window <- 18
 cfr_baseline <- 1.38
 
 ###################################################################

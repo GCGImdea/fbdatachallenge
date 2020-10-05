@@ -19,7 +19,7 @@ agg_ccfr <- function(country_code = c("ES", "BR")){
   country_level_estimates$total_cum_deaths = cumsum(country_level_estimates$total_deaths)
   write.csv(country_level_estimates, 
             paste0("../data/estimates-ccfr-based/",country_code,
-            "-country-ccfr-aggregate-estimate.vsv"))
+            "-country-ccfr-aggregate-estimate.csv"))
 }
 
 agg_ccfr("ES")
