@@ -50,22 +50,32 @@ df[df$mean_cmnty_cli_ct > reach_cutoff, ] <- NA
 df$nsum <- 100 * df$mean_cmnty_cli_ct / reach
 
 df <- smooth_column(df, "pct_cli", smooth_param)
-df <- smooth_column(df, "nsum", smooth_param)
-# df$nsum_smooth <- rollmean(df$nsum, 20, fill=NA)
+df$nsum_roll <- rollmean(df$nsum, 3, fill=NA)
+df <- smooth_column(df, "nsum_roll", 15)
+
+library(ggplot2)
+p_temp <- ggplot(data = df, aes(x = date)) +
+        geom_point(aes(y = pct_cli), color = "blue", alpha = 0.2) +
+        geom_line(aes(y = pct_cli_smooth), color = "blue", size = 0.6) +
+        geom_point(aes(y = nsum), color = "red", alpha = 0.2) +
+        geom_line(aes(y = nsum_roll), color = "red", alpha = 0.2, size = 0.6) +
+        geom_line(aes(y = nsum_roll_smooth), color = "red", alpha = 0.6, size = 1) +
+        theme_bw()
+p_temp 
 
 # -- Active cases
 png(file = output_path)
 
-ymax <- 3
+ymax <- 4
 
-plot(df$date, df$nsum_smooth, type="l", xlab = "Date", 
+plot(df$date, df$pct_cli_smooth, type="l", xlab = "Date", 
      ylab = "% symptomatic cases", main = "Symptomatic cases",
      # xlim=c(xmin, xmax), 
-     # ylim=c(0, ymax)
+     ylim=c(0, ymax)
      )
 # lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
 # lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
-lines(df$date, df$pct_cli_smooth,lty=1,col="red")
+lines(df$date, df$nsum_roll_smooth,lty=1,col="red")
 # lines(dtplot$date, dtplot$fb_umd,lty=1,col="blue")
 legend("topright", 
        legend=c("pct_cli", 
