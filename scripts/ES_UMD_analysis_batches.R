@@ -217,7 +217,7 @@ for (batch_size in unique(df_out$b_size_denom)){
   
   p1 <-  ggplot(data = df_batch, aes(x = date)) +
     geom_point(aes(y = batched_pct_cli), size = 1, colour = "red", alpha = 0.5) +
-    geom_line(aes(y = batched_pct_cli_smooth), size = 1, colour = "blue") +
+    geom_line(aes(y = batched_pct_cli_smooth), size = 1, alpha = 0.6, colour = "blue") +
     facet_wrap(~region) +
     theme_bw() + 
     xlab("Date") + ylab("% symptomatic cases") + 
@@ -240,7 +240,7 @@ for (region_code in unique(df_out$region)){
   
   p2 <-  ggplot(data = df_region, aes(x = date)) +
     geom_point(aes(y = batched_pct_cli), size = 1, colour = "red", alpha = 0.5) +
-    geom_line(aes(y = batched_pct_cli_smooth), size = 1, colour = "blue") +
+    geom_line(aes(y = batched_pct_cli_smooth), size = 1, alpha = 0.6, colour = "blue") +
     facet_wrap(~d) +
     theme_bw() + 
     xlab("Date") + ylab("% symptomatic cases") + 
