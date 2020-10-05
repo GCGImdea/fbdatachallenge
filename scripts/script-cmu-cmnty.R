@@ -45,7 +45,7 @@ df <- read.csv(estimates_path, as.is = T)
 df$date <- as.Date(df$date, format = "%Y-%m-%d")
 
 reach_cutoff <- boxplot.stats(df$mean_cmnty_cli_ct)$stats[5] # changed cutoff to upper fence
-df[df$mean_cmnty_cli_ct > reach_cutoff, ] <- NA
+df[df$mean_cmnty_cli_ct > reach_cutoff, "mean_cmnty_cli_ct"] <- NA
 
 df$nsum <- 100 * df$mean_cmnty_cli_ct / reach
 
