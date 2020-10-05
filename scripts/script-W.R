@@ -17,7 +17,7 @@ data_path <- "https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/da
 ci_level <- 0.95
 max_ratio <- 1/3
 num_responses <- 30
-W <- 60
+W <- 100
 
 #with recent cases
 provincial_regional_estimate_w_only <- function(countrycode = "ES",
@@ -49,9 +49,7 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   
   cat(" Using ", nrow(dt), " responses after outlier removal\n")
   
-  cat(" Total reach: ", sum(dt$reach), " rows\n")
-  
-  cat(" Total reach: ", sum(dt$reach), " rows\n")
+  cat(" Total reach: ", sum(dt$reach), "\n")
   
   #change region name to province name for single-province regions
   #dt <- change_region_province(dt)
