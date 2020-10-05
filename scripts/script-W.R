@@ -17,7 +17,7 @@ data_path <- "https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/da
 ci_level <- 0.95
 max_ratio <- 1/3
 num_responses <- 30
-W <- 30
+W <- 100
 
 #with recent cases
 provincial_regional_estimate_w_only <- function(countrycode = "ES",
@@ -80,7 +80,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   
   for (j in dates){
     # get data from the past up to W days earlier
-    subcondition <- (as.Date(dt$date) >= (as.Date(j)-(W/2))  & as.Date(dt$date) <= (as.Date(j)+(W/2)) )
+    subcondition <- (as.Date(dt$date) >= (as.Date(j)-W)  & as.Date(dt$date) <= (as.Date(j)) )
+    # subcondition <- (as.Date(dt$date) >= (as.Date(j)-(W/2))  & as.Date(dt$date) <= (as.Date(j)+(W/2)) )
     dt_date <- dt[subcondition, ]
     
     #Remove duplicated cookies keeping the most recent response
@@ -92,7 +93,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
     if (province == T){
       dtprovs <- na.omit(dt_region2)
       provs <- unique(dtprovs$provincecode)
-      p_w_provs <- p_m_provs <- recent_p_w_provs <- recent_p_m_provs <- sumreach_provs <- n_obs_provs <- rep(0, length(provs))
+      p_w_provs <- p_m_provs <- recent_p_w_provs <- recent_p_m_provs <- 
+        sumreach_provs <- n_obs_provs <- rep(0, length(provs))
       for (i in seq_along(provs)) {
         provpop <- dtprovs$population[dtprovs$provincecode == provs[i]]
         dt_prov <- dt_date[dt_date$iso.3166.2 == provs[i], ]
