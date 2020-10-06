@@ -1,13 +1,14 @@
 library(dplyr)
 library(tidyr)
 library(zoo)
+library(ggplot2)
 
 reach <- 150
 smooth_param <- 15
 
 estimates_path <- "../data/cmu-state/cmu-state-ma.csv"
-output_path <- "../data/cmu-state/cmu-state-ma2.png"
-
+output_path2 <- "../data/cmu-state/cmu-state-ma2.png"
+output_path1 <- "../data/cmu-state/cmu-state-ma1.png"
 
 #--------------------------------------------------------
 smooth_column <- function(df_in, col_s, basis_dim = 15){
@@ -64,6 +65,37 @@ df$pct_cases_active_cdc <- df$cases_active_cdc/df$population*100
 df <- smooth_column(df, "pct_cases_active_cdc", smooth_param)
 
 
+# Harold's ----
+ymax <- 4
+
+# my_colors <- c("yellow", "yellow", "blue", "blue", "red", "red", "red")
+my_colors <- c("#ffd166", "#ffd166", "#118ab2", "#118ab2", "#ef476f", "#ef476f", "#ef476f")
+
+p <- ggplot(data = df, aes(x = date)) +
+        geom_point(aes(y = pct_cases_active_cdc, color = "Confirmed"), alpha = 0.4) +
+        geom_line(aes(y = pct_cases_active_cdc_smooth, color = "Confirmed (smooth)"), size = 0.8) +
+        geom_point(aes(y = pct_cli, color = "CSDC CLI"), alpha = 0.4) +
+        geom_line(aes(y = pct_cli_smooth, color = "CSDC CLI (smooth)"), size = 0.8) +
+        geom_point(aes(y = nsum, color = "NSUM"), alpha = 0.4) +
+        geom_line(aes(y = nsum_roll, color = "NSUM (rolling mean)"), linetype = "dashed", alpha = 0.3, size = 0.8) +
+        geom_line(aes(y = nsum_roll_smooth, color = "NSUM (smooth)"), alpha = 0.6, size = 0.8) +
+        theme_bw() + 
+        labs(title = "Symptomatic cases in Massachussets", x = "Date",
+             y = "% symptomatic cases") +
+        scale_colour_manual(name= "", values = my_colors,
+                            guide = guide_legend(override.aes = list(
+                                    linetype = c("blank", "solid", "blank", "solid", "blank", "dashed", "solid"),
+                                    shape = c(1, NA, 1, NA, 1, NA, NA)))) + 
+        ylim(-0.1, ymax) +
+        theme(legend.position="bottom")
+p
+
+ggsave(plot = p, 
+       filename = output_path1, 
+       width = 8, height = 6)
+
+
+# Segun's: ----
 pal <- c("pct_cli" = "blue",
          "pct_cli_smooth" = "blue",
          "nsum" = "red",
@@ -71,23 +103,6 @@ pal <- c("pct_cli" = "blue",
          "nsum_roll_smooth" = "red",
          "pct_active_cases_jhu" = "green",
          "pct_active_cases_jhu_smooth" = "green")
-
-library(ggplot2)
-p_temp <- ggplot(data = df, aes(x = date)) +
-        geom_point(aes(y = pct_cli, color = "pct_cli"), alpha = 0.2) +
-        geom_line(aes(y = pct_cli_smooth, color = "pct_cli_smooth"), size = 0.6) +
-        geom_point(aes(y = nsum, color = "nsum"), alpha = 0.2) +
-        geom_line(aes(y = nsum_roll, color = "nsum_roll"), alpha = 0.2, size = 0.6) +
-        geom_line(aes(y = nsum_roll_smooth, color = "nsum_roll_smooth"), alpha = 0.6, size = 1) +
-        geom_point(aes(y = pct_active_cases_jhu, color = "pct_active_cases_jhu"), alpha = 0.2) +
-        geom_line(aes(y = pct_active_cases_jhu_smooth, color = "pct_active_cases_jhu_smooth"), size = 0.6) +
-        theme_bw() +
-        scale_color_manual(values = pal) + 
-        scale_
-        theme(legend.position = "bottom") 
-p_temp 
-
-
 
 dt_point <- df[,c("date", "pct_cli", "nsum", "pct_cases_active_cdc")] %>% 
         gather(key = "type", value = "pct", -1)
@@ -106,30 +121,30 @@ pq <- ggplot(data = dt_point, aes(x = date, y = pct, colour = type))+
         scale_color_manual(values = c("#ef476f", "#ffd166", "#118ab2", "#06d6a0"))
 
 ggsave(plot = pq,
-       filename =  output_path,
+       filename =  output_path2,
        width = 8, height = 6)
 
 
-
-# -- Active cases
-png(file = output_path)
-
-ymax <- 4
-
-plot(df$date, df$pct_cli_smooth, type="l", xlab = "Date", 
-     ylab = "% symptomatic cases", main = "Symptomatic cases in Massachussets",
-     # xlim=c(xmin, xmax), 
-     ylim=c(0, ymax)
-     )
-# lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
-# lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
-lines(df$date, df$nsum_roll_smooth,lty=1,col="red")
-# lines(dtplot$date, dtplot$fb_umd,lty=1,col="blue")
-legend("topright", 
-       legend=c("pct_cli", 
-                # "Active from cumulative", "Active from smoothed cumulative", "CCFR-based", 
-                "NSUM"), 
-       col=c("black", "red", "blue", "magenta", "brown"), lty = 1, cex=0.8)
-
-# Save the file.
-dev.off()
+# Antonio's ----
+# # -- Active cases
+# png(file = output_path)
+# 
+# ymax <- 4
+# 
+# plot(df$date, df$pct_cli_smooth, type="l", xlab = "Date", 
+#      ylab = "% symptomatic cases", main = "Symptomatic cases in Massachussets",
+#      # xlim=c(xmin, xmax), 
+#      ylim=c(0, ymax)
+#      )
+# # lines(dtwhole$date, dtwhole$p_active*100000,lty=1,col="blue")
+# # lines(dtwhole$date, dtwhole$p_active_smooth*100000,lty=1,col="magenta")
+# lines(df$date, df$nsum_roll_smooth,lty=1,col="red")
+# # lines(dtplot$date, dtplot$fb_umd,lty=1,col="blue")
+# legend("topright", 
+#        legend=c("pct_cli", 
+#                 # "Active from cumulative", "Active from smoothed cumulative", "CCFR-based", 
+#                 "NSUM"), 
+#        col=c("black", "red", "blue", "magenta", "brown"), lty = 1, cex=0.8)
+# 
+# # Save the file.
+# dev.off()
