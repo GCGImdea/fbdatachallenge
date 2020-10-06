@@ -53,7 +53,7 @@ df2plot <- full_join(df, dt, by = "date")
 
 d = df2plot$b_size_denom[1]
 
-p1 <- ggplot(data = df2plot, aes(x = date, color = Legend)) +
+p1 <- ggplot(data = df2plot, aes(x = date)) +
   geom_point(aes(y = pct_cli, color = "CSDC CLI (UMD raw)"), alpha = 0.3) +
   geom_line(aes(y = smoothed_pct_cli, color = "CSDC CLI (UMD smooth)"), linetype = "dashed", alpha = 0.6, size = 0.7) +
   geom_point(aes(y = batched_pct_cli, color = "Batched CSDC CLI"), alpha = 0.5) +
@@ -61,10 +61,11 @@ p1 <- ggplot(data = df2plot, aes(x = date, color = Legend)) +
   theme_bw() + 
   labs(title = "Madrid", subtitle = paste0("batch size = population / ", d),
        x = "Date", y = "% symptomatic cases") +
-  scale_colour_manual(values = c("blue", "blue", "red", "red"),
+  scale_colour_manual(name = "", values = c("blue", "blue", "red", "red"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "blank", "dashed"),
-                        shape = c(1, NA, 1, NA))))
+                        shape = c(1, NA, 1, NA)))) +
+  theme(legend.position = "bottom")
 p1
 
 ggsave(plot = p1, 
