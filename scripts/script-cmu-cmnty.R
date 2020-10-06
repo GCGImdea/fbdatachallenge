@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 library(zoo)
 
-reach <- 60
+reach <- 150
 smooth_param <- 15
 
 estimates_path <- "../data/cmu-state/cmu-state-ma.csv"
@@ -117,7 +117,7 @@ png(file = output_path)
 ymax <- 4
 
 plot(df$date, df$pct_cli_smooth, type="l", xlab = "Date", 
-     ylab = "% symptomatic cases", main = "Symptomatic cases",
+     ylab = "% symptomatic cases", main = "Symptomatic cases in Massachussets",
      # xlim=c(xmin, xmax), 
      ylim=c(0, ymax)
      )
