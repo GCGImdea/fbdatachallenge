@@ -1,7 +1,7 @@
 library(dplyr)
 library(zoo)
 
-reach <- 60
+reach <- 150
 smooth_param <- 15
 
 estimates_path <- "../data/cmu-state/cmu-state-ma.csv"
