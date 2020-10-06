@@ -92,7 +92,7 @@ do_plotting <-function(country ="ES"){
         
         p1 <- ggplot(data = dtplot, aes(x = date)) +
                 geom_line(aes(y = cs_recent, colour = "CS-Recent"), size = 1) +
-                geom_line(aes(y = cs_dunb_recent, colour = "CS-Dunbar-Recent"), size = 1) +
+                # geom_line(aes(y = cs_dunb_recent, colour = "CS-Dunbar-Recent"), size = 1) +
                 geom_line(aes(y = ccfr, colour = "CCFR-based"), size = 1) + 
                 geom_line(aes(y = fb_umd, colour = "Batched CSDC CLI (smooth)"), size =1) +
                 geom_line(aes(y = confirmed_active, colour = "Confirmed active cases"), size =1) +
