@@ -19,9 +19,9 @@ png(file = paste0(estimates_path, "PlotData/", country, "-cumulative-estimate.pn
 
 plot(dt$fecha, dt$p_cases*100, type="l", xlab = "Date", 
      ylab = "% cum. incidence", main = "Cumulative incidence")
-lines(dt$fecha, dt$p_cases_smooth*100,lty=1,col="red")
+lines(dt$fecha, dt$p_cases_smooth*100,lty=1,col="blue")
 legend("bottomright", legend=c("Original", "Smoothed"), 
-       col=c("red", "blue"), lty = 1, cex=0.8)
+       col=c("black", "blue"), lty = 1, cex=0.8)
 
 # Save the file.
 dev.off()

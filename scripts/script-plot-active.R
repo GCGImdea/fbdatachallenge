@@ -4,7 +4,7 @@ estimates_W_path <- "../data/estimates-W/PlotData/"
 # estimates_ccfr_path <- "https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/data/estimates-ccfr-based/PlotData/"
 estimates_ccfr2_path <- "../data/estimates-ccfr-based/"
 estimates_UMD_path <- "../data/estimates-umd-batches/"
-output_path <- "../data/all-estimates/PlotData/"
+output_path <- "../data/all-estimates/"
 
 active_window <- 18
 

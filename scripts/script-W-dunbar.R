@@ -48,6 +48,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   dt <- dt[is.finite(dt$ratio), ]  # discard cases with zero reach
   dt <- dt[dt$ratio <= max_ratio, ]
   
+  dunbar <- mean(dt$reach)
+  cat(" Using reach = ", dunbar, "\n")
   dt$reach <- dunbar
   
   cat(" Using ", nrow(dt), " responses after outlier removal\n")
