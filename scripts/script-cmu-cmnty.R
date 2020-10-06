@@ -1,11 +1,12 @@
 library(dplyr)
+library(tidyr)
 library(zoo)
 
 reach <- 60
 smooth_param <- 15
 
 estimates_path <- "../data/cmu-state/cmu-state-ma.csv"
-output_path <- "../data/cmu-state/cmu-state-ma.png"
+output_path <- "../data/cmu-state/cmu-state-ma2.png"
 
 
 #--------------------------------------------------------
@@ -44,24 +45,71 @@ smooth_column <- function(df_in, col_s, basis_dim = 15){
 df <- read.csv(estimates_path, as.is = T)
 df$date <- as.Date(df$date, format = "%Y-%m-%d")
 
+
+dtcdc <- read.csv("../data/US_cdc_active_cases/us_cdc_active_cases_ma.csv", as.is = T)[,-1]
+dtcdc$date <- as.Date(dtcdc$date, format = "%Y-%m-%d")
+
+df <- left_join(df, dtcdc, by = "date")
+
+
 reach_cutoff <- boxplot.stats(df$mean_cmnty_cli_ct)$stats[5] # changed cutoff to upper fence
 df[df$mean_cmnty_cli_ct > reach_cutoff, "mean_cmnty_cli_ct"] <- NA
 
 df$nsum <- 100 * df$mean_cmnty_cli_ct / reach
 
 df <- smooth_column(df, "pct_cli", smooth_param)
-df$nsum_roll <- rollmean(df$nsum, 3, fill=NA)
+df$nsum_roll <- zoo::rollmean(df$nsum, 3, fill=NA)
 df <- smooth_column(df, "nsum_roll", 15)
+df$pct_cases_active_cdc <- df$cases_active_cdc/df$population*100
+df <- smooth_column(df, "pct_cases_active_cdc", smooth_param)
+
+
+pal <- c("pct_cli" = "blue",
+         "pct_cli_smooth" = "blue",
+         "nsum" = "red",
+         "nsum_roll" = "red",
+         "nsum_roll_smooth" = "red",
+         "pct_active_cases_jhu" = "green",
+         "pct_active_cases_jhu_smooth" = "green")
 
 library(ggplot2)
 p_temp <- ggplot(data = df, aes(x = date)) +
-        geom_point(aes(y = pct_cli), color = "blue", alpha = 0.2) +
-        geom_line(aes(y = pct_cli_smooth), color = "blue", size = 0.6) +
-        geom_point(aes(y = nsum), color = "red", alpha = 0.2) +
-        geom_line(aes(y = nsum_roll), color = "red", alpha = 0.2, size = 0.6) +
-        geom_line(aes(y = nsum_roll_smooth), color = "red", alpha = 0.6, size = 1) +
-        theme_bw()
+        geom_point(aes(y = pct_cli, color = "pct_cli"), alpha = 0.2) +
+        geom_line(aes(y = pct_cli_smooth, color = "pct_cli_smooth"), size = 0.6) +
+        geom_point(aes(y = nsum, color = "nsum"), alpha = 0.2) +
+        geom_line(aes(y = nsum_roll, color = "nsum_roll"), alpha = 0.2, size = 0.6) +
+        geom_line(aes(y = nsum_roll_smooth, color = "nsum_roll_smooth"), alpha = 0.6, size = 1) +
+        geom_point(aes(y = pct_active_cases_jhu, color = "pct_active_cases_jhu"), alpha = 0.2) +
+        geom_line(aes(y = pct_active_cases_jhu_smooth, color = "pct_active_cases_jhu_smooth"), size = 0.6) +
+        theme_bw() +
+        scale_color_manual(values = pal) + 
+        scale_
+        theme(legend.position = "bottom") 
 p_temp 
+
+
+
+dt_point <- df[,c("date", "pct_cli", "nsum", "pct_cases_active_cdc")] %>% 
+        gather(key = "type", value = "pct", -1)
+
+dt_line <-  df[,c("date", "pct_cli_smooth", "nsum_roll_smooth", "pct_cases_active_cdc_smooth")] %>% 
+        rename(pct_cli = pct_cli_smooth,
+               nsum = nsum_roll_smooth,
+               pct_cases_active_cdc = pct_cases_active_cdc_smooth) %>% 
+        gather(key = "type", value = "pct", -1)
+
+pq <- ggplot(data = dt_point, aes(x = date, y = pct, colour = type))+
+        geom_point() +
+        geom_line(data = dt_line, aes(x = date, y = pct, colour = type))+
+        theme_bw()+
+        theme(legend.position = "bottom")+
+        scale_color_manual(values = c("#ef476f", "#ffd166", "#118ab2", "#06d6a0"))
+
+ggsave(plot = pq,
+       filename =  output_path,
+       width = 8, height = 6)
+
+
 
 # -- Active cases
 png(file = output_path)
