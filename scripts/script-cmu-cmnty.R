@@ -69,7 +69,7 @@ png(file = output_path)
 ymax <- 4
 
 plot(df$date, df$pct_cli_smooth, type="l", xlab = "Date", 
-     ylab = "% symptomatic cases", main = "Symptomatic cases",
+     ylab = "% symptomatic cases", main = "Symptomatic cases in Massachussets",
      # xlim=c(xmin, xmax), 
      ylim=c(0, ymax)
      )
