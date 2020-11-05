@@ -1,70 +1,64 @@
 ## Libraries
 library(dplyr)
 library(ggplot2)
+library(stringr)
 
 ## Smoothing the estimated active cases
 
-smooth_column <- function(df_in, col_s, basis_dim = 15){
-  require(mgcv)
+source("smooth_column-v2.R")
+
+## Load data ----
+use_unsmoothed_UMD = T # write F if using the UMD's smoothed data
+
+if (use_unsmoothed_UMD) {
+  ## Unsmoothed Data
+  data <- read.csv("../data/UMD/Full Survey Data/country/esp_country_full_new.csv", 
+                   fileEncoding = "UTF-8")
   
-  # add a number of "day" column:
-  to.smooth <- df_in
-  to.smooth$day <- 1:nrow(to.smooth)
+  ## Filter overall >> overall
+  dt <- data %>% 
+    filter(gender=="overall", age_bucket == "overall")
   
-  # change the name of column to be smoothed:
-  colnames(to.smooth)[colnames(to.smooth) == col_s] = "y"
+  dt$date <- as.Date(dt$date)
   
-  # not NA elements to be smoothed:
-  ind_not_na <- !is.na(to.smooth$y)
+  ## Consider data starting on 2020-05-08
+  # dt <- dt %>% filter(date > "2020-05-07")
+}else {
+  ## Smoothed Data
+  data_s <- read.csv("../data/UMD/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv",
+                   fileEncoding = "UTF-8")
   
-  # data to be smoothed:
-  to.smooth <- to.smooth[ind_not_na, c("y", "day")]
+  ## Filter overall >> overall
+  dt <- data_s %>%
+    filter(gender=="overall", age_bucket == "overall") 
   
-  # Mono-smoothing with scam ----
-  b1 <- gam(y ~ s(day, k = basis_dim, bs="ps"), data=to.smooth)
+  dt$date <- as.Date(dt$date)
   
-  # save to column "xxx_smooth":
-  df_in$y_smooth <- NA
-  # df_in[frst_n_zero:nrow(df_in) , "y_smooth"] <- b1$fitted.values
-  newd <- data.frame(day = 1:nrow(df_in))
-  df_in[ , "y_smooth"] <- predict(b1, newd)
-  colnames(df_in)[colnames(df_in) == "y_smooth"] <- paste0(col_s, 
-                                                           "_smooth")
-  return(df_in)
+  ## Consider data starting on 2020-05-08
+  # dt <- dt %>% filter(date > "2020-05-07")
 }
 
-## Load data
-data <- read.csv("../data/UMD/Full Survey Data/country/esp_country_full_new.csv", 
-                 fileEncoding = "UTF-8")
+# retain only the unweighted percentages
+dt <- dt[ , !str_detect(colnames(dt), pattern = "weighted")]
 
-# data_s <- read.csv("../data/UMD/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv", 
-#                  fileEncoding = "UTF-8")
+# remove a repeated date:
+dt <- dt[-70, ]
 
-## Filter overall >> overall
-# unsmoothed
-dt <- data %>% 
-  filter(gender=="overall", age_bucket == "overall") %>% 
-  select(date, total_responses, pct_cli )
+# remove redundant variables
+dt <- dt %>% select(!c("X.1", 
+                       "X", 
+                       "country_agg", 
+                       "GID_0", 
+                       "gender", 
+                       "age_bucket", 
+                       "weight_sums"))
 
-## Number of infected in each region
-dt$number_cli <- dt$total_responses*dt$pct_cli/100
+# get name of variables representing percentages
+all_pct_to_smooth <- colnames(dt)[str_detect(colnames(dt), pattern = "pct")]
+all_pct_to_smooth <- all_pct_to_smooth[1:24]
+print(all_pct_to_smooth)
 
-# # smoothed
-# dt_s <- data_s %>% 
-#   filter(gender=="overall", age_bucket == "overall") %>% 
-#   select(country_agg, region_agg, date, rolling_total_responses, 
-#          country_region_numeric, smoothed_pct_cli )
-# 
-# ## Use smoothed data
-# dt <- dt_s
-# colnames(dt)[colnames(dt)== "smoothed_pct_cli"] <- "pct_cli"
-
-dt$date <- as.Date(dt$date)
-
-## Consider data starting on 2020-05-08
-# dt <- dt %>% filter(date > "2020-05-07")
-
-## Get region population
+## Get region population ----
 regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv", as.is = T) %>%
   filter(countrycode == "ES") %>% 
   group_by(regioncode) %>% 
@@ -72,61 +66,117 @@ regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv
 
 dt$population <- sum(regions_tree$population)
 
+
 ## Batched-estimated-cases ----
 
-batch_effect <- function(df_batch_in, denom2try){
+batch_effect <- function(df_batch_in, denom2try, col_string_vec){
+  ## Build a batched-smoothed version of a variable
+  ##
+  ## df_batch_in:input data frame
+  ## denom2try: denominators to try (also called "d"). batch_size = population / d.
+  ## col_string_vec: vector of strings with the names of the columns/variables
+  ##                 to be batched and smoothed. 
+  
+  
   df_out <- data.frame()
+  
   for (denom in denom2try) { # different denominators for batch size
     
     df_temp <- df_batch_in
-    
     b_size <- df_temp[1, "population"]/denom
     
-    df_temp$batched_pct_cli <- NA
-    
-    # df_temp <- df_temp %>%  arrange(desc(date) )
-    
-    df_temp$cum_responses <- cumsum(df_temp$total_responses)
-    df_temp$cum_number_cli <- cumsum(df_temp$number_cli)
-    
-    i_past = 1 # where last batch size was reached
-    for (i in 1:(nrow(df_temp)-1)) {
-      if (df_temp[i, "cum_responses"] >= b_size) {
-        
-        df_temp[ceiling((i+i_past)/2), "batched_pct_cli"] <- df_temp[i, "cum_number_cli"]/df_temp[i, "cum_responses"]*100
-        
-        i_past = i
-        
-        df_temp[(i+1):nrow(df_temp), "cum_responses"] <- df_temp[(i+1):nrow(df_temp), "cum_responses"] - df_temp[i, "cum_responses"]
-        df_temp[(i+1):nrow(df_temp), "cum_number_cli"] <- df_temp[(i+1):nrow(df_temp), "cum_number_cli"] - df_temp[i, "cum_number_cli"]
-        
-      } # if-cum_responses-greater-b_size
-    } # for-rows-df_temp
-    
-    df_temp <- smooth_column(df_temp, "batched_pct_cli", 
-                             basis_dim = min(sum(!is.na(df_temp$batched_pct_cli)), 25))
-    
-    df_temp <- smooth_column(df_temp, "pct_cli", 
-                             basis_dim = min(sum(!is.na(df_temp$batched_pct_cli)), 40))
-    
-    df_temp <- df_temp %>% 
-      select(date, population, total_responses, pct_cli, pct_cli_smooth,
-             number_cli, batched_pct_cli, batched_pct_cli_smooth) %>% 
-      mutate(estimate_cli = population*(batched_pct_cli_smooth/100),
-             cum_estimate_cli = cumsum(estimate_cli),
-             number_cli_smooth = population*(pct_cli_smooth/100),
-             cum_number_cli_smooth = cumsum(number_cli_smooth))
+    for (col_string in col_string_vec) {
+      
+      print(paste0("Batching & smoothing --- column: ", 
+                   col_string,
+                   " ~~ d = ", denom))
+      
+      # change the name of column to be smoothed:
+      colnames(df_temp)[colnames(df_temp) == col_string] = "signal_pct"
+      
+      # Obtain the actual number from signal_pct
+      df_temp$number_signal_pct <- df_temp$total_responses*df_temp$signal_pct/100
+      
+      # create batched variable
+      df_temp$batched_signal_pct <- NA
+      
+      # cumulative
+      df_temp$cum_responses <- cumsum(df_temp$total_responses)
+      df_temp$cum_number_signal_pct <- cumsum(df_temp$number_signal_pct)
+      
+      i_past = 1 # where last batch size was reached
+      for (i in 1:(nrow(df_temp)-1)) {
+        if (df_temp[i, "cum_responses"] >= b_size) {
+          
+          df_temp[ceiling((i+i_past)/2), "batched_signal_pct"] <- df_temp[i, "cum_number_signal_pct"]/df_temp[i, "cum_responses"]*100
+          
+          i_past = i
+          
+          df_temp[(i+1):nrow(df_temp), "cum_responses"] <- df_temp[(i+1):nrow(df_temp), "cum_responses"] - df_temp[i, "cum_responses"]
+          df_temp[(i+1):nrow(df_temp), "cum_number_signal_pct"] <- df_temp[(i+1):nrow(df_temp), "cum_number_signal_pct"] - df_temp[i, "cum_number_signal_pct"]
+          
+        } # if-cum_responses-greater-b_size
+      } # for-rows-df_temp
+      
+      df_temp <- df_temp %>% select(!c("cum_responses", "cum_number_signal_pct"))
+      
+      ## smooth the batched signal:
+      df_temp <- smooth_column(df_in = df_temp, 
+                               col_s =  "batched_signal_pct", 
+                               basis_dim = min(sum(!is.na(df_temp$batched_signal_pct)), 25),
+                               link_in = "log",
+                               monotone = F)
+      
+      # change name to column "batched_xxx_smooth":
+      colnames(df_temp)[colnames(df_temp) == "batched_signal_pct"] <- 
+        paste0("batched_", col_string)
+      
+      colnames(df_temp)[colnames(df_temp) == "batched_signal_pct_smooth"] <- 
+        paste0("batched_", col_string, "_smooth")
+      
+      colnames(df_temp)[colnames(df_temp) == "batched_signal_pct_smooth_low"] <- 
+        paste0("batched_", col_string, "_smooth_low")
+      
+      colnames(df_temp)[colnames(df_temp) == "batched_signal_pct_smooth_high"] <- 
+        paste0("batched_", col_string, "_smooth_high")
+      
+      ## smooth the original signal:
+      df_temp <- smooth_column(df_in = df_temp, 
+                               col_s =  "signal_pct", 
+                               basis_dim = min(sum(!is.na(df_temp$signal_pct)), 40),
+                               link_in = "log",
+                               monotone = F)
+      
+      # change name to column "xxx_smooth":
+      colnames(df_temp)[colnames(df_temp) == "signal_pct"] <- 
+        paste0(col_string)
+      
+      colnames(df_temp)[colnames(df_temp) == "signal_pct_smooth"] <- 
+        paste0(col_string, "_smooth")
+      
+      colnames(df_temp)[colnames(df_temp) == "signal_pct_smooth_low"] <- 
+        paste0(col_string, "_smooth_low")
+      
+      colnames(df_temp)[colnames(df_temp) == "signal_pct_smooth_high"] <- 
+        paste0(col_string, "_smooth_high")
+      
+      
+    } # loop-col_string_vec
     
     df_temp$b_size_denom <- denom 
     
     df_out <- rbind(df_out, df_temp)
-  }
+  } # loop-denom_to_try
   
   return(df_out)
 }
 
+# df_out <- batch_effect(df_batch_in = dt, 
+#                        denom2try = seq(1000, 5000, by = 500))
+
 df_out <- batch_effect(df_batch_in = dt, 
-                       denom2try = seq(1000, 5000, by = 500))
+                       denom2try = seq(1000, 2000, by = 500), 
+                       col_string_vec = all_pct_to_smooth )
 
 ## Savings ----
 
@@ -143,36 +193,73 @@ write.csv(df_save,
 
 ## Some plots ----
 df_out$d = paste0("d = ", df_out$b_size_denom)
+country = "Spain"
 
-p1 <- ggplot(data = df_out, aes(x = date, group = d, colour = Legend)) +
-  geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
-  geom_line(aes(y = pct_cli_smooth, colour = "CSDC CLI (smooth)"), linetype = "solid", size = 1, alpha = 0.6) + 
+p1 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
+  facet_wrap( ~ d, scales = "free_y" ) +
   geom_point(aes(y = batched_pct_cli, colour = "Batched CSDC CLI"), alpha = 0.5, size = 2) +
-  geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CSDC CLI (smooth)"), linetype = "solid", size =1, alpha = 0.6) +
+  geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CSDC CLI (smooth)"), 
+            linetype = "solid", size =1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = batched_pct_cli_smooth_low, 
+                  ymax = batched_pct_cli_smooth_high), 
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+  geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
+  geom_line(aes(y = pct_cli_smooth, colour = "CSDC CLI (smooth)"), 
+            linetype = "solid", size = 1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = pct_cli_smooth_low, 
+                  ymax = pct_cli_smooth_high), 
+              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
   geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
-  facet_wrap( ~ d ) +
-  theme_bw() + 
+  theme_bw() +
   scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
                       guide = guide_legend(override.aes = list(
-                      linetype = c("blank", "solid", "blank", "solid", "blank"),
-                      shape = c(1, NA, 1, NA, NA)))) + 
-  xlab("Date") + ylab("% symptomatic cases") + ggtitle("Spain") 
+                        linetype = c("blank", "solid", "blank", "solid", "blank"),
+                        shape = c(1, NA, 1, NA, NA)))) +
+  xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
+  theme(legend.position = "bottom")
 p1
 ggsave(plot = p1, 
        filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_pct_cli_by_batch_size.png", 
        width = 9, height = 6)
 
-
-# Animated
-library(gganimate)
-library(gapminder)
-
-p2 <- ggplot(data = df_out, aes(x = date, y = batched_pct_cli_smooth)) +
-  geom_point(colour = "blue") +
-  labs(title = 'Spain batched CSDC CLI (smooth): d = {frame_time}',
-       y = "% symptomatic cases", x = "Date") +
-  transition_time(b_size_denom) +
-  ease_aes('linear') +
-  theme_bw()
+p2 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
+  facet_wrap( ~ d, scales = "free_y" ) +
+  geom_point(aes(y = pct_anosmia_ageusia, colour = "Anosmia-Ageusia"), alpha = 0.2, size = 2) +
+  geom_line(aes(y = batched_pct_anosmia_ageusia_smooth, colour = "Batched Anosmia-Ageusia (smooth)"), 
+            linetype = "solid", size = 1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = batched_pct_anosmia_ageusia_smooth_low, 
+                  ymax = batched_pct_anosmia_ageusia_smooth_high), 
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+  geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CLI (smooth)"), 
+            linetype = "solid", size =1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = batched_pct_cli_smooth_low, 
+                  ymax = batched_pct_cli_smooth_high), 
+              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
+  geom_point(aes(y = pct_cli, colour = "CLI"), alpha = 0.5, size = 2) +
+  geom_point(aes(y = pct_cli_smooth, colour = "d = population / batch size"), alpha = 0) +
+  theme_bw() +
+  scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
+                      guide = guide_legend(override.aes = list(
+                        linetype = c("blank", "solid", "solid", "blank" , "blank"),
+                        shape = c(1, NA, NA, 1, NA)))) +
+  xlab("Date") + ylab("% cases") + ggtitle(country) +
+  theme(legend.position = "bottom")
 p2
-anim_save("../data/estimates-umd-batches/ES/plots_by_batch_size/batch_size_effect_ES_country.gif")
+ggsave(plot = p2, 
+       filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_cli_vs_anosmia_by_batch_size.png", 
+       width = 9, height = 6)
+
+
+# # Animated
+# library(gganimate)
+# library(gapminder)
+# 
+# p2 <- ggplot(data = df_out, aes(x = date, y = batched_pct_cli_smooth)) +
+#   geom_point(colour = "blue") +
+#   labs(title = 'Spain batched CSDC CLI (smooth): d = {frame_time}',
+#        y = "% symptomatic cases", x = "Date") +
+#   transition_time(b_size_denom) +
+#   ease_aes('linear') +
+#   theme_bw()
+# p2
+# anim_save("../data/estimates-umd-batches/ES/plots_by_batch_size/batch_size_effect_ES_country.gif")
