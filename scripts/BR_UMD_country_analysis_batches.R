@@ -226,16 +226,16 @@ p2 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
             linetype = "solid", size = 1, alpha = 0.6) +
   geom_ribbon(aes(ymin = batched_pct_anosmia_ageusia_smooth_low, 
                   ymax = batched_pct_anosmia_ageusia_smooth_high), 
-              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
   geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CLI (smooth)"), 
             linetype = "solid", size =1, alpha = 0.6) +
   geom_ribbon(aes(ymin = batched_pct_cli_smooth_low, 
                   ymax = batched_pct_cli_smooth_high), 
-              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_cli, colour = "CLI"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_cli_smooth, colour = "d = population / batch size"), alpha = 0) +
   theme_bw() +
-  scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
+  scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
                         shape = c(1, NA, NA, 1, NA)))) +
@@ -253,16 +253,16 @@ p3 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
             linetype = "solid", size = 1, alpha = 0.6) +
   geom_ribbon(aes(ymin = batched_pct_anosmia_ageusia_smooth_low, 
                   ymax = batched_pct_anosmia_ageusia_smooth_high), 
-              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
   geom_line(aes(y = batched_pct_fever_smooth, colour = "Batched Fever (smooth)"), 
             linetype = "solid", size =1, alpha = 0.6) +
   geom_ribbon(aes(ymin = batched_pct_fever_smooth_low, 
                   ymax = batched_pct_fever_smooth_high), 
-              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_fever, colour = "Cases Fever"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_fever_smooth, colour = "d = population / batch size"), alpha = 0) +
   theme_bw() +
-  scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
+  scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
                         shape = c(1, NA, NA, 1, NA)))) +
@@ -280,16 +280,16 @@ p4 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
             linetype = "solid", size = 1, alpha = 0.6) +
   geom_ribbon(aes(ymin = batched_pct_anosmia_ageusia_smooth_low, 
                   ymax = batched_pct_anosmia_ageusia_smooth_high), 
-              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
   geom_line(aes(y = batched_pct_ili_smooth, colour = "Batched ILI (smooth)"), 
             linetype = "solid", size =1, alpha = 0.6) +
   geom_ribbon(aes(ymin = batched_pct_ili_smooth_low, 
                   ymax = batched_pct_ili_smooth_high), 
-              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_ili, colour = "Cases ILI"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_ili_smooth, colour = "d = population / batch size"), alpha = 0) +
   theme_bw() +
-  scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
+  scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
                         shape = c(1, NA, NA, 1, NA)))) +
