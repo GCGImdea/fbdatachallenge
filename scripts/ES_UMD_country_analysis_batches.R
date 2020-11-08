@@ -12,7 +12,7 @@ use_unsmoothed_UMD = T # write F if using the UMD's smoothed data
 
 if (use_unsmoothed_UMD) {
   ## Unsmoothed Data
-  data <- read.csv("../data/UMD/Full Survey Data/country/esp_country_full_new.csv", 
+  data <- read.csv("../data/UMD_updated/Full Survey Data/country/esp_country_full.csv", 
                    fileEncoding = "UTF-8")
   
   ## Filter overall >> overall
@@ -25,7 +25,7 @@ if (use_unsmoothed_UMD) {
   # dt <- dt %>% filter(date > "2020-05-07")
 }else {
   ## Smoothed Data
-  data_s <- read.csv("../data/UMD/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv",
+  data_s <- read.csv("../data/UMD_updated/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv",
                    fileEncoding = "UTF-8")
   
   ## Filter overall >> overall
@@ -41,9 +41,6 @@ if (use_unsmoothed_UMD) {
 # retain only the unweighted percentages
 dt <- dt[ , !str_detect(colnames(dt), pattern = "weighted")]
 
-# remove a repeated date:
-dt <- dt[-70, ]
-
 # remove redundant variables
 dt <- dt %>% select(!c("X.1", 
                        "X", 
@@ -52,6 +49,14 @@ dt <- dt %>% select(!c("X.1",
                        "gender", 
                        "age_bucket", 
                        "weight_sums"))
+
+# remove a repeated date:
+if (length(unique(dt$date)) != nrow(dt)) {
+  dt <- dt %>% distinct()
+  # still: date == 2020-10-25 is repeated, different outcomes :o
+  dt <- dt[-193, ]
+}
+
 
 # get name of variables representing percentages
 all_pct_to_smooth <- colnames(dt)[str_detect(colnames(dt), pattern = "pct")]
@@ -120,12 +125,26 @@ batch_effect <- function(df_batch_in, denom2try, col_string_vec){
       
       df_temp <- df_temp %>% select(!c("cum_responses", "cum_number_signal_pct"))
       
+      ## DEALING WITH NA's IN THE TAILS 
+      # fill first and last NA's of "batched"-version with original signal:
+      # 1. non-NA elements in "batched_pct_cli":
+      first_non_NA <- min(which(!is.na(df_temp$batched_signal_pct)))
+      last_non_NA <- max(which(!is.na(df_temp$batched_signal_pct)))
+      # 2. save in temporary var. the bathched signal:
+      df_temp$temp_batched_signal_pct <- df_temp$batched_signal_pct
+      # 3.assign the values from "signal_pct":
+      df_temp[-(first_non_NA:last_non_NA) , "batched_signal_pct"] <- df_temp[-(first_non_NA:last_non_NA) , "signal_pct"]
+      
       ## smooth the batched signal:
       df_temp <- smooth_column(df_in = df_temp, 
                                col_s =  "batched_signal_pct", 
                                basis_dim = min(sum(!is.na(df_temp$batched_signal_pct)), 25),
                                link_in = "log",
                                monotone = F)
+      
+      # retrieve the batched signal and remove temporary:
+      df_temp$batched_signal_pct <- df_temp$temp_batched_signal_pct
+      df_temp <- df_temp %>% select(!temp_batched_signal_pct)
       
       # change name to column "batched_xxx_smooth":
       colnames(df_temp)[colnames(df_temp) == "batched_signal_pct"] <- 
@@ -175,7 +194,7 @@ batch_effect <- function(df_batch_in, denom2try, col_string_vec){
 #                        denom2try = seq(1000, 5000, by = 500))
 
 df_out <- batch_effect(df_batch_in = dt, 
-                       denom2try = seq(1000, 2000, by = 500), 
+                       denom2try = c(1000, 2000), 
                        col_string_vec = all_pct_to_smooth )
 
 ## Savings ----

@@ -19,7 +19,7 @@ output_path <- "../data/all-estimates/PlotData/"
 
 active_window <- 18
 
-do_plotting <-function(region_iso ="ESMD"){
+do_plotting <-function(region_iso ="ESMD", use_dunbar = F){
         
         country = substr(region_iso, 1, 2)
         
@@ -90,10 +90,10 @@ do_plotting <-function(region_iso ="ESMD"){
         # my.palette <- paste0("#", c("264653","2a9d8f","e9c46a","f4a261","e76f51"))
         # my.palette <- paste0("#", c("ffbe0b","fb5607","ff006e","8338ec","3a86ff"))
         
-        colors <- c("CS-Recent" = my.palette[1], 
-                    "CS-Dunbar-Recent" = my.palette[5], 
-                    "CCFR-based" = my.palette[2], 
-                    "Batched CSDC CLI (smooth)" = my.palette[3],
+        colors <- c("NSUM" = my.palette[1], 
+                    "NSUM-Dunbar" = my.palette[5], 
+                    "CCFR" = my.palette[2], 
+                    "CSDC" = my.palette[3],
                     "Confirmed active cases" = my.palette[4])
         
         # if (country == "ES") {
@@ -103,10 +103,10 @@ do_plotting <-function(region_iso ="ESMD"){
         # }
         
         p1 <- ggplot(data = dtplot, aes(x = date)) +
-                geom_line(aes(y = cs_recent, colour = "CS-Recent"), size = 1) +
+                geom_line(aes(y = cs_recent, colour = "NSUM"), size = 1) +
                 # geom_line(aes(y = cs_dunb_recent, colour = "CS-Dunbar-Recent"), size = 1) +
-                geom_line(aes(y = ccfr, colour = "CCFR-based"), size = 1) + 
-                geom_line(aes(y = fb_umd, colour = "Batched CSDC CLI (smooth)"), size =1) +
+                geom_line(aes(y = ccfr, colour = "CCFR"), size = 1) + 
+                geom_line(aes(y = fb_umd, colour = "CSDC"), size =1) +
                 geom_line(aes(y = confirmed_active, colour = "Confirmed active cases"), size =1) +
                 theme_bw() + 
                 # ylim(-0.1, up.limit) +
@@ -121,7 +121,29 @@ do_plotting <-function(region_iso ="ESMD"){
         ggsave(plot = p1,
                filename =  paste0(output_path, region_iso, "-active.png"),
                width = 8, height = 6)
+        
+        if (use_dunbar) {
+                p2 <- ggplot(data = dtplot, aes(x = date)) +
+                        geom_line(aes(y = cs_recent, colour = "NSUM"), size = 1) +
+                        geom_line(aes(y = cs_dunb_recent, colour = "NSUM-Dunbar"), size = 1) +
+                        geom_line(aes(y = ccfr, colour = "CCFR"), size = 1) + 
+                        geom_line(aes(y = fb_umd, colour = "CSDC"), size =1) +
+                        geom_line(aes(y = confirmed_active, colour = "Confirmed active cases"), size =1) +
+                        theme_bw() + 
+                        # ylim(-0.1, up.limit) +
+                        labs(x = "Date", y =  "% symptomatic cases", 
+                             title = paste0(country_large, ": ", region_iso),  
+                             colour = "") +
+                        scale_color_manual(values = colors) + 
+                        theme(legend.position = "bottom") 
+                print(p2)
+                
+                # Save the file.
+                ggsave(plot = p2,
+                       filename =  paste0(output_path, region_iso, "-active-dunbar.png"),
+                       width = 8, height = 6)
+        }
 }
 
 do_plotting("ESMD")
-
+do_plotting("ESMD", use_dunbar = T)
