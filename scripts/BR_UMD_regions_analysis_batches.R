@@ -218,7 +218,7 @@ summary(dt$region)
 df_out <- data.frame()
 selected_regions <- unique(dt$region)
 
-for (i in 18:length(selected_regions)){
+for (i in 1:length(selected_regions)){
   
   region_code <- selected_regions[i]
   
