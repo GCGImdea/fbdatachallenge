@@ -6,7 +6,8 @@ path_W_dunbar <- "../data/estimates-W-dunbar/"
 
 
 do_plotting <-function(country ="ES",
-                       estimates_path){
+                       estimates_path,
+                       reach_text){
 
 dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
 
@@ -18,7 +19,7 @@ dt$fecha <- as.Date(dt$date, format = "%Y/%m/%d")
 png(file = paste0(estimates_path, "PlotData/", country, "-cumulative-estimate.png"))
 
 plot(dt$fecha, dt$p_cases*100, type="l", xlab = "Date", 
-     ylab = "% cum. incidence", main = "Cumulative incidence")
+     ylab = "% cum. incidence", main = paste0("Cumulative incidence (Reach ", reach_text,")"))
 lines(dt$fecha, dt$p_cases_smooth*100,lty=1,col="blue")
 legend("bottomright", legend=c("Original", "Smoothed"), 
        col=c("black", "blue"), lty = 1, cex=0.8)
@@ -30,7 +31,7 @@ dev.off()
 png(file = paste0(estimates_path, "PlotData/", country, "-active-estimate.png"))
 
 plot(dt$fecha, dt$p_active*100, type="l", xlab = "Date", 
-     ylab = "% active cases", main = "Active cases")
+     ylab = "% active cases", main = paste0("Active cases (Reach ", reach_text,")"))
 lines(dt$fecha, dt$p_cases_recent*100,lty=1,col="blue")
 lines(dt$fecha, dt$p_active_smooth*100,lty=1,col="magenta")
 lines(dt$fecha, dt$p_cases_recent_smooth*100,lty=1,col="red")
@@ -44,12 +45,12 @@ dev.off()
 }
 
 cat("Plotting ES\n")
-do_plotting("ES", path_W)
-do_plotting("ES", path_W_dunbar)
+do_plotting("ES", path_W, "per response")
+do_plotting("ES", path_W_dunbar, "67.24397")
 cat("Plotting BR\n")
-do_plotting("BR", path_W)
-do_plotting("BR", path_W_dunbar)
+do_plotting("BR", path_W, "per response")
+do_plotting("BR", path_W_dunbar, "59.06486")
 cat("Plotting US\n")
-do_plotting("US", path_W)
-do_plotting("US", path_W_dunbar)
+do_plotting("US", path_W, "per response")
+do_plotting("US", path_W_dunbar, "37.45614")
 
