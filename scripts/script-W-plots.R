@@ -13,7 +13,7 @@ dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as
 
 # --- Ploting and saving
 
-dt$fecha <- as.Date(dt$date, format = "%Y/%m/%d")
+dt$fecha <- as.Date(dt$date, format = "%Y-%m-%d")
 
 # -- Cummulative
 png(file = paste0(estimates_path, "PlotData/", country, "-cumulative-estimate.png"))

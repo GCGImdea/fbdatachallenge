@@ -1,4 +1,5 @@
 library(dplyr) 
+library(zoo)
 
 # smoothed p_cases and CI:
 # source("smooth_column.R")
@@ -64,7 +65,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   dt$iso.3166.2[dt$iso.3166.2 == ""] <- countrycode
   
   # compute provincial estimates
-  dates <- unique(dt$date)
+  # dates <- unique(dt$date)
+  dates <- seq(as.Date(dt$date[1]), Sys.Date(), by = "day")
   
   
   dt_region2 <- dt_region[, c("countrycode",  "regioncode",   "provincecode", "population")] ## bring autonomous cities code to lowest level
@@ -307,7 +309,7 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
     
     
     if (write_daily_file == T){
-      dt_est_count <- data.frame(date=j,
+      dt_est_count <- data.frame(date=as.Date(j),
                                  countrycode = countrycode,
                                  population_country = sum(dtregs$population_region),
                                  p_w_country_only = p_w_country_only,
@@ -333,17 +335,16 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
       
       #----------------------------------------------
       write.csv(x = dt_est_prov_reg_country, file = paste0(estimates_path, countrycode, "/", countrycode,
-                                                           "-", gsub("/", "_", j), "-estimate.csv"), row.names = FALSE)
+                                                           "-", gsub("-", "_", as.Date(j)), "-estimate.csv"), row.names = FALSE)
       
       if (j == dates[length(dates)]){
         write.csv(x = dt_est_prov_reg_country, file = paste0(estimates_path, countrycode, "/", countrycode,
                                                            "-latest-estimate.csv"), row.names = FALSE)
       }
-      
     }
 
     # Concatenate to dwhole the regional estimates for date j
-    dt_est_prov_reg$date <- j
+    dt_est_prov_reg$date <- as.Date(j)
     df_aux <- dt_est_prov_reg[, c("date", "countrycode", "regioncode", "population_region", "p_w_regs", "recent_p_w_regs")]
     
     df_aux %>% rename(country = countrycode, region = regioncode, 
@@ -376,8 +377,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   write.csv(x = dwhole, file = paste0(estimates_path, countrycode, "/", countrycode,
                                       "-region-estimate.csv"), row.names = FALSE)
   
-  for (j in regions){
-  df_aux <- dwhole[dwhole$region == j,]
+  for (r in regions){
+  df_aux <- dwhole[dwhole$region == r,]
   #   df_aux[["p_cases"]][is.na(df_aux[["p_cases"]])] <- 0
   #   if (sum(df_aux$p_cases != 0) > smooth_param) {
   #     df_aux <- smooth_column(df_aux, "p_cases", smooth_param)
@@ -386,11 +387,11 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   #   if (sum(df_aux$p_cases_recent != 0) > smooth_param) {
   #     df_aux <- smooth_column(df_aux, "p_cases_recent", smooth_param)
   #   }
-  write.csv(x = df_aux, file = paste0(estimates_path, countrycode, "/", j,
+  write.csv(x = df_aux, file = paste0(estimates_path, countrycode, "/", r,
                                       "-region-estimate.csv"), row.names = FALSE)
   }
   
-  region_based_estimate <- data.frame(date = dates,
+  region_based_estimate <- data.frame(date = as.Date(dates),
                                       #r_c = r_c,
                                       #r_r = r_r,
                                       #r_r_recent = r_r_recent,
