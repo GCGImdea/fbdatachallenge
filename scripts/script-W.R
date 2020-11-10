@@ -437,9 +437,9 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
 
 #interest <- c("BR", "CL", "CY", "DE", "EC", "FR", "GB", "PT", "UA", "US")
 interest <- c("BR", "US")
-dd <- sapply(interest, provincial_regional_estimate_w_only, province = F, write_daily_file = F)
+dd <- sapply(interest, provincial_regional_estimate_w_only, province = F, write_daily_file = T)
 
 #interest2 <- c("ES", "IT")
 interest2 <- c("ES")
-dd2 <- sapply(interest2, provincial_regional_estimate_w_only, province = T, write_daily_file = F)
+dd2 <- sapply(interest2, provincial_regional_estimate_w_only, province = T, write_daily_file = T)
 
