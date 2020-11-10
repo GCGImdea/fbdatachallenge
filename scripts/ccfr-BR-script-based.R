@@ -125,19 +125,20 @@ plot_estimates <- function(region_code = "BRAC",
   dt$cases_active <- cumsum(c(dt$cases_daily[1:ac_window],
                               diff(dt$cases_daily, lag = ac_window)))
   #undetected active cases
-  undetected_daily_estimate <-  dt$cases_daily - dt$cases
-  dt$cases_active_undected <- cumsum(c(undetected_daily_estimate[1:ac_window],
-                                       diff(undetected_daily_estimate, lag = ac_window)))
-  
+  # undetected_daily_estimate <-  dt$cases_daily - dt$cases
+  # dt$cases_active_undected <- cumsum(c(undetected_daily_estimate[1:ac_window],
+  #                                      diff(undetected_daily_estimate, lag = ac_window)))
+  # 
   dt$p_cases_daily <- ccfr_factor*dt$cases_daily/dt$population
   dt$p_cases_active <- dt$cases_active/dt$population
-  dt$p_cases_active_undetected <- dt$cases_active_undected/dt$population
+  # dt$p_cases_active_undetected <- dt$cases_active_undected/dt$population
   
   
   dt_w <- dt %>% 
-    select("date", "regioncode", "cases", "deaths", "cum_cases", "cum_deaths", "cases_daily", "cases_active", "cases_active_undected", 
-           "p_cases", "p_cases_low", "p_cases_high", "p_cases_daily", "p_cases_active", "p_cases_active_undetected", 
-           "population")
+    select("date", "regioncode", "cases", "deaths", "cum_cases",
+           "cum_deaths", "cases_daily", "cases_active", 
+           "p_cases", "p_cases_low", "p_cases_high", "p_cases_daily",
+           "p_cases_active", "population")
   
   dir.create("../data/estimates-ccfr-based/BR/", showWarnings = F)
   cat("::- script-ccfr-based: Writing data for", dt_w$regioncode[1], "::\n")
