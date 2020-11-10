@@ -15,30 +15,34 @@ start_date <- "2020-03-01"
 
 #do_CCFR_plotting <-function(countries){
         # estimates W
-        dt_ES <- read.csv(paste0(estimates_CCFR_path, "ES-estimate.csv"), as.is = T)
-        dt_ES$date <- as.Date(dt_ES$date, format = "%Y/%m/%d")
-        dt_ES %>% rename(p_CCFR_infected_ES = p_cases_infected) -> dt_ES
+        dt_CCFR_ES <- read.csv(paste0(estimates_CCFR_path, "ES-estimate.csv"), as.is = T)
+        dt_CCFR_ES$date <- as.Date(dt_CCFR_ES$date, format = "%Y/%m/%d")
+        dt_CCFR_ES <- dt_CCFR_ES[dt_CCFR_ES$date >= ymd(start_date),]
         
-        dt_BR <- read.csv(paste0(estimates_CCFR_path, "BR-estimate.csv"), as.is = T)
-        dt_BR$date <- as.Date(dt_BR$date, format = "%Y/%m/%d")
-        dt_BR %>% rename(p_CCFR_infected_BR = p_cases_infected) -> dt_BR
+        #dt_ES %>% rename(p_CCFR_infected_ES = p_cases_infected) -> dt_ES
         
-        dt_US <- read.csv(paste0(estimates_CCFR_path, "US-estimate.csv"), as.is = T)
-        dt_US$date <- as.Date(dt_US$date, format = "%Y/%m/%d")
-        dt_US %>% rename(p_CCFR_infected_US = p_cases_infected) -> dt_US
+        dt_CCFR_BR <- read.csv(paste0(estimates_CCFR_path, "BR-estimate.csv"), as.is = T)
+        dt_CCFR_BR$date <- as.Date(dt_CCFR_BR$date, format = "%Y/%m/%d")
+        dt_CCFR_BR <- dt_CCFR_BR[dt_CCFR_BR$date >= ymd(start_date),]
+        #dt_BR %>% rename(p_CCFR_infected_BR = p_cases_infected) -> dt_BR
+        
+        dt_CCFR_US <- read.csv(paste0(estimates_CCFR_path, "US-estimate.csv"), as.is = T)
+        dt_CCFR_US$date <- as.Date(dt_CCFR_US$date, format = "%Y/%m/%d")
+        dt_CCFR_US <- dt_CCFR_US[dt_CCFR_US$date >= ymd(start_date),]
+        #dt_US %>% rename(p_CCFR_infected_US = p_cases_infected) -> dt_US
         
         # merge all data
-        dtwhole <- merge(dt_ES, dt_BR, by="date")
-        dtwhole <- merge(dtwhole, dt_US, by="date")
-
-        dtplot_CCFR <- dtwhole[dtwhole$date >= ymd(start_date), c("date",  
-                              "p_CCFR_infected_ES", 
-                              "p_CCFR_infected_BR",
-                              "p_CCFR_infected_US")]
-        
-        dir.create(output_path, showWarnings = F)
-        cat(paste0("::- script-W: Writing the cumulative CCFR data \n"))
-        write.csv(dtplot_CCFR, paste0(output_path, "CCFR-cumulative.csv"))
+        # dtwhole <- merge(dt_ES, dt_BR, by="date")
+        # dtwhole <- merge(dtwhole, dt_US, by="date")
+        # 
+        # dtplot_CCFR <- dtwhole[dtwhole$date >= ymd(start_date), c("date",  
+        #                       "p_CCFR_infected_ES", 
+        #                       "p_CCFR_infected_BR",
+        #                       "p_CCFR_infected_US")]
+        # 
+        # dir.create(output_path, showWarnings = F)
+        # cat(paste0("::- script-W: Writing the cumulative CCFR data \n"))
+        # write.csv(dtplot_CCFR, paste0(output_path, "CCFR-cumulative.csv"))
         
         # 5-colors palettes:
         my.palette <- c("red", "blue", "black", "magenta", "brown")
@@ -50,14 +54,17 @@ start_date <- "2020-03-01"
                     "Brazil" = my.palette[2], 
                     "USA" = my.palette[3])
         
-        p1 <- ggplot(data = dtplot_CCFR, aes(x = date)) +
-                geom_line(aes(y = 100*p_CCFR_infected_ES, colour = "Spain"), size = 1) + # use to be: "CS-Recent"
-                geom_line(aes(y = 100*p_CCFR_infected_BR, colour = "Brazil"), size = 1) + # use to be: "CCFR-based"
-                geom_line(aes(y = 100*p_CCFR_infected_US, colour = "USA"), size =1) + # use to be: "Batched CSDC CLI (smooth)"
+        p1 <- ggplot(data = dt_CCFR_ES, aes(x = date)) +
+                geom_line(aes(y = 100*p_cases_infected, colour = "Spain"), size = 1) + 
+                geom_line(data=dt_CCFR_BR, aes(y = 100*p_cases_infected, colour = "Brazil"), size = 1) + 
+                geom_line(data=dt_CCFR_US, aes(y = 100*p_cases_infected, colour = "USA"), size =1) + 
+                geom_line(aes(y = 100*cum_cases/population, colour = "Spain"), size = 1, linetype = "dashed", alpha=0.5) + 
+                geom_line(data=dt_CCFR_BR, aes(y = 100*cum_cases/population, colour = "Brazil"), size = 1, linetype = "dashed", alpha=0.5) + 
+                geom_line(data=dt_CCFR_US, aes(y = 100*cum_cases/population, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) +
                 # geom_line(aes(y = confirmed_active, colour = "Confirmed active cases"), size =1) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidente", title = "cCFR-based Estimates of Cumulative Incidence",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidente", title = "cCFR-based Estimates vs Confirmed Cumulative Incidence",  colour = "") +
                 scale_color_manual(values = colors) + 
                 theme(legend.position = "bottom") 
         print(p1)
@@ -120,7 +127,7 @@ start_date <- "2020-03-01"
                 # geom_line(aes(y = confirmed_active, colour = "Confirmed active cases"), size =1) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidente", title = "NSUM Estimates of Cumulative Incidence",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidente", title = "NSUM vs CCFR Estimates of Cumulative Incidence",  colour = "") +
                 scale_color_manual(values = colors) + 
                 theme(legend.position = "bottom") 
         print(p1)
@@ -143,10 +150,10 @@ start_date <- "2020-03-01"
                     "USA" = my.palette[3]
                     )
         
-        p1 <- ggplot(data = dtplot_CCFR, aes(x = date)) +
-                geom_line(aes(y = 100*p_CCFR_infected_ES, colour = "Spain"), size = 1, linetype = "dashed", alpha=0.5) + 
-                geom_line(aes(y = 100*p_CCFR_infected_BR, colour = "Brazil"), size = 1, linetype = "dashed", alpha=0.5) + 
-                geom_line(aes(y = 100*p_CCFR_infected_US, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) + 
+        p1 <- ggplot(data = dt_CCFR_ES, aes(x = date)) +
+                geom_line(aes(y = 100*p_cases_infected, colour = "Spain"), size = 1, linetype = "dashed", alpha=0.5) + 
+                geom_line(data=dt_CCFR_BR, aes(y = 100*p_cases_infected, colour = "Brazil"), size = 1, linetype = "dashed", alpha=0.5) + 
+                geom_line(data=dt_CCFR_US, aes(y = 100*p_cases_infected, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) +
                 geom_line(data=dt_NSUM_ES, aes(y = 100*p_NSUM_infected, colour = "Spain"), size = 1, linetype = "solid") + 
                 geom_line(data=dt_NSUM_BR, aes(y = 100*p_NSUM_infected, colour = "Brazil"), size = 1, linetype = "solid") + 
                 geom_line(data=dt_NSUM_US, aes(y = 100*p_NSUM_infected, colour = "USA"), size =1, linetype = "solid") + 
