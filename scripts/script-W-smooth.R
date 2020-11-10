@@ -178,4 +178,6 @@ do_smoothing("BR", path_W_dunbar)
 cat("Smoothing US\n")
 do_smoothing("US", path_W)
 do_smoothing("US", path_W_dunbar)
+do_smoothing("PT", path_W)
+do_smoothing("PT", path_W_dunbar)
 
