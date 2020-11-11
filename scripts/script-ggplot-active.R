@@ -21,17 +21,35 @@ active_window <- 18
 do_plotting <-function(country ="ES", use_dunbar = F, use_ccfr_coronasurveys = T){
         # estimates W
         if (use_ccfr_coronasurveys) {
-                # estimates W (from **coronasurveys**)
+                ## estimates W (from **coronasurveys**)
                 dt_W <- read.csv(paste0(estimates_W2_path, country, "-estimate.csv"))
                 dt_W$date <- as.Date(dt_W$date) #, format = "%Y/%m/%d"
                 dt_W <- dt_W %>% select(date, p_cases_active_smooth)
                 # rename the column as in the fbdatachallenge repo:
                 colnames(dt_W) <- c("date", "p_cases_recent_smooth")
+                
+                ## estimates cCFR (from **coronasurveys**)
+                dt_ccfr <- read.csv(paste0(estimates_ccfr_path, country, "-estimate.csv"), 
+                                    as.is = T)
+                dt_ccfr$date <- as.Date(dt_ccfr$date) #, format = "%Y/%m/%d"
+                # retain "date" and "p_cases_active" and confirmed "cases"
+                dt_ccfr <- dt_ccfr %>% 
+                        mutate(total_cases = cases) %>%
+                        select(date, p_cases_active, total_cases)
+                
+                # change the name:
+                dt_ccfr2 <- dt_ccfr
+                
         }else {
                 # estimates W (from **fbdatachallenge**)
                 dt_W <- read.csv(paste0(estimates_W_path, country, "-estimate.csv"), as.is = T)
                 dt_W$date <- as.Date(dt_W$date) #, format = "%Y/%m/%d"
                 # dt_W <- dt_W %>% select(date, p_cases_recent_smooth)
+                
+                ## estimates cCFR (from **fbdatachallenge**)
+                dt_ccfr2 <- read.csv(paste0(estimates_ccfr2_path, country, "-country-ccfr-aggregate-estimate.csv"),
+                                     as.is = T)
+                dt_ccfr2$date <- as.Date(dt_ccfr2$date) # , format = "%Y-%m-%d"
         }
         
         
@@ -41,29 +59,6 @@ do_plotting <-function(country ="ES", use_dunbar = F, use_ccfr_coronasurveys = T
         colnames(dt_W_dunb)[4:ncol(dt_W_dunb)] <- paste0(colnames(dt_W_dunb)[4:ncol(dt_W_dunb)], "_dunb")
         # dt_W_dunb <- dt_W_dunb %>% select(date, p_cases_recent_smooth_dunb)
         
-        # estimates cCFR (from **fbdatachallenge**)
-        dt_ccfr2 <- read.csv(paste0(estimates_ccfr2_path, country, "-country-ccfr-aggregate-estimate.csv"),
-                             as.is = T)
-        dt_ccfr2$date <- as.Date(dt_ccfr2$date) # , format = "%Y-%m-%d"
-        
-        if (use_ccfr_coronasurveys) {
-                # estimates cCFR (from **coronasurveys**)
-                dt_ccfr <- read.csv(paste0(estimates_ccfr_path, country, "-estimate.csv"), 
-                                    as.is = T)
-                dt_ccfr$date <- as.Date(dt_ccfr$date) #, format = "%Y/%m/%d"
-                
-                # print(summary(dt_ccfr$p_cases_active))
-                
-                # retain "date" and "p_cases_active"
-                dt_ccfr <- dt_ccfr %>% 
-                        # mutate(total_cases_active = p_cases_active) %>% 
-                        select(date, p_cases_active)
-                
-                # change the p_cases_active from dt_ccfr2, to those from dt_ccfr
-                # dt_ccfr2 <- dt_ccfr2 %>% select(!total_cases_active)
-                # dt_ccfr2 <- left_join(dt_ccfr2, dt_ccfr, by = "date")
-                dt_ccfr2 <- full_join(dt_ccfr2, dt_ccfr, by = "date")
-        }
         
         # estimates UMD data
         dt_UMD <- read.csv(paste0(estimates_UMD_path, country, "/", country, "_UMD_country_data.csv"), 
