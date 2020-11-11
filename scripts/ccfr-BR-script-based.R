@@ -1,5 +1,6 @@
 library(dplyr)
 active_window <- 18
+contagious_window <- 12
 cfr_baseline <- 1.36
 source("smooth_greedy_monotone.R")
 ###################################################################
@@ -53,7 +54,8 @@ plot_estimates <- function(region_code = "BRAC",
                            c_cfr_baseline = 1.38,
                            c_cfr_estimate_range = c(1.23, 1.53),
                            dts = data, 
-                           ac_window){
+                           active_window, 
+                           contagious_window){
   #cat("::- script-ccfr-based: Computing ccfr-based estimates for", country_geoid, "::\n")
   mu_hdt = log(z_median_hdt)
   sigma_hdt = sqrt(2*(log(z_mean_hdt) - mu_hdt))
@@ -109,36 +111,54 @@ plot_estimates <- function(region_code = "BRAC",
     p_ccfr_high[i] <- est_ccfr_high[i]/dt$population[1]
   }
   
-  dt$est_cases <- est_ccfr
-  dt$est_cases_low <- est_ccfr_low
-  dt$est_cases_high <- est_ccfr_high
-  dt$p_cases <- p_ccfr
-  dt$p_cases_low <- p_ccfr_low
-  dt$p_cases_high <- p_ccfr_high
+  dt$cases_infected <- est_ccfr
+  dt$cases_infected_low <- est_ccfr_low
+  dt$cases_infected_high <- est_ccfr_high
+  dt$p_cases_infected <- p_ccfr
+  dt$p_cases_infected_low <- p_ccfr_low
+  dt$p_cases_infected_high <- p_ccfr_high
   
   # clean ccfr factor
-  ccfr_factor[is.na(ccfr_factor)|(ccfr_factor<1)] <- 1
+  #ccfr_factor[is.na(ccfr_factor)|(ccfr_factor<1)] <- 1
   # daily ccfr estimate
-  dt$cases_daily <- c(0, diff(smooth_greedy(dt$est_cases)))
+  dt$cases_daily <- c(0, diff(smooth_greedy(dt$cases_infected)))
   
-  #total active cases
-  dt$cases_active <- cumsum(c(dt$cases_daily[1:ac_window],
-                              diff(dt$cases_daily, lag = ac_window)))
+  #contagious
+  if (nrow(dt) >= contagious_window){
+    dt$cases_contagious <- cumsum(c(dt$cases_daily[1:contagious_window],
+                                    diff(dt$cases_daily, lag = contagious_window)))
+  }
+  else {
+    dt$cases_contagious <- NA
+  }
+  
+  #cases_active
+  if (nrow(dt) >= active_window){
+    dt$cases_active <- cumsum(c(dt$cases_daily[1:active_window],
+                                diff(dt$cases_daily, lag = active_window)))
+  }
+  else {
+    dt$cases_active <- NA
+  }
+  
   #undetected active cases
   # undetected_daily_estimate <-  dt$cases_daily - dt$cases
   # dt$cases_active_undected <- cumsum(c(undetected_daily_estimate[1:ac_window],
   #                                      diff(undetected_daily_estimate, lag = ac_window)))
   # 
   dt$p_cases_daily <- ccfr_factor*dt$cases_daily/dt$population
+  dt$p_cases_contagious <- dt$cases_contagious/dt$population
   dt$p_cases_active <- dt$cases_active/dt$population
+  
   # dt$p_cases_active_undetected <- dt$cases_active_undected/dt$population
   
   
   dt_w <- dt %>% 
-    select("date", "regioncode", "cases", "deaths", "cum_cases",
-           "cum_deaths", "cases_daily", "cases_active", 
-           "p_cases", "p_cases_low", "p_cases_high", "p_cases_daily",
-           "p_cases_active", "population")
+    select("date", "regioncode", "population", "cases", "deaths", "cum_cases",
+           "cum_deaths", "cases_infected", "cases_infected_low", "cases_infected_high",
+           "cases_daily", "cases_contagious", "cases_active", 
+           "p_cases_infected", "p_cases_infected_low", "p_cases_infected_high", 
+           "p_cases_daily", "p_cases_contagious", "p_cases_active")
   
   dir.create("../data/estimates-ccfr-based/BR/", showWarnings = F)
   cat("::- script-ccfr-based: Writing data for", dt_w$regioncode[1], "::\n")
@@ -150,7 +170,7 @@ plot_estimates <- function(region_code = "BRAC",
 #############################
 
 
-generate_estimates <- function(active_window_cases,
+generate_estimates <- function(active_window,
                                cfr_baseline){
   gunzip_link <- "https://data.brasil.io/dataset/covid19/caso_full.csv.gz"
   #download.file(gunzip_link, destfile = "../data/brazil_io_regional/caso_full.csv.gz")
@@ -171,7 +191,9 @@ generate_estimates <- function(active_window_cases,
   # data <- left_join(cases_full, regsdata, by = "regioncode")
   
   go <- sapply(sort(unique(cases_full$regioncode)),
-               plot_estimates, dts =  cases_full, ac_window = active_window_cases, 
+               plot_estimates, dts =  cases_full,
+               active_window = active_window,
+               contagious_window = contagious_window,
                c_cfr_baseline = cfr_baseline)
   
 }
