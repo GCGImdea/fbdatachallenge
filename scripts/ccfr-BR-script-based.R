@@ -146,7 +146,7 @@ plot_estimates <- function(region_code = "BRAC",
   # dt$cases_active_undected <- cumsum(c(undetected_daily_estimate[1:ac_window],
   #                                      diff(undetected_daily_estimate, lag = ac_window)))
   # 
-  dt$p_cases_daily <- ccfr_factor*dt$cases_daily/dt$population
+  dt$p_cases_daily <- dt$cases_daily/dt$population
   dt$p_cases_contagious <- dt$cases_contagious/dt$population
   dt$p_cases_active <- dt$cases_active/dt$population
   

@@ -13,7 +13,8 @@ agg_ccfr <- function(country_code = c("ES", "BR")){
               total_deaths = sum(deaths, na.rm = T),
               total_cases_daily = sum(cases_daily, na.rm = T),
               total_cases_active = sum(cases_active, na.rm = T),
-              total_cases_active_undetected = sum(cases_active_undected, na.rm = T))
+              total_cases_contagious = sum(cases_contagious, na.rm = T),
+              total_cases_infected = sum(cases_infected, na.rm = T))
   
   country_level_estimates$total_cum_cases = cumsum(country_level_estimates$total_cases)
   country_level_estimates$total_cum_deaths = cumsum(country_level_estimates$total_deaths)
