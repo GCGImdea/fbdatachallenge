@@ -36,6 +36,8 @@ esp_country_full <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_country_full, "./UMD_updated/Full Survey Data/country/esp_country_full.csv")
 bra_country_full <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_country_full, "./UMD_updated/Full Survey Data/country/bra_country_full.csv")
+prt_country_full <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_country_full, "./UMD_updated/Full Survey Data/country/prt_country_full.csv")
 
 # Analyse added and removed questions
 
@@ -122,6 +124,8 @@ esp_country_full_smooth <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_country_full_smooth, "./UMD_updated/Full Survey Data/country/smoothed/esp_country_full_smoothed.csv")
 bra_country_full_smooth <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_country_full_smooth, "./UMD_updated/Full Survey Data/country/smoothed/bra_country_full_smoothed.csv")
+prt_country_full_smooth <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_country_full_smooth, "./UMD_updated/Full Survey Data/country/smoothed/prt_country_full_smoothed.csv")
 
 
 ##################### Full survey data region ##############
@@ -142,6 +146,8 @@ esp_region_full <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_region_full, "./UMD_updated/Full Survey Data/region/esp_region_full.csv")
 bra_region_full <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_region_full, "./UMD_updated/Full Survey Data/region/bra_region_full.csv")
+prt_region_full <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_region_full, "./UMD_updated/Full Survey Data/region/prt_region_full.csv")
 
 
 
@@ -159,6 +165,8 @@ esp_region_full_smoothed <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_region_full_smoothed, "./UMD_updated/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv")
 bra_region_full_smoothed <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_region_full_smoothed, "./UMD_updated/Full Survey Data/region/smoothed/bra_region_full_smoothed.csv")
+prt_region_full_smoothed <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_region_full_smoothed, "./UMD_updated/Full Survey Data/region/smoothed/prt_region_full_smoothed.csv")
 
 
 
@@ -179,6 +187,8 @@ esp_country_parta <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_country_parta, "./UMD_updated/Part-A Survey Data/country/esp_country_parta.csv")
 bra_country_parta <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_country_parta, "./UMD_updated/Part-A Survey Data/country/bra_country_parta.csv")
+prt_country_parta <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_country_parta, "./UMD_updated/Part-A Survey Data/country/prt_country_parta.csv")
 
 
 ################## Part A Survey country smooothed ################
@@ -198,6 +208,8 @@ esp_country_parta_smooth <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_country_parta_smooth, "./UMD_updated/Part-A Survey Data/country/smoothed/esp_country_parta_smoothed.csv")
 bra_country_parta_smooth <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_country_parta_smooth, "./UMD_updated/Part-A Survey Data/country/smoothed/bra_country_parta_smoothed.csv")
+prt_country_parta_smooth <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_country_parta_smooth, "./UMD_updated/Part-A Survey Data/country/smoothed/prt_country_parta_smoothed.csv")
 
 
 
@@ -218,6 +230,8 @@ esp_region_parta <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_region_parta, "./UMD_updated/Part-A Survey Data/region/esp_region_parta.csv")
 bra_region_parta <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_region_parta, "./UMD_updated/Part-A Survey Data/region/bra_region_parta.csv")
+prt_region_parta <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_region_parta, "./UMD_updated/Part-A Survey Data/region/prt_region_parta.csv")
 
 
 ##################### Part A survey data region smoothed ##############
@@ -237,5 +251,7 @@ esp_region_parta_smoothed <- dtfull %>% filter(GID_0 == "ESP")
 write.csv(esp_region_parta_smoothed, "./UMD_updated/Part-A Survey Data/region/smoothed/esp_region_parta_smoothed.csv")
 bra_region_parta_smoothed <- dtfull %>% filter(GID_0 == "BRA")
 write.csv(bra_region_parta_smoothed, "./UMD_updated/Part-A Survey Data/region/smoothed/bra_region_parta_smoothed.csv")
+prt_region_parta_smoothed <- dtfull %>% filter(GID_0 == "PRT")
+write.csv(prt_region_parta_smoothed, "./UMD_updated/Part-A Survey Data/region/smoothed/prt_region_parta_smoothed.csv")
 
 

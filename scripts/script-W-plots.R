@@ -53,4 +53,5 @@ do_plotting("BR", path_W_dunbar, "59.06486")
 cat("Plotting US\n")
 do_plotting("US", path_W, "per response")
 do_plotting("US", path_W_dunbar, "37.45614")
-
+do_plotting("PT", path_W, "per response")
+do_plotting("PT", path_W_dunbar, "65.00961")

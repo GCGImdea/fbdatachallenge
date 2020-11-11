@@ -3,7 +3,7 @@ library(dplyr)
 # smoothed p_cases and CI:
 source("smooth_column-v2.R")
 
-smooth_param <- 25
+smooth_param <- 35
 active_window <- 18 #https://patient.info/news-and-features/coronavirus-how-quickly-do-covid-19-symptoms-develop-and-how-long-do-they-last
 path_W <- "../data/estimates-W/"
 path_W_dunbar <- "../data/estimates-W-dunbar/"
@@ -178,4 +178,6 @@ do_smoothing("BR", path_W_dunbar)
 cat("Smoothing US\n")
 do_smoothing("US", path_W)
 do_smoothing("US", path_W_dunbar)
+do_smoothing("PT", path_W)
+do_smoothing("PT", path_W_dunbar)
 
