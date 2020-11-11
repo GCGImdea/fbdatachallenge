@@ -61,7 +61,8 @@ do_plotting <-function(country ="ES", use_dunbar = F, use_ccfr_coronasurveys = T
                 
                 # change the p_cases_active from dt_ccfr2, to those from dt_ccfr
                 # dt_ccfr2 <- dt_ccfr2 %>% select(!total_cases_active)
-                dt_ccfr2 <- left_join(dt_ccfr2, dt_ccfr, by = "date")
+                # dt_ccfr2 <- left_join(dt_ccfr2, dt_ccfr, by = "date")
+                dt_ccfr2 <- full_join(dt_ccfr2, dt_ccfr, by = "date")
         }
         
         # estimates UMD data
@@ -130,8 +131,6 @@ do_plotting <-function(country ="ES", use_dunbar = F, use_ccfr_coronasurveys = T
         }else {
                 up.limit = 2.5
         }
-        
-        
         
         p1 <- ggplot(data = dtplot, aes(x = date)) +
                 geom_line(aes(y = cs_recent, colour = "NSUM"), size = 1) + # use to be: "CS-Recent"
