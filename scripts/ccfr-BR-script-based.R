@@ -1,7 +1,7 @@
 library(dplyr)
 active_window <- 18
 contagious_window <- 12
-cfr_baseline <- 1.36
+cfr_baseline <- 1.38
 source("smooth_greedy_monotone.R")
 ###################################################################
 calculate_ci <- function(p_est, level, pop_size) {

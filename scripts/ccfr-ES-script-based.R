@@ -2,7 +2,7 @@ library(dplyr)
 
 active_window <- 18
 contagious_window <- 12
-cfr_baseline <- 1.36
+cfr_baseline <- 1.38
 estimates_path <- "../data/estimates-ccfr-based/ES/"
 source("smooth_greedy_monotone.R")
 

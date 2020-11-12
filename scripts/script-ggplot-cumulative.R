@@ -64,7 +64,7 @@ start_date <- "2020-03-01"
                 # geom_line(aes(y = confirmed_active, colour = "Confirmed active cases"), size =1) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidente", title = "cCFR-based Estimates vs Confirmed Cumulative Incidence",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidente", title = "CCFR-based Estimates vs Confirmed Cumulative Incidence",  colour = "") +
                 scale_color_manual(values = colors) + 
                 theme(legend.position = "bottom") 
         print(p1)
