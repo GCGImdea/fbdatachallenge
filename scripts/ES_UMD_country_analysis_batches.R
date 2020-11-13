@@ -229,14 +229,15 @@ p1 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
                   ymax = pct_cli_smooth_high), 
               alpha = 0.1, color = "red", size = 0.1, fill = "red") +
   geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("blue", "blue", "red", "red", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "blank", "solid", "blank"),
-                        shape = c(1, NA, 1, NA, NA)))) +
+                        shape = c(1, NA, 1, NA, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p1
+# aspect_ratio <- 2.5
 ggsave(plot = p1, 
        filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_pct_cli_by_batch_size.png", 
        width = 9, height = 6)
@@ -246,11 +247,11 @@ p1.1 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
   facet_wrap( ~ d, scales = "free_y" ) +
   geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
   geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("red", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "blank"),
-                        shape = c(1, NA)))) +
+                        shape = c(1, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p1.1
@@ -264,11 +265,11 @@ p1.2 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
   geom_point(aes(y = batched_pct_cli, colour = "Batched CSDC CLI"), alpha = 0.8, size = 3) +
   geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
   geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("blue", "red", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "blank", "blank"),
-                        shape = c(1, 1, NA)))) +
+                        shape = c(1, 1, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p1.2
@@ -287,11 +288,11 @@ p1.3 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
               alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
   geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("blue", "blue", "red", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "blank", "blank"),
-                        shape = c(1, NA, 1, NA)))) +
+                        shape = c(1, NA, 1, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p1.3
@@ -314,11 +315,11 @@ p2 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
               alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_cli, colour = "CLI"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_cli_smooth, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
-                        shape = c(1, NA, NA, 1, NA)))) +
+                        shape = c(1, NA, NA, 1, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p2
@@ -343,13 +344,13 @@ p2.1 <- ggplot(data = df_out1000, aes(x = date, colour = Legend)) +
               alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_cli, colour = "CLI"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_cli_smooth, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
-                      guide = guide_legend(override.aes = list(
+                      guide = guide_legend( override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
-                        shape = c(1, NA, NA, 1, NA)))) +
+                        shape = c(1, NA, NA, 1, NA) ), nrow = 2 )) +
   xlab("Date") + ylab("% cases") + ggtitle(country) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") 
 p2.1
 ggsave(plot = p2.1, 
        filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_cli_vs_anosmia_batch_size_1000.png", 
@@ -371,11 +372,11 @@ p3 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
               alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_fever, colour = "Cases Fever"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_fever_smooth, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
-                        shape = c(1, NA, NA, 1, NA)))) +
+                        shape = c(1, NA, NA, 1, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p3
@@ -398,11 +399,11 @@ p4 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
               alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
   geom_point(aes(y = pct_ili, colour = "Cases ILI"), alpha = 0.5, size = 2) +
   geom_point(aes(y = pct_ili_smooth, colour = "d = population / batch size"), alpha = 0) +
-  theme_bw() +
+  theme_bw(base_size = 15) +
   scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
                       guide = guide_legend(override.aes = list(
                         linetype = c("blank", "solid", "solid", "blank" , "blank"),
-                        shape = c(1, NA, NA, 1, NA)))) +
+                        shape = c(1, NA, NA, 1, NA)), nrow = 2 )) +
   xlab("Date") + ylab("% cases") + ggtitle(country) +
   theme(legend.position = "bottom")
 p4
