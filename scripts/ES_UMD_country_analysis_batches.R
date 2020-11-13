@@ -241,6 +241,64 @@ ggsave(plot = p1,
        filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_pct_cli_by_batch_size.png", 
        width = 9, height = 6)
 
+# Just pct_cli as dots and unprocessed
+p1.1 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
+  facet_wrap( ~ d, scales = "free_y" ) +
+  geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
+  geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
+  theme_bw() +
+  scale_colour_manual(values = c("red", "black"),
+                      guide = guide_legend(override.aes = list(
+                        linetype = c("blank", "blank"),
+                        shape = c(1, NA)))) +
+  xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
+  theme(legend.position = "bottom")
+p1.1
+ggsave(plot = p1.1, 
+       filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_pct_cli_unprocessed_by_batch_size.png", 
+       width = 9, height = 6)
+
+# Just pct_cli unprocessed and batched, both as dots
+p1.2 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
+  facet_wrap( ~ d, scales = "free_y" ) +
+  geom_point(aes(y = batched_pct_cli, colour = "Batched CSDC CLI"), alpha = 0.8, size = 3) +
+  geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
+  geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
+  theme_bw() +
+  scale_colour_manual(values = c("blue", "red", "black"),
+                      guide = guide_legend(override.aes = list(
+                        linetype = c("blank", "blank", "blank"),
+                        shape = c(1, 1, NA)))) +
+  xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
+  theme(legend.position = "bottom")
+p1.2
+ggsave(plot = p1.2, 
+       filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_batched_pct_cli_by_batch_size.png", 
+       width = 9, height = 6)
+
+# Just pct_cli unprocessed and batched, both as dots
+p1.3 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
+  facet_wrap( ~ d, scales = "free_y" ) +
+  geom_point(aes(y = batched_pct_cli, colour = "Batched CSDC CLI"), alpha = 0.8, size = 3) +
+  geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CSDC CLI (smooth)"), 
+            linetype = "solid", size =1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = batched_pct_cli_smooth_low, 
+                  ymax = batched_pct_cli_smooth_high), 
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+  geom_point(aes(y = pct_cli, colour = "CSDC CLI"), alpha = 0.2, size = 2) +
+  geom_point(aes(y = pct_cli, colour = "d = population / batch size"), alpha = 0) +
+  theme_bw() +
+  scale_colour_manual(values = c("blue", "blue", "red", "black"),
+                      guide = guide_legend(override.aes = list(
+                        linetype = c("blank", "solid", "blank", "blank"),
+                        shape = c(1, NA, 1, NA)))) +
+  xlab("Date") + ylab("% symptomatic cases") + ggtitle(country) +
+  theme(legend.position = "bottom")
+p1.3
+ggsave(plot = p1.3, 
+       filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_batched_pct_cli_and_curve_by_batch_size.png", 
+       width = 9, height = 6)
+
 p2 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
   facet_wrap( ~ d, scales = "free_y" ) +
   geom_point(aes(y = pct_anosmia_ageusia, colour = "Anosmia-Ageusia"), alpha = 0.2, size = 2) +
