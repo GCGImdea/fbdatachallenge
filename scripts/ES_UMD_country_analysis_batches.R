@@ -326,6 +326,35 @@ ggsave(plot = p2,
        filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_cli_vs_anosmia_by_batch_size.png", 
        width = 9, height = 6)
 
+# just with d = 1000
+df_out1000 <- df_out %>% filter(b_size_denom == 1000)
+p2.1 <- ggplot(data = df_out1000, aes(x = date, colour = Legend)) +
+  facet_wrap( ~ d, scales = "free_y" ) +
+  geom_point(aes(y = pct_anosmia_ageusia, colour = "Anosmia-Ageusia"), alpha = 0.2, size = 2) +
+  geom_line(aes(y = batched_pct_anosmia_ageusia_smooth, colour = "Batched Anosmia-Ageusia (smooth)"), 
+            linetype = "solid", size = 1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = batched_pct_anosmia_ageusia_smooth_low, 
+                  ymax = batched_pct_anosmia_ageusia_smooth_high), 
+              alpha = 0.1, color = "red", size = 0.1, fill = "red") +
+  geom_line(aes(y = batched_pct_cli_smooth, colour = "Batched CLI (smooth)"), 
+            linetype = "solid", size =1, alpha = 0.6) +
+  geom_ribbon(aes(ymin = batched_pct_cli_smooth_low, 
+                  ymax = batched_pct_cli_smooth_high), 
+              alpha = 0.1, color = "blue", size = 0.1, fill = "blue") +
+  geom_point(aes(y = pct_cli, colour = "CLI"), alpha = 0.5, size = 2) +
+  geom_point(aes(y = pct_cli_smooth, colour = "d = population / batch size"), alpha = 0) +
+  theme_bw() +
+  scale_colour_manual(values = c("red", "red", "blue", "blue", "black"),
+                      guide = guide_legend(override.aes = list(
+                        linetype = c("blank", "solid", "solid", "blank" , "blank"),
+                        shape = c(1, NA, NA, 1, NA)))) +
+  xlab("Date") + ylab("% cases") + ggtitle(country) +
+  theme(legend.position = "bottom")
+p2.1
+ggsave(plot = p2.1, 
+       filename =  "../data/estimates-umd-batches/ES/plots_by_batch_size/ES-country_cli_vs_anosmia_batch_size_1000.png", 
+       width = 9, height = 6)
+
 
 p3 <- ggplot(data = df_out, aes(x = date, colour = Legend)) +
   facet_wrap( ~ d, scales = "free_y" ) +
