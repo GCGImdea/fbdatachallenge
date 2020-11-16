@@ -46,9 +46,13 @@ end_date <- "2020-11-02"
                 # geom_line(data=dt_CCFR_US, aes(y = 100*cum_cases/population, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidente", title = "CCFR-based Estimates vs Confirmed Cumulative Incidence",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidence", title = "CCFR vs Confirmed Cumulative",  colour = "") +
                 scale_color_manual(values = colors) + 
-                theme(legend.position = "bottom") 
+                theme(legend.position = "bottom",
+                      legend.text = element_text(size = 20),
+                      axis.text=element_text(size=20),
+                      axis.title =element_text(size=20),
+                      title=element_text(size=20))
         print(p1)
         
         # Save the file.
@@ -90,9 +94,13 @@ end_date <- "2020-11-02"
                 # geom_line(data=dt_NSUM_US, aes(y = 100*p_cases, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidente", title = "NSUM Estimates of Cumulative Incidence",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidence", title = "NSUM Estimates",  colour = "") +
                 scale_color_manual(values = colors) + 
-                theme(legend.position = "bottom") 
+                theme(legend.position = "bottom",
+                      legend.text = element_text(size = 20),
+                      axis.text=element_text(size=20),
+                      axis.title =element_text(size=20),
+                      title=element_text(size=20))
         print(p1)
         
         # Save the file.
@@ -121,9 +129,13 @@ end_date <- "2020-11-02"
                 # geom_line(data=dt_NSUM_US, aes(y = 100*p_NSUM_infected, colour = "USA"), size =1, linetype = "solid") + 
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidente", title = "NSUM vs CCFR Estimates of Cumulative Incidence",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidence", title = "NSUM vs CCFR Estimates",  colour = "") +
                 scale_color_manual(values = colors) + 
-                theme(legend.position = "bottom") 
+                theme(legend.position = "bottom",
+                      legend.text = element_text(size = 20),
+                      axis.text=element_text(size=20),
+                      axis.title =element_text(size=20),
+                      title=element_text(size=20)) 
         print(p1)
         
         # Save the file.
