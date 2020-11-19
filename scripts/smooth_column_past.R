@@ -49,6 +49,8 @@ smooth_column_past <- function(df_in, col_s, basis_dim = 15, link_in = "identity
     smoothed$y_smooth[i] <- aux$y_smooth[i]
     smoothed$y_smooth_low[i] <- aux$y_smooth_low[i]
     smoothed$y_smooth_high[i]  <- aux$y_smooth_high[i]
+    # # Change data to smoothed value to future use
+    # to_smooth$y[i] <- aux$y_smooth[i]
   }
   
   # introduce new data into input-data frame:

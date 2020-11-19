@@ -1,0 +1,115 @@
+## Libraries
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+## Smoothing the estimated active cases
+
+source("smooth_column_past.R")
+smooth_param <- 15
+
+file_in_path <- "../data/estimates-umd-batches/"
+file_in <- "_UMD_country_data.csv"
+file_out_path <- "../data/estimates-umd-batches/PlotData/"
+file_out <- "_UMD_country_past_smooth.csv"
+
+countries <- c("ES", "BR")
+
+pct_excluded <- c("pct_wear_mask_some_time", 
+                  "pct_chills",
+                  "pct_finances_very_worried",
+                  "pct_finances_somewhat_worried",
+                  "pct_finances_notToo_worried",
+                  "pct_finances_not_worried"
+                  )
+pct_to_smooth1 <- c("pct_cli",
+                       "pct_ili",
+                       "pct_fever",
+                       "pct_cough",
+                       "pct_difficulty_breathing",
+                       "pct_fatigue",
+                       "pct_stuffy_runny_nose",
+                       "pct_aches_muscle_pain",
+                       "pct_sore_throat",
+                       "pct_chest_pain",
+                       "pct_nausea",
+                       "pct_anosmia_ageusia",
+                       "pct_eye_pain",
+                       "pct_headache",
+                       "pct_cmnty_sick",
+                       "pct_ever_tested",
+                       "pct_tested_recently",
+                       "pct_worked_outside_home",
+                       "pct_grocery_outside_home",
+                       "pct_ate_outside_home",
+                       "pct_spent_time_with_non_hh",
+                       "pct_attended_public_event",
+                       "pct_used_public_transit",
+                       "pct_direct_contact_with_non_hh",
+                       "pct_wear_mask_all_time",
+                       "pct_wear_mask_most_time",
+                       "pct_wear_mask_half_time",
+                       # "pct_wear_mask_some_time",
+                       "pct_wear_mask_none_time",
+                       "pct_no_public")
+pct_to_smooth2 <- c("pct_feel_nervous_all_time",
+                       "pct_feel_nervous_most_time",
+                       "pct_feel_nervous_some_time",
+                       "pct_feel_nervous_little_time",
+                       "pct_feel_nervous_none_time",
+                       "pct_feel_depressed_all_time",
+                       "pct_feel_depressed_most_time",
+                       "pct_feel_depressed_some_time",
+                       "pct_feel_depressed_little_time",
+                       "pct_feel_depressed_none_time",
+                       "pct_worried_ill_covid19_very",
+                       "pct_worried_ill_covid19_somewhat",
+                       "pct_worried_ill_covid19_notTooWorried",
+                       "pct_worried_ill_covid19_notWorried",
+                       "pct_enough_toEat_very_worried",
+                       "pct_enough_toEat_somewhat_worried",
+                       "pct_enough_toEat_notToo_worried",
+                       "pct_enough_toEat_not_worried")
+                       # "pct_chills",
+                       # "pct_finances_very_worried",
+                       # "pct_finances_somewhat_worried",
+                       # "pct_finances_notToo_worried",
+                       # "pct_finances_not_worried")
+
+
+for (country in countries){
+  cat("Country:", country, "\n")
+  ## Load data ----
+  dt <- read.csv(paste0(file_in_path, country, "/", country, file_in),
+                 fileEncoding = "UTF-8")
+  dt$date <- as.Date(dt$date)
+  
+  dt0 <- dt %>% select(date, total_responses, population)
+  dt1 <- dt %>% select(date, all_of(pct_to_smooth1))
+  dt2 <- dt %>% select(date, all_of(pct_to_smooth2))
+  dtn <- dt %>% select(date, all_of(pct_excluded))
+  for (pct in pct_to_smooth1){
+    cat("Signal:", pct, "\n")
+    dt1 <- smooth_column_past(df_in = dt1, 
+                      col_s =  pct, 
+                      basis_dim = smooth_param,
+                      link_in = "log",
+                      monotone = F)
+  }
+  
+  for (pct in pct_to_smooth2){
+    cat("Signal:", pct, "\n")
+    dt2 <- smooth_column_past(df_in = dt2, 
+                              col_s =  pct, 
+                              basis_dim = smooth_param,
+                              link_in = "log",
+                              monotone = F)
+  }
+  
+  dt_out <- merge(dt0, dt1, by="date")
+  dt_out <- merge(dt_out, dt2, by="date")
+  dt_out <- merge(dt_out, dtn, by="date")
+  write.csv(dt_out, paste0(file_out_path, country, file_out),
+            row.names = FALSE)
+  # plot(dt$date, dt$pct_ili_past_smooth)
+}
