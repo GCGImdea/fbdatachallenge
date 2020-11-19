@@ -3,6 +3,8 @@ library(dplyr)
 
 source("smooth_column-v2.R")
 
+min_vals <- 5
+
 ## Functions ----
 smooth_column_past <- function(df_in, col_s, basis_dim = 15, link_in = "identity", monotone = F){
   
@@ -31,33 +33,35 @@ smooth_column_past <- function(df_in, col_s, basis_dim = 15, link_in = "identity
     }
   )
   
-  to.smooth <- df_in
-  colnames(to.smooth)[colnames(to.smooth) == col_s] = "y"
+  to_smooth <- df_in
+  colnames(to_smooth)[colnames(to_smooth) == col_s] = "y"
+  to_smooth <- to_smooth %>% select(date, y)
   
-  smoothed <- data.frame(date=df_in$date)
-  smoothed$y_smooth <- smoothed$y
-  smoothed$y_smooth_low <- smoothed$y
-  smoothed$y_smooth_high <- smoothed$y
-  
-  for (i in basis_dim:nrow(to.smooth)){
-    aux <- to.smooth[1:i,]
-    smooth_column(aux, "y", basis_dim, link_in, monotone)
+  smoothed <- data.frame(date=to_smooth$date,
+                         y_smooth=to_smooth$y,
+                         y_smooth_low=to_smooth$y,
+                         y_smooth_high=to_smooth$y)
+
+  for (i in min_vals:nrow(to_smooth)){
+
+    aux <- to_smooth %>% slice(1:i)
+    aux <- smooth_column(aux, "y", min(i,basis_dim), link_in, monotone)
     smoothed$y_smooth[i] <- aux$y_smooth[i]
     smoothed$y_smooth_low[i] <- aux$y_smooth_low[i]
-    smoothed$y_smooth_high[i] <- aux$y_smooth_high[i]
+    smoothed$y_smooth_high[i]  <- aux$y_smooth_high[i]
   }
   
   # introduce new data into input-data frame:
   df_in <- full_join(df_in, smoothed, by = "date")
   
   # change to column "xxx_smooth":
-  colnames(df_in)[colnames(df_in) == "y_smooth"] <- paste0(col_s, "_smooth")
-  colnames(df_in)[colnames(df_in) == "y_smooth_low"] <- paste0(col_s, "_smooth_low")
-  colnames(df_in)[colnames(df_in) == "y_smooth_high"] <- paste0(col_s, "_smooth_high")
+  colnames(df_in)[colnames(df_in) == "y_smooth"] <- paste0(col_s, "_past_smooth")
+  colnames(df_in)[colnames(df_in) == "y_smooth_low"] <- paste0(col_s, "_past_smooth_low")
+  colnames(df_in)[colnames(df_in) == "y_smooth_high"] <- paste0(col_s, "_past_smooth_high")
   
   return(df_in)
 }
 
-kk <- data.frame(date=1:200, value = sample(1:100, 200, replace=TRUE))
-kk <- smooth_column_past(kk, "value")
-plot(kk$value_smooth)
+# kk <- data.frame(date=1:200, value = sample(1:10, 200, replace=TRUE))
+# kk <- smooth_column_past(kk, "value", basis_dim = 15, link_in = "log", monotone = F)
+# plot(kk$date, kk$value_past_smooth)
