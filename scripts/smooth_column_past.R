@@ -3,10 +3,10 @@ library(dplyr)
 
 source("smooth_column-v2.R")
 
-min_vals <- 5
-
 ## Functions ----
 smooth_column_past <- function(df_in, col_s, basis_dim = 15, link_in = "identity", monotone = F){
+
+  min_vals <- basis_dim
   
   ## Column smoother using the packages "mgcv/scam":
   ##
@@ -42,6 +42,13 @@ smooth_column_past <- function(df_in, col_s, basis_dim = 15, link_in = "identity
                          y_smooth_low=to_smooth$y,
                          y_smooth_high=to_smooth$y)
 
+  # non-NA elements to be smoothed:
+  first_non_NA <- min(which(!is.na(to_smooth$y)))
+  # first non zero element to be smoothed:
+  frst_n_zero <- min( which( to_smooth$y!=0 ) )
+  
+  min_vals <- max(first_non_NA,frst_n_zero)+min_vals
+  
   for (i in min_vals:nrow(to_smooth)){
 
     aux <- to_smooth %>% slice(1:i)
