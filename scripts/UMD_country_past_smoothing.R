@@ -69,8 +69,7 @@ pct_to_smooth <- c("pct_cli",
                     "pct_finances_very_worried",
                     "pct_finances_somewhat_worried",
                     "pct_finances_notToo_worried",
-                    "pct_finances_not_worried"
-                    )
+                    "pct_finances_not_worried")
 
 for (country in countries){
   cat("Country:", country, "\n")
@@ -89,7 +88,8 @@ for (country in countries){
                       col_s =  pct, 
                       basis_dim = smooth_param,
                       link_in = "log",
-                      monotone = F)
+                      monotone = F,
+                      conf_interval = F)
   }
   
   dt_out <- merge(dt0, dt1, by="date")
