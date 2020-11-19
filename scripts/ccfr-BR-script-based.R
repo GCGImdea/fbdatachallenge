@@ -141,6 +141,15 @@ plot_estimates <- function(region_code = "BRAC",
     dt$cases_active <- NA
   }
   
+  #deaths previous week
+  if (nrow(dt) >= 7){
+    dt$deaths_prev_week <- cumsum(c(dt$deaths[1:7],
+                                    diff(dt$deaths, lag = 7)))
+  }
+  else {
+    dt$deaths_prev_week <- NA
+  }
+  
   #undetected active cases
   # undetected_daily_estimate <-  dt$cases_daily - dt$cases
   # dt$cases_active_undected <- cumsum(c(undetected_daily_estimate[1:ac_window],
@@ -155,7 +164,7 @@ plot_estimates <- function(region_code = "BRAC",
   
   dt_w <- dt %>% 
     select("date", "regioncode", "population", "cases", "deaths", "cum_cases",
-           "cum_deaths", "cases_infected", "cases_infected_low", "cases_infected_high",
+           "cum_deaths", "deaths_prev_week", "cases_infected", "cases_infected_low", "cases_infected_high",
            "cases_daily", "cases_contagious", "cases_active", 
            "p_cases_infected", "p_cases_infected_low", "p_cases_infected_high", 
            "p_cases_daily", "p_cases_contagious", "p_cases_active")

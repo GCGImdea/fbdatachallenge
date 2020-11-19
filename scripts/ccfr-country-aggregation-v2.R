@@ -15,6 +15,7 @@ agg_ccfr <- function(country_code = c("ES", "BR")){
               deaths = sum(deaths, na.rm = T),
               cum_cases = sum(cum_cases, na.rm = T),
               cum_deaths = sum(cum_deaths, na.rm = T),
+              deaths_prev_week = sum(deaths_prev_week, na.rm = T),
 
               cases_infected = sum(cases_infected, na.rm = T),
               cases_infected_low = sum(cases_infected_low, na.rm = T),

@@ -144,6 +144,14 @@ plot_estimates <- function(region_ine = 1,
     dt$cases_active <- NA
   }
   
+  #deaths previous week
+  if (nrow(dt) >= 7){
+    dt$deaths_prev_week <- cumsum(c(dt$deaths[1:7],
+                                    diff(dt$deaths, lag = 7)))
+  }
+  else {
+    dt$deaths_prev_week <- NA
+  }
   
   #total active cases
   # dt$cases_active <- cumsum(c(dt$cases_daily[1:active_window],
@@ -162,7 +170,7 @@ plot_estimates <- function(region_ine = 1,
   
   dt_w <- dt %>% 
     select("date", "ccaa", "reg_code", "population", "cases", "deaths", "cum_cases", "cum_deaths",
-           "cases_infected", "cases_infected_low", "cases_infected_high",
+           "deaths_prev_week", "cases_infected", "cases_infected_low", "cases_infected_high",
            "cases_daily", "cases_contagious", "cases_active", 
            "p_cases_infected", "p_cases_infected_low", "p_cases_infected_high", 
            "p_cases_daily", "p_cases_contagious", "p_cases_active")
