@@ -99,7 +99,7 @@ for (try_shift in seq(0, 30)) {
                        check_lags(df_deaths, df_umd, 
                                   columns_to_try = c("pct_anosmia_ageusia", 
                                                      "pct_sore_throat", 
-                                                     "pct_fever"), 
+                                                     "pct_fever","pct_cmnty_sick"), 
                                   date_shift = try_shift))
   
 }
