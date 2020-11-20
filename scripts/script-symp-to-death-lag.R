@@ -3,29 +3,24 @@ library(dplyr)
 library(stringr)
 library(zoo) # to use rollmean
 library(ggplot2)
-library(plotly)
+
 ## Load UMD data ----
 
 iso_code_country <- "ES"
 # iso_code_country <- "BR"
-country <- "esp" # "bra" "prt"
-data_df <-  read.csv(paste0("../data/UMD_updated/Full\ Survey\ Data/country/", country , "_country_full.csv"))
-#data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
+
+data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
+
 data_df$date <- as.Date(data_df$date)
-colnames(data_df)
 
 ## remove "..._smooth", "..._high/low"
 df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
-
-#df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]  
-#df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
-#df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
-#df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
-#df_umd <- df_umd*data_df$population[1]/100
-
+df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]  
+df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
+df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
+df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
+df_umd <- df_umd*data_df$population[1]/100
 df_umd$date <- data_df$date
-
-
 
 colnames(df_umd)
 
