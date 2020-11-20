@@ -24,16 +24,29 @@ df_umd$date <- data_df$date
 
 colnames(df_umd)
 
-## Load datadista's number of deaths ----  
+## Load number of deaths ----  
 
 df_deaths <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
   mutate(date = as.Date(date) ) %>% 
-  # mutate(y = rollmean(total_deads, 3, fill = NA)) %>% 
   mutate(y = deaths) %>% 
+  mutate(y = rollmean(y, 7, fill = NA)) %>%
   filter(!is.na(y)) %>% 
-  select(date, y) %>% 
+  select(date, y) %>%
   filter(date <= "2020-11-04")
-
+# 
+# temp_deaths <- df_deaths %>%
+#   select(date, deaths_prev_week) %>%
+#   mutate(date = date - 6, deaths_prev_week_6 = deaths_prev_week/7) %>%
+#   select(date, deaths_prev_week_6)
+# 
+# df_deaths <- left_join(df_deaths, temp_deaths) %>% 
+#   mutate(y = deaths_prev_week_6) %>% 
+#   select(date, y)
+# p1 <- ggplot(temp_deaths, aes(x = date )) +
+#   geom_line(aes(y = y), color ="red") +
+#   geom_line(aes(y = deaths_prev_week/7), color = "blue") +
+# geom_line(aes(y = deaths_prev_week7/7), color = "green")
+# ggplotly(p1)
 
 check_lags <- function(df_response, df_add_regressors, columns_to_try, date_shift = 0){
   
@@ -101,3 +114,14 @@ p <- ggplot(data = all_correls, aes(x = shift, y = correlations, color = signal)
 fig <- ggplotly(p)
 fig
 
+# all_correls_no_moving <- all_correls
+# all_correls_no_moving$signal <- paste0(all_correls_no_moving$signal, "_daily_deaths")
+# 
+# all_correls_no_moving <- rbind(all_correls_no_moving, all_correls)
+# 
+# p <- ggplot(data = all_correls_no_moving, aes(x = shift, y = correlations, color = signal)) +
+#   geom_line(alpha = 0.8) + 
+#   labs(title = iso_code_country) +
+#   theme_light()
+# fig <- ggplotly(p)
+# fig
