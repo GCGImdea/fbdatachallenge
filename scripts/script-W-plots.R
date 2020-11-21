@@ -9,7 +9,7 @@ do_plotting <-function(country ="ES",
                        estimates_path,
                        reach_text){
 
-dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
+dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate-smooth.csv"), as.is = T)
 
 # --- Ploting and saving
 

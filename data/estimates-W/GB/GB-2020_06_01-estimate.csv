@@ -1,0 +1,5 @@
+"countrycode","date","population_country","p_w_country_only","recent_p_w_country_only","sumreach_country","n_obs_country","p_w_country_rhs","sumreach_country_rhs","recent_p_w_country_rhs","recent_sumreach_country_rhs","p_w_country","recent_p_w_country","regioncode","population_region","p_w_regs_only","p_m_regs_only","recent_p_w_regs_only","recent_p_m_regs_only","sumreach_regs","n_obs_regs","p_w_regs","p_m_regs","recent_p_w_regs","recent_p_m_regs"
+"GB",2020-06-01,66796807,0.0204897551224388,NA,2001,30,0.0513208426290207,1635,0,1071,0.0343535692239958,0,"GBENG",56286961,0.0588235294117647,0.0735591397849462,0,0,1071,30,0.0588235294117647,0.0735591397849462,0,0
+"GB",2020-06-01,66796807,0.0204897551224388,NA,2001,30,0.0513208426290207,1635,0,1071,0.0343535692239958,0,"GBNIR",1893667,0,0,0,0,0,0,0,0,0,0
+"GB",2020-06-01,66796807,0.0204897551224388,NA,2001,30,0.0513208426290207,1635,0,1071,0.0343535692239958,0,"GBSCT",5463300,0.0214285714285714,0.0216666666666667,NA,NA,560,12,0.0214285714285714,0.0216666666666667,NA,NA
+"GB",2020-06-01,66796807,0.0204897551224388,NA,2001,30,0.0513208426290207,1635,0,1071,0.0343535692239958,0,"GBWLS",3152879,0,0,NA,NA,4,1,0,0,NA,NA

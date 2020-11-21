@@ -177,14 +177,10 @@ plot_estimates <- function(region_ine = 1,
   
   dir.create(estimates_path, showWarnings = F)
   cat("::- script-ccfr-based: Writing data for", dt$reg_code[1], "::\n")
-  write.csv(dt_w, paste0(estimates_path, dt$reg_code[1], "-estimate.csv"))
+  write.csv(dt_w, paste0(estimates_path, dt$reg_code[1], "-estimate.csv"),
+            row.names = FALSE)
   
-} 
-
-
-
-
-
+}
 
 
 generate_estimates <- function(active_window,
