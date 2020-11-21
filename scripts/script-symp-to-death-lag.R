@@ -4,7 +4,7 @@ library(stringr)
 library(zoo) # to use rollmean
 library(ggplot2)
 
-iso_code_country <- "BR"
+iso_code_country <- "ES"
 
 ## Load UMD regressors ----
 
@@ -107,12 +107,12 @@ check_lags <- function(df_response, df_add_regressors, columns_to_try, date_shif
 all_correls <- data.frame()
 for (try_shift in seq(0, 30)) {
   all_correls <- rbind(all_correls, 
-#                       check_lags(df_deaths, df_umd, 
-#                                  columns_to_try = c("pct_anosmia_ageusia", 
-#                                                     "pct_sore_throat", 
-#                                                     "pct_fever","pct_cmnty_sick"), 
-                        check_lags(df_deaths, df_ccfr,
-                                   columns_to_try = c("cases","cases_daily"),
+                       check_lags(df_deaths, df_umd, 
+                                  columns_to_try = c("pct_anosmia_ageusia", 
+                                                     "pct_sore_throat", 
+                                                     "pct_fever","pct_cmnty_sick"), 
+#                        check_lags(df_deaths, df_ccfr,
+#                                   columns_to_try = c("cases","cases_daily"),
                                   date_shift = try_shift))
   
 }
