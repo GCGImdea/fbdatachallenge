@@ -1,9 +1,11 @@
 library(dplyr)
+
 active_window <- 18
 contagious_window <- 12
 cfr_baseline <- 1.38
 source("smooth_greedy_monotone.R")
 ###################################################################
+
 calculate_ci <- function(p_est, level, pop_size) {
   z <- qnorm(level+(1-level)/2)
   se <- sqrt(p_est*(1-p_est))/sqrt(pop_size)
@@ -178,12 +180,27 @@ plot_estimates <- function(region_code = "BRAC",
 
 #############################
 
+read_gz <- function(broken_link){
+  funny_gunzip <- gzcon(url(broken_link))  
+  funny_gunzip_connection <- readLines(funny_gunzip)
+  dt <- read.csv(textConnection(funny_gunzip_connection), as.is = T)
+  close(funny_gunzip)
+  return(dt)
+}
+
 
 generate_estimates <- function(active_window,
                                cfr_baseline){
   gunzip_link <- "https://data.brasil.io/dataset/covid19/caso_full.csv.gz"
-  #download.file(gunzip_link, destfile = "../data/brazil_io_regional/caso_full.csv.gz")
-  cases_full <- read.csv("../data/brazil_io_regional/caso_full.csv", as.is = T) %>% 
+  # download.file(gunzip_link, destfile = "../data/brazil_io_regional/caso_full.csv.gz")
+  # cases_full <- read.csv("../data/brazil_io_regional/caso_full.csv", as.is = T) %>% 
+  #   filter(place_type == "state") %>% 
+  #   select(date, state, new_confirmed, new_deaths, estimated_population_2019) %>% 
+  #   rename(cases = new_confirmed, 
+  #          deaths = new_deaths, 
+  #          population = estimated_population_2019) %>% 
+  #   mutate(regioncode = paste0("BR", state))
+  cases_full <- read_gz(gunzip_link) %>% 
     filter(place_type == "state") %>% 
     select(date, state, new_confirmed, new_deaths, estimated_population_2019) %>% 
     rename(cases = new_confirmed, 
