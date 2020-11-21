@@ -4,9 +4,10 @@ library(stringr)
 library(zoo) # to use rollmean
 library(ggplot2)
 
-## Load UMD data ----
+iso_code_country <- "BR"
 
-iso_code_country <- "ES"
+## Load UMD regressors ----
+
 # iso_code_country <- "BR"
 
 data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
@@ -23,6 +24,16 @@ df_umd <- df_umd*data_df$population[1]/100
 df_umd$date <- data_df$date
 
 colnames(df_umd)
+
+## Load CCFR regressors
+
+df_ccfr <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+  mutate(date = as.Date(date) )
+
+## Load NSUM regressors TODO
+
+#df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+#  mutate(date = as.Date(date) )  
 
 ## Load number of deaths ----  
 
@@ -96,10 +107,12 @@ check_lags <- function(df_response, df_add_regressors, columns_to_try, date_shif
 all_correls <- data.frame()
 for (try_shift in seq(0, 30)) {
   all_correls <- rbind(all_correls, 
-                       check_lags(df_deaths, df_umd, 
-                                  columns_to_try = c("pct_anosmia_ageusia", 
-                                                     "pct_sore_throat", 
-                                                     "pct_fever","pct_cmnty_sick"), 
+#                       check_lags(df_deaths, df_umd, 
+#                                  columns_to_try = c("pct_anosmia_ageusia", 
+#                                                     "pct_sore_throat", 
+#                                                     "pct_fever","pct_cmnty_sick"), 
+                        check_lags(df_deaths, df_ccfr,
+                                   columns_to_try = c("cases","cases_daily"),
                                   date_shift = try_shift))
   
 }
