@@ -31,9 +31,8 @@ agg_ccfr <- function(country_code = c("ES", "BR")){
   country_est$p_cases_contagious <- country_est$cases_contagious / country_est$population
   country_est$p_cases_active <- country_est$cases_active / country_est$population
   
-  write.csv(country_est, 
-            paste0("../data/estimates-ccfr-based/PlotData/",country_code,
-            "-estimate.csv"))
+  write.csv(country_est, paste0("../data/estimates-ccfr-based/PlotData/", country_code, "-estimate.csv"),
+            row.names = FALSE)
 }
 
 agg_ccfr("ES")

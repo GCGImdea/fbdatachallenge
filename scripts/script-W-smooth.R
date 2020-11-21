@@ -166,7 +166,8 @@ dt$p_active_smooth <- cumsum(c(dt$p_daily_smooth[1:active_window],
 
 dir.create(paste0(estimates_path, "PlotData/"), showWarnings = F)
 cat(paste0("::- script-W: Writing the smoothed region based estimate summary for ", country, "..\n"))
-write.csv(dt, paste0(estimates_path, "PlotData/", country, "-estimate.csv"))
+write.csv(dt, paste0(estimates_path, "PlotData/", country, "-estimate.csv"),
+          row.names = FALSE)
 }
 
 cat("Smoothing ES\n")
