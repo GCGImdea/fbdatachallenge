@@ -6,7 +6,7 @@ library(foreign)
 library(MASS)
 library(ggplot2)
 
-iso_code_country <- "FR"
+iso_code_country <- "PT"
 
 ## Load UMD regressors ----
 
@@ -153,7 +153,7 @@ fig
 #### NEW
 
 
-lag <- 24 # Choose a good lag by looking at max correlations of predictors
+lag <- 30 # Choose a good lag by looking at max correlations of predictors
 
 df_umd$date <- as.Date(df_umd$date) + lag
 rend <- min(max(df_umd$date),max(df_deaths$date))
@@ -186,6 +186,6 @@ pred$date <- future$date
 
 sm <- 3 # optional smooth on prediction output
 
-plot(pred$date,runmed(pred$Y,sm),type="b"); points(df_deaths$date,df_deaths$deaths,pch=19, col="red")
+plot(pred$date,runmed(pred$Y,sm),type="b",pch=19, col="blue",cex=.8); points(df_deaths$date,df_deaths$deaths,pch=19, col="red")
 
 
