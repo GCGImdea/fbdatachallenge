@@ -7,6 +7,7 @@ library(httr)
 try(source("script-confirmed2.R"), silent = T) # Downloads all country cases and deaths from ECDC
 try(source("script-confirmed_ES_datadista.R"), silent = T) # Downloads regional Spanish cases, deaths, hospital and icu from Datadista github
 try(source("script-confirmed-country-aggregation.R"), silent = T) # Aggrgates regional data for the country, when available
+try(source("script-confirmed-hospital.R"), silent = T) # Downloads hospital and ICU occupancy from ECDC
 
 # Compute estimates from the CoronaSurveys responses
 try(source("script-W.R"), silent = T)

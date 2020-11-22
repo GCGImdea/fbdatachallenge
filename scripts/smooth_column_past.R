@@ -12,7 +12,7 @@ smooth_column_past <- function(df_in,
                                conf_interval = F
                                ){
 
-  min_vals <- basis_dim
+  #min_vals <- basis_dim
   
   ## Column smoother using the packages "mgcv/scam":
   ##
@@ -55,8 +55,10 @@ smooth_column_past <- function(df_in,
   first_non_NA <- min(which(!is.na(to_smooth$y)))
   # first non zero element to be smoothed:
   frst_n_zero <- min( which( to_smooth$y!=0 ) )
-  
-  min_vals <- max(first_non_NA,frst_n_zero)+min_vals
+
+  min_vals <- basis_dim + max(first_non_NA,frst_n_zero)
+
+  # min_vals <- basis_dim + min( which( ( (!is.na(to_smooth$y) ) && (to_smooth$y!=0) ) )) 
   
   for (i in min_vals:nrow(to_smooth)){
 
