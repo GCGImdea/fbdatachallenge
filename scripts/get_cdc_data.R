@@ -15,7 +15,7 @@ ac_window <- 18
 dt$cases_active_cdc <- cumsum(c(dt$new_case_cdc[1:ac_window],
                                 diff(dt$new_case_cdc, lag = ac_window)))
 dt$state <- paste0("US", dt$state)
-uscodes <- (read.csv("../data/common_data/regions-tree-population.csv") %>% 
+uscodes <- (read.csv("../data/common-data/regions-tree-population.csv") %>% 
               filter(countrycode == "US"))[, c(2,5)] 
 dt <- left_join(dt, uscodes, by = c("state" = "regioncode"))
 
