@@ -1,6 +1,6 @@
 library(dplyr)
 # for USMA
-uscodes <- (read.csv("../data/common_data/regions-tree-population.csv") %>% 
+uscodes <- (read.csv("../data/common-data/regions-tree-population.csv") %>% 
   filter(countrycode == "US"))[, c(2,5,6)] 
 
 fls <- list.files("../data/csse_covid_19_daily_reports_us", full.names = T)

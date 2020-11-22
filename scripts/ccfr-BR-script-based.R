@@ -209,7 +209,7 @@ generate_estimates <- function(active_window,
     mutate(regioncode = paste0("BR", state))
   
   
-  regsdata <- read.csv("../data/common_data/regions-tree-population.csv", as.is = T) %>% 
+  regsdata <- read.csv("../data/common-data/regions-tree-population.csv", as.is = T) %>% 
     filter(countrycode == "BR") %>% 
     group_by(regioncode) %>% 
     summarise(population = sum(population))

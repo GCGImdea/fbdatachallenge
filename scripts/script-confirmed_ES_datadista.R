@@ -22,7 +22,7 @@ ine_dict <- data.frame(cod_ine = 1:19,
                        reg_code = c("ESAN", "ESAR", "ESAS", "ESIB", "ESCN", "ESCB", "ESCL",
                                     "ESCM", "ESCT", "ESVC", "ESEX", "ESGA", "ESMD",
                                     "ESMC", "ESNC", "ESPV", "ESRI", "ESCE", "ESML"))
-regsdata <- read.csv("../data/common_data/regions-tree-population.csv", as.is = T) %>% 
+regsdata <- read.csv("../data/common-data/regions-tree-population.csv", as.is = T) %>% 
   filter(countrycode == "ES") %>% 
   group_by(regioncode) %>% 
   summarise(population = sum(population))

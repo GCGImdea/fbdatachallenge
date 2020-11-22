@@ -64,7 +64,7 @@ all_pct_to_smooth <- all_pct_to_smooth[1:24]
 print(all_pct_to_smooth)
 
 ## Get region population
-regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv", as.is = T) %>%
+regions_tree <- read.csv(file = "../data/common-data/regions-tree-population.csv", as.is = T) %>%
   filter(countrycode == "BR") %>% 
   group_by(regioncode) %>% 
   summarise(population = sum(population))

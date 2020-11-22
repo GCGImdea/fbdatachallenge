@@ -186,7 +186,7 @@ dt$region[dt$region_agg == "Melilla"] <- "ESMC"
 dt$region[dt$region_agg == "Ceuta y Melilla"] <- "ESCE_ML"
 
 ## Get region population
-regions_tree <- read.csv(file = "../data/common_data/regions-tree-population.csv", as.is = T) %>%
+regions_tree <- read.csv(file = "../data/common-data/regions-tree-population.csv", as.is = T) %>%
   filter(countrycode == country_geoid) %>% 
   group_by(regioncode) %>% 
   summarise(population = sum(population))

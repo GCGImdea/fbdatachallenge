@@ -3,17 +3,24 @@ library(tidyverse)
 library(readxl)
 library(httr)
 
+# Download the data about confirmed cases, deaths, hospital, icu, etc. and accumulate for weeks
+try(source("script-confirmed2.R"), silent = T) # Downloads all country cases and deaths from ECDC
+try(source("script-confirmed_ES_datadista.R"), silent = T) # Downloads regional Spanish cases, deaths, hospital and icu from Datadista github
+try(source("script-confirmed-country-aggregation.R"), silent = T) # Aggrgates regional data for the country, when available
+
 # Compute estimates from the CoronaSurveys responses
 try(source("script-W.R"), silent = T)
 try(source("script-W-dunbar.R"), silent = T)
 try(source("script-W-smooth.R"), silent = T)  # Uses smooth_column-v2.R
 try(source("script-W-plots.R"), silent = T)
 
+# Compute CCFR estimates
 try(source("ccfr-ES-script-based.R"), silent = T)
 try(source("ccfr-BR-script-based.R"), silent = T)
 #try(source("ccfr-country-aggregation.R"), silent = T)   # generates the files data/estimates-ccfr-based/XX-country-ccfr-aggregate-estimate.csv
 try(source("ccfr-country-aggregation-v2.R"), silent = T) #generates the files in data/estimates-ccfr-based/PlotData/XX-estimate-csv
 
+#Plotting combining multiple estimates
 try(source("script-ggplot-cumulative-v2.R"), silent = T)
 #try(source("script-plot-active.R"), silent = T)
 try(source("script-ggplot-active.R"), silent = T)
