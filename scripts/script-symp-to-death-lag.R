@@ -41,8 +41,8 @@ df_ccfr <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccf
 
 ## Load number of deaths ----  
 
-#df_deaths <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
-df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+df_deaths <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+#df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
   mutate(date = as.Date(date) ) %>% 
   mutate(y = deaths) %>% 
   mutate(y = rollmean(y, 1, fill = NA)) %>%
@@ -153,7 +153,7 @@ fig
 #### NEW
 
 
-lag <- 30 # Choose a good lag by looking at max correlations of predictors
+lag <- 22 # Choose a good lag by looking at max correlations of predictors
 
 df_umd$date <- as.Date(df_umd$date) + lag
 rend <- min(max(df_umd$date),max(df_deaths$date))
