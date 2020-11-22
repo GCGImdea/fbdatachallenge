@@ -146,8 +146,7 @@ plot_estimates <- function(region_ine = 1,
   
   #deaths previous week
   if (nrow(dt) >= 7){
-    dt$deaths_prev_week <- cumsum(c(dt$deaths[1:7],
-                                    diff(dt$deaths, lag = 7)))
+    dt$deaths_prev_week <- cumsum(c(dt$deaths[1:7], diff(dt$deaths, lag = 7)))
   }
   else {
     dt$deaths_prev_week <- NA

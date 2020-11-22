@@ -15,10 +15,10 @@ try(source("script-W-smooth.R"), silent = T)  # Uses smooth_column-v2.R
 try(source("script-W-plots.R"), silent = T)
 
 # Compute CCFR estimates
-try(source("ccfr-ES-script-based.R"), silent = T)
-try(source("ccfr-BR-script-based.R"), silent = T)
-#try(source("ccfr-country-aggregation.R"), silent = T)   # generates the files data/estimates-ccfr-based/XX-country-ccfr-aggregate-estimate.csv
-try(source("ccfr-country-aggregation-v2.R"), silent = T) #generates the files in data/estimates-ccfr-based/PlotData/XX-estimate-csv
+try(source("script-ccfr-based3.R"), silent = T) # Generates CCFR estimates for all countries from ECDC data
+try(source("script-ccfr-ES-based.R"), silent = T) # Generates CCFR regional ES estimates from Datadista
+try(source("script-ccfr-BR-based.R"), silent = T) # Generates CCFR regional BR estimates 
+try(source("script-ccfr-country-aggregation-v2.R"), silent = T) # Aggregates regional estimates, when available
 
 #Plotting combining multiple estimates
 try(source("script-ggplot-cumulative-v2.R"), silent = T)

@@ -16,7 +16,7 @@ dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate-smooth.cs
 dt$fecha <- as.Date(dt$date, format = "%Y-%m-%d")
 
 # -- Cummulative
-png(file = paste0(estimates_path, "PlotData/", country, "-cumulative-estimate.png"))
+png(file = paste0(estimates_path, "plots/", country, "-cumulative-estimate.png"))
 
 plot(dt$fecha, dt$p_cases*100, type="l", xlab = "Date", 
      ylab = "% cum. incidence", main = paste0("Cumulative incidence (Reach ", reach_text,")"))
@@ -28,7 +28,7 @@ legend("bottomright", legend=c("Original", "Smoothed"),
 dev.off()
 
 # -- Active cases
-png(file = paste0(estimates_path, "PlotData/", country, "-active-estimate.png"))
+png(file = paste0(estimates_path, "plots/", country, "-active-estimate.png"))
 
 plot(dt$fecha, dt$p_active*100, type="l", xlab = "Date", 
      ylab = "% active cases", main = paste0("Active cases (Reach ", reach_text,")"))
