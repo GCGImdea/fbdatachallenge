@@ -5,6 +5,7 @@ library(zoo) # to use rollmean
 library(foreign)
 library(MASS)
 library(ggplot2)
+library(plotly)
 
 iso_code_country <- "PT"
 
