@@ -6,7 +6,7 @@ library(foreign)
 library(MASS)
 library(ggplot2)
 
-iso_code_country <- "FR"
+iso_code_country <- "IL"
 
 ## Load UMD regressors ----
 
@@ -158,12 +158,13 @@ df_Y <- data.frame(y = df_deaths$y, date = df_deaths$date)
 # ES 7 18 8 7
 # PT 20 20 32 7
 # FR 20 35 30 7
+# IL 12 27 21 7
 
 # Sources
-df_P1 <- data.frame(p = df_umd$pct_cmnty_sick_past_smooth, date = as.Date(df_umd$date) + 20)
-df_P2 <- data.frame(p = df_umd$pct_sore_throat_past_smooth, date = as.Date(df_umd$date) + 35)
+df_P1 <- data.frame(p = df_umd$pct_cmnty_sick_past_smooth, date = as.Date(df_umd$date) + 12)
+df_P2 <- data.frame(p = df_umd$pct_sore_throat_past_smooth, date = as.Date(df_umd$date) + 27)
 #df_P2 <- data.frame(p = df_umd$pct_anosmia_ageusia_past_smooth, date = as.Date(df_umd$date) + 20)
-df_P3 <- data.frame(p = df_umd$pct_fever_past_smooth, date = as.Date(df_umd$date) + 30)
+df_P3 <- data.frame(p = df_umd$pct_fever_past_smooth, date = as.Date(df_umd$date) + 21)
 #df_P4 <- data.frame(p = df_umd$pct_direct_contact_with_non_hh_past_smooth, date = as.Date(df_umd$date) + 7)
 #df_P4 <- df_P3
 df_P4 <- data.frame(p = df_ccfr$cases_contagious, date = as.Date(df_ccfr$date) + 7)
