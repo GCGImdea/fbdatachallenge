@@ -5,7 +5,6 @@ library(zoo) # to use rollmean
 library(foreign)
 library(MASS)
 library(ggplot2)
-library(plotly)
 
 iso_code_country <- "FR"
 
@@ -32,7 +31,7 @@ colnames(df_umd)
 
 #df_ccfr <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
 #  mutate(date = as.Date(date) )
-df_ccfr <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+df_ccfr <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
   mutate(date = as.Date(date) )
   
 ## Load NSUM regressors TODO
@@ -42,7 +41,7 @@ df_ccfr <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccf
 
 ## Load number of deaths ----  
 
-df_deaths <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+df_deaths <- read.csv(paste0("../data/estimates-confirmed/PlotData/", iso_code_country,"-estimate.csv")) %>% 
 #df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
   mutate(date = as.Date(date) ) %>% 
   mutate(y = deaths) %>% 
@@ -152,43 +151,64 @@ fig
 
 #### NEW
 
+# Target
+df_Y <- data.frame(y = df_deaths$y, date = df_deaths$date) 
 
-lag <- 20 # Choose a good lag by looking at max correlations of predictors
+# Lags
+# ES 7 18 8 7
+# PT 20 20 32 7
+# FR 20 35 30 7
 
-df_umd$date <- as.Date(df_umd$date) + lag
-rend <- min(max(df_umd$date),max(df_deaths$date))
-lend <- max(min(df_umd$date),min(df_deaths$date))
+# Sources
+df_P1 <- data.frame(p = df_umd$pct_cmnty_sick_past_smooth, date = as.Date(df_umd$date) + 20)
+df_P2 <- data.frame(p = df_umd$pct_sore_throat_past_smooth, date = as.Date(df_umd$date) + 35)
+#df_P2 <- data.frame(p = df_umd$pct_anosmia_ageusia_past_smooth, date = as.Date(df_umd$date) + 20)
+df_P3 <- data.frame(p = df_umd$pct_fever_past_smooth, date = as.Date(df_umd$date) + 30)
+#df_P4 <- data.frame(p = df_umd$pct_direct_contact_with_non_hh_past_smooth, date = as.Date(df_umd$date) + 7)
+#df_P4 <- df_P3
+df_P4 <- data.frame(p = df_ccfr$cases_contagious, date = as.Date(df_ccfr$date) + 7)
+
+
+p_rend <- min(max(df_P1$date),max(df_P2$date),max(df_P3$date),max(df_P4$date))
+p_lend <- max(min(df_P1$date),min(df_P2$date),min(df_P3$date),min(df_P4$date))
+rend <- min(p_rend,max(df_Y$date))
+lend <- max(p_lend,min(df_Y$date))
 #rend <- as.Date("2020-09-01")
-df_umd_ss <- df_umd %>% 
-  filter(date <= rend) %>%
-  filter(date >= lend)
-df_deaths_ss <- df_deaths %>% 
-  filter(date <= rend) %>%
-  filter(date >= lend)
 
-length(df_deaths_ss$y)
-dados<-data.frame(Y=df_deaths_ss$y, 
-                  P1=df_umd_ss$pct_cmnty_sick_past_smooth, 
-                  P2=df_umd_ss$pct_anosmia_ageusia_past_smooth,
-                  P3=df_umd_ss$pct_fever_past_smooth,
-                  P4=df_umd_ss$pct_sore_throat_past_smooth,
-                  P5=df_umd_ss$pct_direct_contact_with_non_hh_past_smooth
+# Make sure we restrict to days we have all signals
+df_P1 <- df_P1 %>% filter(date <= p_rend) %>% filter(date >= p_lend)
+df_P2 <- df_P2 %>% filter(date <= p_rend) %>% filter(date >= p_lend)
+df_P3 <- df_P3 %>% filter(date <= p_rend) %>% filter(date >= p_lend)
+df_P4 <- df_P4 %>% filter(date <= p_rend) %>% filter(date >= p_lend)
+
+# Combine
+df_P <- data.frame( P1 = df_P1$p, P2 = df_P2$p, P3 = df_P3$p, P4 = df_P4$p, date = df_P1$date) 
+
+# Further restrict fro training
+df_P_ss <- df_P %>% filter(date <= rend) %>% filter(date >= lend)
+
+df_Y_ss <- df_Y %>% filter(date <= rend) %>%filter(date >= lend)
+
+dados<-data.frame(Y=df_Y_ss$y, 
+                  P1=df_P_ss$P1,
+                  P2=df_P_ss$P2,
+                  P3=df_P_ss$P3,
+                  P4=df_P_ss$P4
                   )
 
-length(df_deaths_ss$y); lend; rend;
+length(df_Y_ss$y); lend; rend;
 
-summary(m1 <- glm.nb(Y ~ P1 + P2, data = dados))
+summary(m1 <- glm.nb(Y ~ P1 + P2 + P3 + P4, data = dados))
 
 names(m1)
 
-future <- df_umd #%>% filter(date > rend+1)
+pred <- df_P #%>% filter(date > rend+1)
 
-pred <- data.frame(P1 = future$pct_cmnty_sick_past_smooth, P2 = future$pct_anosmia_ageusia_past_smooth, P3 = future$pct_fever_past_smooth, P4=future$pct_sore_throat_past_smooth, P5 = future$pct_direct_contact_with_non_hh_past_smooth)
 pred$Y <- predict(m1, pred, type = "response")
-pred$date <- future$date
+pred$date <- df_P$date
 
-sm <- 3 # optional smooth on prediction output
+sm <- 1 # optional smooth on prediction output
 
-plot(pred$date,runmed(pred$Y,sm),type="b",pch=19, col="blue",cex=.8); points(df_deaths$date,df_deaths$deaths,type="b",pch=19, col="red")
-
+plot(pred$date,runmed(pred$Y,sm),type="b",pch=19, col="blue",cex=.8); points(df_Y$date,df_Y$y,type="b",pch=19, col="red")
+title(main=iso_code_country )
 
