@@ -10,8 +10,8 @@ try(source("script-confirmed-country-aggregation.R"), silent = T) # Aggrgates re
 try(source("script-confirmed-hospital.R"), silent = T) # Downloads hospital and ICU occupancy from ECDC
 
 # Compute estimates from the CoronaSurveys responses
-try(source("script-W.R"), silent = T)
-try(source("script-W-dunbar.R"), silent = T)
+try(source("script-W-v2.R"), silent = T)
+#try(source("script-W-dunbar.R"), silent = T)
 try(source("script-W-smooth.R"), silent = T)  # Uses smooth_column-v2.R
 try(source("script-W-plots.R"), silent = T)
 

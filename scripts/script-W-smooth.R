@@ -2,6 +2,7 @@ library(dplyr)
 
 # smoothed p_cases and CI:
 source("smooth_column-v2.R")
+source("smooth_column_past.R")
 
 smooth_param <- 15
 active_window <- 18 #https://patient.info/news-and-features/coronavirus-how-quickly-do-covid-19-symptoms-develop-and-how-long-do-they-last
@@ -29,20 +30,53 @@ do_smoothing <- function(country = "ES",
     # dt <- smooth_column_cum(dt, "p_cases", smooth_param)
     # dt <- smooth_column(dt, "p_cases_recent", smooth_param)
     
+    cat("Smoothing p_cases...\n")
+    try(
     dt <- smooth_column(dt, "p_cases", basis_dim = smooth_param, link_in ="log", monotone = T)
+    , silent = F)
+    cat("Smoothing p_cases...\n")
+    try(
+    dt <- smooth_column_past(dt, "p_cases", basis_dim = smooth_param, link_in ="log", monotone = T)
+    , silent = F)
+    
+    cat("Smoothing p_cases_fatalities...\n")
+    try(
+    dt <- smooth_column(dt, "p_cases_fatalities", basis_dim = smooth_param, link_in ="log", monotone = T)
+    , silent = F)
+    cat("Smoothing p_cases_fatalities...\n")
+    try(
+    dt <- smooth_column_past(dt, "p_cases_fatalities", basis_dim = smooth_param, link_in ="log", monotone = T)
+    , silent = F)
+
+    cat("Smoothing p_cases_recent...\n")
+    try(
     dt <- smooth_column(dt, "p_cases_recent", basis_dim = smooth_param, link_in ="log", monotone = F)
+    , silent = F)
+    cat("Smoothing p_cases_recent...\n")
+    try(
+    dt <- smooth_column_past(dt, "p_cases_recent", basis_dim = smooth_param, link_in ="log", monotone = F)
+    , silent = F)
+    
+    cat("Smoothing p_cases_stillsick...\n")
+    try(
+    dt <- smooth_column(dt, "p_cases_stillsick", basis_dim = smooth_param, link_in ="log", monotone = F)
+    , silent = F)
+    cat("Smoothing p_cases_stillsick...\n")
+    try(
+    dt <- smooth_column_past(dt, "p_cases_stillsick", basis_dim = smooth_param, link_in ="log", monotone = F)
+    , silent = F)
     
     # --- Computing the daily differences of cases
     
-    dt$p_daily <- c(0 , diff(dt$p_cases))
-    dt[["p_cases_smooth"]][is.na(dt[["p_cases_smooth"]])] <- 0
-    dt$p_daily_smooth <- c(0 , diff(dt$p_cases_smooth))
-    
-    #total active cases
-    dt$p_active <- cumsum(c(dt$p_daily[1:active_window],
-                            diff(dt$p_daily, lag = active_window)))
-    dt$p_active_smooth <- cumsum(c(dt$p_daily_smooth[1:active_window],
-                                   diff(dt$p_daily_smooth, lag = active_window)))
+    # dt$p_daily <- c(0 , diff(dt$p_cases))
+    # dt[["p_cases_smooth"]][is.na(dt[["p_cases_smooth"]])] <- 0
+    # dt$p_daily_smooth <- c(0 , diff(dt$p_cases_smooth))
+    # 
+    # #total active cases
+    # dt$p_active <- cumsum(c(dt$p_daily[1:active_window],
+    #                         diff(dt$p_daily, lag = active_window)))
+    # dt$p_active_smooth <- cumsum(c(dt$p_daily_smooth[1:active_window],
+    #                                diff(dt$p_daily_smooth, lag = active_window)))
     # --- Saving new data
     
     dir.create(paste0(estimates_path, "PlotData/"), showWarnings = F)
@@ -52,9 +86,13 @@ do_smoothing <- function(country = "ES",
   }
 }
 
-interest <- c("BR", "CL", "CY", "DE", "EC", "FR", "GB", "PT", "US", "ES", "IT", "UA")
+interest <- c("US", "ES", "BR", "DE", "EC", "PT", "FR", "IT", "GB", "CY", "CL", "UA")
 dd <- sapply(interest, do_smoothing, estimates_path = path_W)
-dd <- sapply(interest, do_smoothing, estimates_path = path_W_dunbar)
+# dd <- sapply(interest, do_smoothing, estimates_path = path_W_dunbar)
+
+
+
+
 
 # cat("Smoothing ES\n")
 # do_smoothing("ES", path_W)

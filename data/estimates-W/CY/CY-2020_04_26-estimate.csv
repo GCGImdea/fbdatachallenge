@@ -1,7 +1,7 @@
-"countrycode","date","population_country","p_w_country_only","recent_p_w_country_only","sumreach_country","n_obs_country","p_w_country_rhs","sumreach_country_rhs","recent_p_w_country_rhs","recent_sumreach_country_rhs","p_w_country","recent_p_w_country","regioncode","population_region","p_w_regs_only","p_m_regs_only","recent_p_w_regs_only","recent_p_m_regs_only","sumreach_regs","n_obs_regs","p_w_regs","p_m_regs","recent_p_w_regs","recent_p_m_regs"
-"CY",2020-04-26,949477,0.0111788617886179,NA,984,30,0,0,0,0,0.0111788617886179,0,"CY01",341700,0,0,0,0,0,0,0,0,0,0
-"CY",2020-04-26,949477,0.0111788617886179,NA,984,30,0,0,0,0,0.0111788617886179,0,"CY02",244900,0,0,0,0,0,0,0,0,0,0
-"CY",2020-04-26,949477,0.0111788617886179,NA,984,30,0,0,0,0,0.0111788617886179,0,"CY03",147000,0,0,0,0,0,0,0,0,0,0
-"CY",2020-04-26,949477,0.0111788617886179,NA,984,30,0,0,0,0,0.0111788617886179,0,"CY04",48200,0,0,0,0,0,0,0,0,0,0
-"CY",2020-04-26,949477,0.0111788617886179,NA,984,30,0,0,0,0,0.0111788617886179,0,"CY05",94100,0,0,0,0,0,0,0,0,0,0
-"CY",2020-04-26,949477,0.0111788617886179,NA,984,30,0,0,0,0,0.0111788617886179,0,"CY06",73577,0,0,0,0,0,0,0,0,0,0
+"countrycode","date","population_country","p_w_country_only","recent_p_w_country_only","fatalities_p_w_country_only","stillsick_p_w_country_only","sumreach_country","n_obs_country","p_w_country_rhs","sumreach_country_rhs","recent_p_w_country_rhs","fatalities_p_w_country_rhs","stillsick_p_w_country_rhs","recent_sumreach_country_rhs","p_w_country","recent_p_w_country","fatalities_p_w_country","stillsick_p_w_country","regioncode","population_region","p_w_regs_only","p_m_regs_only","recent_p_w_regs_only","recent_p_m_regs_only","fatalities_p_w_regs_only","fatalities_p_m_regs_only","stillsick_p_w_regs_only","stillsick_p_m_regs_only","sumreach_regs","n_obs_regs","p_w_regs","p_m_regs","recent_p_w_regs","recent_p_m_regs","fatalities_p_w_regs","fatalities_p_m_regs","stillsick_p_w_regs","stillsick_p_m_regs"
+"CY",2020-04-26,949477,0.0111788617886179,NA,NA,NA,984,30,0,0,0,0,0,0,0.0111788617886179,0,0,0,"CY01",341700,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+"CY",2020-04-26,949477,0.0111788617886179,NA,NA,NA,984,30,0,0,0,0,0,0,0.0111788617886179,0,0,0,"CY02",244900,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+"CY",2020-04-26,949477,0.0111788617886179,NA,NA,NA,984,30,0,0,0,0,0,0,0.0111788617886179,0,0,0,"CY03",147000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+"CY",2020-04-26,949477,0.0111788617886179,NA,NA,NA,984,30,0,0,0,0,0,0,0.0111788617886179,0,0,0,"CY04",48200,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+"CY",2020-04-26,949477,0.0111788617886179,NA,NA,NA,984,30,0,0,0,0,0,0,0.0111788617886179,0,0,0,"CY05",94100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+"CY",2020-04-26,949477,0.0111788617886179,NA,NA,NA,984,30,0,0,0,0,0,0,0.0111788617886179,0,0,0,"CY06",73577,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
