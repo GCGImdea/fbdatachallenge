@@ -32,7 +32,7 @@ colnames(df_umd)
 
 #df_ccfr <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
 #  mutate(date = as.Date(date) )
-df_ccfr <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
+df_ccfr <- read.csv(paste0("https://raw.githubusercontent.com/GCGImdea/coronasurveys/master/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>% 
   mutate(date = as.Date(date) )
   
 ## Load NSUM regressors TODO
@@ -128,13 +128,14 @@ for (try_shift in seq(0, 2*30)) {
 
 head(all_correls)
 
-p <- ggplot(data = all_correls, aes(x = shift, y = correlations, color = signal)) +
+p1 <- ggplot(data = all_correls, aes(x = shift, y = correlations, color = signal)) +
   geom_line(alpha = 0.8) + 
   ylim(-1,1) +
 #  ylim(0,0.05) +
   labs(title = iso_code_country) +
   theme_light()
-fig <- ggplotly(p)
+print(p1)
+fig <- ggplotly(p1)
 fig
 
 # all_correls_no_moving <- all_correls
@@ -191,4 +192,39 @@ sm <- 3 # optional smooth on prediction output
 
 plot(pred$date,runmed(pred$Y,sm),type="b",pch=19, col="blue",cex=.8); points(df_deaths$date,df_deaths$deaths,type="b",pch=19, col="red")
 
+## Plot + CI ----
+## grad the inverse link function
+ilink <- family(m1)$linkinv
+## add fit and se.fit on the **link** scale
+pred <- bind_cols(pred, setNames(as_tibble(predict(m1, pred, se.fit = TRUE)[1:2]),
+                                   c('fit_link','se_link')))
+## create the interval and backtransform
+pred <- mutate(pred,
+                fit_resp  = ilink(fit_link),
+                right_upr = ilink(fit_link + (2 * se_link)),
+                right_lwr = ilink(fit_link - (2 * se_link)))
 
+## show
+head(pred)
+
+## join with official deaths
+
+df_plot <- pred %>% 
+  left_join(df_deaths, by = "date") %>% 
+  select(date, deaths, fit_resp, right_upr, right_lwr)
+
+my_colors <- c("Official" = "red", 
+            "Estimated" = "blue")
+
+p2 <- ggplot(data = df_plot, aes(x = date) ) +
+  geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
+  geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
+  geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
+              alpha = 0.1, fill = my_colors["Estimated"]) +
+  geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
+  geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
+  scale_color_manual(values = my_colors) +
+  labs(x = "Date", y =  "Number of deaths", title = iso_code_country,  colour = "") +
+  theme_light(base_size = 15) +
+  theme(legend.position="bottom")
+print(p2)
