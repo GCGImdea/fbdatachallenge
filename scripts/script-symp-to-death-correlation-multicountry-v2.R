@@ -243,12 +243,12 @@ for (file in files) {
     
     # contruct a single data frame with response and regressors:
     df_glm <- df_deaths %>% 
-      select(date, deaths)
+      dplyr::select(date, deaths)
     
     for (indep_var in unique(opt_correl_single_country$signal)) {
       
       df_indep_var_temp <- df_umd %>% 
-        select(date, all_of(indep_var)) %>% 
+        dplyr::select(date, all_of(indep_var)) %>% 
         mutate(date = date + 
                  opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var]
                )
@@ -257,6 +257,17 @@ for (file in files) {
     }
     # get only complete cases (remove rows with NAs)
     df_glm <- df_glm[complete.cases(df_glm), ]
+    
+    # # Lasso GLM-Negative Binomial:
+    # library(mpath)
+    # # m_lasso <- glmregNB(deaths ~ . -date , data = df_glm, parallel=TRUE, n.cores=2)
+    # cv_lasso <- cv.glmregNB(deaths ~ . -date , data = df_glm, parallel=TRUE, n.cores=2)
+    # coef(cv_lasso)
+    # 
+    # m_lasso <- glmregNB(deaths ~ . -date, lambda = cv_lasso$lambda.optim,
+    #                     data = df_glm, parallel=TRUE, n.cores=2)
+    # coef(m_lasso)
+    # m1<- m_lasso
     
     # fit model (DO NOT USE DATE!!!):
     m1 <- glm.nb(deaths ~ . -date , data = df_glm)
@@ -275,9 +286,48 @@ for (file in files) {
     df_glm <- bind_cols(df_glm, setNames(as_tibble(predict(m1, se.fit = TRUE)[1:2]),
                                      c('fit_link','se_link'))) %>% 
       mutate(fit_resp  = ilink(fit_link),
-             right_upr = ilink(fit_link + (2 * se_link)),
-             right_lwr = ilink(fit_link - (2 * se_link)))
-      
+             fit_resp_upr = ilink(fit_link + (2 * se_link)),
+             fit_resp_lwr = ilink(fit_link - (2 * se_link)))
+    
+    # get the coefficients
+    m1_coef <- m1[["coefficients"]]
+    
+    # construct a data frame to save results 
+    # (original data, coeffs, pvals, AIC, deviance)
+    df_glm_save <- df_glm %>% 
+      dplyr::select(date, 
+                    deaths, 
+                    fit_resp,
+                    fit_resp_upr,
+                    fit_resp_lwr,
+                    names(m1_coef)[-1])
+    
+    # save coefficients as coef_xxx_signal
+    names(m1_coef) <- paste0("coef_", names(m1_coef) )
+    for (each_coef in names(m1_coef)) {
+      df_glm_save[ , each_coef] <- m1_coef[each_coef]
+    }
+    
+    # save p-values as pvals_xxx_signal
+    m1_pvals <- coef(summary(m1))[,4]
+    names(m1_pvals) <- paste0( "pvals_", names(m1_pvals) )
+    for (each_coef in names(m1_pvals)) {
+      df_glm_save[ , each_coef] <- m1_pvals[each_coef]
+    }
+    
+    
+    # save AIC, deviance, null_deviance
+    df_glm_save$aic <- m1[["aic"]]
+    df_glm_save$deviance <- m1[["deviance"]]
+    df_glm_save$null_deviance <- m1[["null.deviance"]]
+    
+    
+    write.csv(x = df_glm_save, file = paste0(
+      "../data/estimates-symptom-lags/PlotData/",
+      iso_code_country,
+      "-deaths-vs-predicted.csv"))
+    
+    ## Some Plots ----
     ## join with official deaths
     my_colors <- c("Official" = "red", 
                    "Estimated" = "blue")
@@ -288,7 +338,7 @@ for (file in files) {
     p_model <- ggplot(data = df_glm, aes(x = date) ) +
       geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
       geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
-      geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
+      geom_ribbon(aes(ymin = fit_resp_lwr, ymax = fit_resp_upr),
                   alpha = 0.1, fill = my_colors["Estimated"]) +
       geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
       geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
@@ -316,3 +366,47 @@ for (file in files) {
 write.csv(opt_correls, file = paste0(
   "../data/estimates-symptom-lags/optimal-lags.csv"
 ))
+
+## Study the stable signals:
+
+files_model_path <- "../data/estimates-symptom-lags/PlotData/"
+files_model <- dir(files_model_path)
+
+stable_regressors <- matrix(0, nrow = length(files_model), ncol = length(columns_to_try))
+colnames(stable_regressors) <- columns_to_try
+rownames(stable_regressors) <- str_sub(files_model, 1, 2)
+
+for (country_model in files_model) {
+  temp <- read.csv(paste0(files_model_path, country_model)) %>% 
+    dplyr::select(!starts_with("pvals")) %>% 
+    dplyr::select(!starts_with("coef")) %>% 
+    dplyr::select(!contains("X")) %>% 
+    dplyr::select(!contains("aic")) %>% 
+    dplyr::select(!contains("deviance")) %>% 
+    dplyr::select(!contains("fit")) %>% 
+    dplyr::select(!contains("deaths")) %>% 
+    dplyr::select(!contains("date")) %>% 
+    colnames()
+  stable_regressors[str_sub(country_model, 1, 2), temp] = 1
+  
+}
+
+times_stable_predictors <- sort(colSums(stable_regressors), decreasing = T)
+
+times_stable_predictors <- tibble(regressor = names(times_stable_predictors),
+                                      times = times_stable_predictors)
+
+head(times_stable_predictors)
+
+
+p_stable <- ggplot(times_stable_predictors, aes(x =regressor, y = times)) +
+  geom_col() +
+  theme_light(base_size = 15) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
+p_stable
+
+ggsave(plot = p_stable, 
+       filename = paste0(
+         "../data/estimates-symptom-lags/stable-regressors.png"
+       ), width = 12, height = 10
+)
