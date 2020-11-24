@@ -5,6 +5,7 @@ library(zoo) # to use rollmean
 library(foreign)
 library(MASS)
 library(ggplot2)
+library(grid) # annotate a ggplot
 
 check_lags <-
   function(df_response,
@@ -65,13 +66,67 @@ check_lags <-
     
   } # end-check_lags
 
-columns_to_try = c(
-  "pct_anosmia_ageusia_past_smooth",
-  "pct_sore_throat_past_smooth",
-  "pct_fever_past_smooth",
-  "pct_cmnty_sick_past_smooth",
-  "pct_direct_contact_with_non_hh_past_smooth"
-)
+# columns_to_try = c(
+#   "pct_anosmia_ageusia_past_smooth",
+#   "pct_sore_throat_past_smooth",
+#   "pct_fever_past_smooth",
+#   "pct_cmnty_sick_past_smooth",
+#   "pct_direct_contact_with_non_hh_past_smooth"
+# )
+
+columns_to_try <- c(# "pct_cli",
+  # "pct_ili",
+  "pct_fever",
+  "pct_cough",
+  "pct_difficulty_breathing",
+  "pct_fatigue",
+  "pct_stuffy_runny_nose",
+  "pct_aches_muscle_pain",
+  "pct_sore_throat",
+  "pct_chest_pain",
+  "pct_nausea",
+  "pct_anosmia_ageusia",
+  "pct_eye_pain",
+  "pct_headache",
+  "pct_cmnty_sick",
+  "pct_ever_tested",
+  "pct_tested_recently",
+  "pct_worked_outside_home",
+  "pct_grocery_outside_home",
+  "pct_ate_outside_home",
+  "pct_spent_time_with_non_hh",
+  "pct_attended_public_event",
+  "pct_used_public_transit",
+  "pct_direct_contact_with_non_hh",
+  "pct_wear_mask_all_time",
+  "pct_wear_mask_most_time",
+  "pct_wear_mask_half_time",
+  "pct_wear_mask_some_time",
+  "pct_wear_mask_none_time",
+  "pct_no_public",
+  "pct_feel_nervous_all_time",
+  "pct_feel_nervous_most_time",
+  "pct_feel_nervous_some_time",
+  "pct_feel_nervous_little_time",
+  "pct_feel_nervous_none_time",
+  "pct_feel_depressed_all_time",
+  "pct_feel_depressed_most_time",
+  "pct_feel_depressed_some_time",
+  "pct_feel_depressed_little_time",
+  "pct_feel_depressed_none_time",
+  "pct_worried_ill_covid19_very",
+  "pct_worried_ill_covid19_somewhat",
+  "pct_worried_ill_covid19_notTooWorried",
+  "pct_worried_ill_covid19_notWorried",
+  "pct_enough_toEat_very_worried",
+  "pct_enough_toEat_somewhat_worried",
+  "pct_enough_toEat_notToo_worried",
+  "pct_enough_toEat_not_worried",
+  "pct_chills",
+  "pct_finances_very_worried",
+  "pct_finances_somewhat_worried",
+  "pct_finances_notToo_worried",
+  "pct_finances_not_worried")
 
 
 file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
@@ -207,6 +262,12 @@ for (file in files) {
     m1 <- glm.nb(deaths ~ . -date , data = df_glm)
     summary(m1)
     
+    # Stepwise regression model
+    m1 <- stepAIC(m1, direction = "both", 
+                          trace = FALSE)
+    summary(m1)
+    m1$anova
+    
     ## Plot + CI
     ## grab the inverse link function
     ilink <- family(m1)$linkinv
@@ -221,6 +282,9 @@ for (file in files) {
     my_colors <- c("Official" = "red", 
                    "Estimated" = "blue")
     
+    # grob <- grobTree(textGrob(, x=0.1,  y=0.95, hjust=0,
+    #                           gp=gpar(col="black", fontsize=13, fontface="italic")))
+    
     p_model <- ggplot(data = df_glm, aes(x = date) ) +
       geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
       geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
@@ -231,7 +295,7 @@ for (file in files) {
       scale_color_manual(values = my_colors) +
       labs(x = "Date", y =  "Number of deaths", title = iso_code_country,  colour = "") +
       theme_light(base_size = 15) +
-      theme(legend.position="bottom")
+      theme(legend.position="bottom") # + annotation_custom(grob)
     # p_model
     ggsave(plot = p_model, 
            filename = paste0(
