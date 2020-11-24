@@ -84,7 +84,7 @@ opt_correls <- data.frame()
 for (file in files) {
   tryCatch({
     iso_code_country <- substr(file, 1, 2)
-    cat("doing ", iso_code_country, "-> \n")
+    cat("doing ", iso_code_country, ": ")
     ## Load UMD regressors ----
     
     #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
@@ -160,6 +160,9 @@ for (file in files) {
       filter(abs(correlations) == max(abs(correlations))) %>% 
       ungroup()
     
+    # opt_correl_single_country <- 
+    #   opt_correl_single_country[-duplicated(opt_correl_single_country[ , c("correlations", "signal")]),]
+    
     # save optimal correlations:
     opt_correl_single_country$country <- iso_code_country
     opt_correls <- rbind(opt_correls, opt_correl_single_country)
@@ -181,13 +184,70 @@ for (file in files) {
            ), width = 10, height = 7
     )
     
+    ## GLM ----
     
+    # contruct a single data frame with response and regressors:
+    df_glm <- df_deaths %>% 
+      select(date, deaths)
+    
+    for (indep_var in unique(opt_correl_single_country$signal)) {
+      
+      df_indep_var_temp <- df_umd %>% 
+        select(date, all_of(indep_var)) %>% 
+        mutate(date = date + 
+                 opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var]
+               )
+      df_glm <- df_glm %>% full_join(df_indep_var_temp, by = "date")
+      
+    }
+    # get only complete cases (remove rows with NAs)
+    df_glm <- df_glm[complete.cases(df_glm), ]
+    
+    # fit model (DO NOT USE DATE!!!):
+    m1 <- glm.nb(deaths ~ . -date , data = df_glm)
+    summary(m1)
+    
+    ## Plot + CI
+    ## grab the inverse link function
+    ilink <- family(m1)$linkinv
+    ## add fit and se.fit on the **link** scale
+    df_glm <- bind_cols(df_glm, setNames(as_tibble(predict(m1, se.fit = TRUE)[1:2]),
+                                     c('fit_link','se_link'))) %>% 
+      mutate(fit_resp  = ilink(fit_link),
+             right_upr = ilink(fit_link + (2 * se_link)),
+             right_lwr = ilink(fit_link - (2 * se_link)))
+      
+    ## join with official deaths
+    my_colors <- c("Official" = "red", 
+                   "Estimated" = "blue")
+    
+    p_model <- ggplot(data = df_glm, aes(x = date) ) +
+      geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
+      geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
+      geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
+                  alpha = 0.1, fill = my_colors["Estimated"]) +
+      geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
+      geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
+      scale_color_manual(values = my_colors) +
+      labs(x = "Date", y =  "Number of deaths", title = iso_code_country,  colour = "") +
+      theme_light(base_size = 15) +
+      theme(legend.position="bottom")
+    # p_model
+    ggsave(plot = p_model, 
+           filename = paste0(
+             "../data/estimates-symptom-lags/Plots-GLM/",
+             iso_code_country,
+             "-deaths-vs-predicted.png"
+           ), width = 10, height = 7
+    )
+    
+    message("succeeded")
   }, error = function(cond) {
     message(paste("error in country", iso_code_country))
   })
 }
 
-glimpse(opt_correls)
+# glimpse(opt_correls)
 
 write.csv(opt_correls, file = paste0(
   "../data/estimates-symptom-lags/optimal-lags.csv"
