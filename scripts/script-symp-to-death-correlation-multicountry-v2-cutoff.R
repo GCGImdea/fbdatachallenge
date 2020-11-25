@@ -13,13 +13,12 @@ check_lags <-
            columns_to_try,
            min_lag = 7,
            max_lag = 60) {
-    
     df_response$date <- as.Date(df_response$date)
     
     df_out <- data.frame()
     
     for (column_in in columns_to_try) {
-      for (date_shift in seq(min_lag,max_lag)) {
+      for (date_shift in seq(min_lag, max_lag)) {
         df_single_symp <- df_add_regressors[, c("date", column_in)]
         
         # time shifting in extra regressors:
@@ -45,9 +44,15 @@ check_lags <-
         
         # correl <-
         #   cor(df_response$y, df_single_symp[, column_in], method = "spearman")
+        print(paste("doing column",column_in, "lag ",date_shift, " response rows ",nrow(df_response), "df_single_symp rows ",nrow(df_response)))
+        print("df response")
+        print (df_response$y)
+        print ("predictor")
+        print(df_single_symp[, column_in])
+        tryCatch({
         corTest <-
           cor.test(df_response$y, df_single_symp[, column_in], method = "spearman")
-        
+     
         df_correl <-
           data.frame(
             shift = date_shift,
@@ -56,7 +61,16 @@ check_lags <-
             win_size = win_size,
             signal = column_in
           )
-        
+      }, error=function(cond){
+        df_correl <-
+          data.frame(
+            shift = date_shift,
+            correlations = 0,
+            pval = 0,
+            win_size = win_size,
+            signal = column_in
+          )
+      })
         df_out <- rbind(df_out, df_correl)
       } # loop-date_shift
     } # loop-column_in
@@ -67,116 +81,159 @@ check_lags <-
   } # end-check_lags
 
 
-doCorrelations <- function(df_deaths, df_umd, columns_to_try, iso_code_country) {
-  ## Correlations ----
-  # compute all correlations for all lags in min_lag to max_lag:
-  correls_single_country <- check_lags(
-    df_response = df_deaths,
-    df_add_regressors = df_umd,
-    columns_to_try = columns_to_try,
-    min_lag = 7,
-    max_lag = 60)
-  
-  # extract lag with significant-maximum correlation by signal:
-  opt_correl_single_country <- correls_single_country %>% 
-    filter(pval <= 0.05) %>% 
-    group_by(signal) %>% 
-    filter(abs(correlations) == max(abs(correlations))) %>% 
-    ungroup()
-  
-  # opt_correl_single_country <- 
-  #   opt_correl_single_country[-duplicated(opt_correl_single_country[ , c("correlations", "signal")]),]
-  
-  # save optimal correlations:
-  opt_correl_single_country$country <- iso_code_country
-  opt_correls <- rbind(opt_correls, opt_correl_single_country)
-  
-  # plot of correlations for single country:
-  ifelse(!dir.exists(file.path("../data/estimates-umd-unbatched/", "Plots")), 
-         dir.create(file.path("../data/estimates-umd-unbatched/", "Plots")), FALSE)
-  p <-
-    ggplot(data = correls_single_country, aes(x = shift, y = correlations, color = signal)) +
-    geom_line(alpha = 0.8) +
-    ylim(-1, 1) +
-    labs(title = iso_code_country) +
-    theme_light()
-  ggsave(plot = p, 
-         filename = paste0(
-           "../data/estimates-symptom-lags/Plots-Correlations/",
-           iso_code_country,
-           "-predictor-correlation.png"
-         ), width = 10, height = 7
-  )
-  return (opt_correl_single_country)
-}
-
-
-doGLM <- function(df_deaths, df_umd, iso_code_country, opt_correl_single_country) {
-  # contruct a single data frame with response and regressors:
-  df_glm <- df_deaths %>% 
-    select(date, deaths)
-  
-  for (indep_var in unique(opt_correl_single_country$signal)) {
+doCorrelations <-
+  function(toPredict,
+           modelPar,
+           columns_to_try,
+           iso_code_country) {
+    ## Correlations ----
+    # compute all correlations for all lags in min_lag to max_lag:
+    correls_single_country <- check_lags(
+      df_response = toPredict,
+      df_add_regressors = modelPar,
+      columns_to_try = columns_to_try,
+      min_lag = 7,
+      max_lag = 60
+    )
     
-    df_indep_var_temp <- df_umd %>% 
-      select(date, all_of(indep_var)) %>% 
-      mutate(date = date + 
-               opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var]
-      )
-    df_glm <- df_glm %>% full_join(df_indep_var_temp, by = "date")
+    # extract lag with significant-maximum correlation by signal:
+    opt_correl_single_country <- correls_single_country %>%
+      filter(pval <= 0.05) %>%
+      group_by(signal) %>%
+      filter(abs(correlations) == max(abs(correlations))) %>%
+      ungroup()
+    
+    # opt_correl_single_country <-
+    #   opt_correl_single_country[-duplicated(opt_correl_single_country[ , c("correlations", "signal")]),]
+    
+    # save optimal correlations:
+    opt_correl_single_country$country <- iso_code_country
+    opt_correls <- rbind(opt_correls, opt_correl_single_country)
+    
+    # plot of correlations for single country:
+    ifelse(!dir.exists(file.path(
+      "../data/estimates-umd-unbatched/", "Plots"
+    )),
+    dir.create(file.path(
+      "../data/estimates-umd-unbatched/", "Plots"
+    )), FALSE)
+    p <-
+      ggplot(data = correls_single_country, aes(x = shift, y = correlations, color = signal)) +
+      geom_line(alpha = 0.8) +
+      ylim(-1, 1) +
+      labs(title = iso_code_country) +
+      theme_light()
+    ggsave(
+      plot = p,
+      filename = paste0(
+        "../data/estimates-symptom-lags/Plots-Correlations/",
+        iso_code_country,
+        "-predictor-correlation.png"
+      ),
+      width = 10,
+      height = 7
+    )
+    return (opt_correl_single_country)
+  }
+
+
+doGLM <-
+  function(toPredict,
+           modelPar,
+           iso_code_country,
+           opt_correl_single_country) {
+    # contruct a single data frame with response and regressors:
+    df_glm <- toPredict %>%
+      select(date, deaths)
+    
+    for (indep_var in unique(opt_correl_single_country$signal)) {
+      df_indep_var_temp <- modelPar %>%
+        select(date, all_of(indep_var)) %>%
+        mutate(date = date +
+                 opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var])
+      df_glm <- df_glm %>% full_join(df_indep_var_temp, by = "date")
+      
+    }
+    # get only complete cases (remove rows with NAs)
+    df_glm <- df_glm[complete.cases(df_glm), ]
+    
+    # fit model (DO NOT USE DATE!!!):
+    m1 <- glm.nb(deaths ~ . - date , data = df_glm)
+    #summary(m1)
+    
+    # Stepwise regression model
+    m1 <- stepAIC(m1, direction = "both",
+                  trace = FALSE)
+    #summary(m1)
+    #m1$anova
+    
+    ## Plot + CI
+    ## grab the inverse link function
+    
+    return (m1)
+    
     
   }
+
+
+doTest <- function(m, testSignals, testResp) {
+  # keep only kept regressors and date
+  df_pred <-
+    df_pred[, (names(df_pred) %in% c(labels(m$terms), "date"))]
   # get only complete cases (remove rows with NAs)
-  df_glm <- df_glm[complete.cases(df_glm), ]
-  
-  # fit model (DO NOT USE DATE!!!):
-  m1 <- glm.nb(deaths ~ . -date , data = df_glm)
-  summary(m1)
-  
-  # Stepwise regression model
-  m1 <- stepAIC(m1, direction = "both", 
-                trace = FALSE)
-  summary(m1)
-  m1$anova
+  df_pred <- df_pred[complete.cases(df_pred), ]
   
   ## Plot + CI
   ## grab the inverse link function
   ilink <- family(m1)$linkinv
   ## add fit and se.fit on the **link** scale
-  df_glm <- bind_cols(df_glm, setNames(as_tibble(predict(m1, se.fit = TRUE)[1:2]),
-                                       c('fit_link','se_link'))) %>% 
-    mutate(fit_resp  = ilink(fit_link),
-           right_upr = ilink(fit_link + (2 * se_link)),
-           right_lwr = ilink(fit_link - (2 * se_link)))
+  prediction <- bind_cols(testSignals %>% select(date),
+                          setNames(as_tibble(predict(
+                            m, testSignals, se.fit = TRUE
+                          )[1:2]),
+                          c('fit_link', 'se_link'))) %>%
+    mutate(
+      fit_resp  = ilink(fit_link),
+      right_upr = ilink(fit_link + (2 * se_link)),
+      right_lwr = ilink(fit_link - (2 * se_link))
+    )
   
-  ## join with official deaths
-  my_colors <- c("Official" = "red", 
-                 "Estimated" = "blue")
   
-  # grob <- grobTree(textGrob(, x=0.1,  y=0.95, hjust=0,
-  #                           gp=gpar(col="black", fontsize=13, fontface="italic")))
+  mape <- mean(abs ((testResp - prediction) / testResp))
+  mae <- mean(abs(testResp - prediction))
+  mse <- mean((testResp - prediction) ^ 2)
+  rmse <- sqrt(mse)
+  #
+  #
+  #
+  # ## join with official deaths
+  # my_colors <- c("Official" = "red",
+  #                "Estimated" = "blue")
+  #
+  # # grob <- grobTree(textGrob(, x=0.1,  y=0.95, hjust=0,
+  # #                           gp=gpar(col="black", fontsize=13, fontface="italic")))
+  #
+  # p_model <- ggplot(data = df_glm, aes(x = date) ) +
+  #   geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
+  #   geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
+  #   geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
+  #               alpha = 0.1, fill = my_colors["Estimated"]) +
+  #   geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
+  #   geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
+  #   scale_color_manual(values = my_colors) +
+  #   labs(x = "Date", y =  "Number of deaths", title = iso_code_country,  colour = "") +
+  #   theme_light(base_size = 15) +
+  #   theme(legend.position="bottom") # + annotation_custom(grob)
+  # # p_model
+  # ggsave(plot = p_model,
+  #        filename = paste0(
+  #          "../data/estimates-symptom-lags/Plots-GLM/",
+  #          iso_code_country,
+  #          "-deaths-vs-predicted.png"
+  #        ), width = 10, height = 7
+  # )
   
-  p_model <- ggplot(data = df_glm, aes(x = date) ) +
-    geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
-    geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
-    geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
-                alpha = 0.1, fill = my_colors["Estimated"]) +
-    geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
-    geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
-    scale_color_manual(values = my_colors) +
-    labs(x = "Date", y =  "Number of deaths", title = iso_code_country,  colour = "") +
-    theme_light(base_size = 15) +
-    theme(legend.position="bottom") # + annotation_custom(grob)
-  # p_model
-  ggsave(plot = p_model, 
-         filename = paste0(
-           "../data/estimates-symptom-lags/Plots-GLM/",
-           iso_code_country,
-           "-deaths-vs-predicted.png"
-         ), width = 10, height = 7
-  )
 }
-
 # columns_to_try = c(
 #   "pct_anosmia_ageusia_past_smooth",
 #   "pct_sore_throat_past_smooth",
@@ -185,7 +242,8 @@ doGLM <- function(df_deaths, df_umd, iso_code_country, opt_correl_single_country
 #   "pct_direct_contact_with_non_hh_past_smooth"
 # )
 
-columns_to_try <- c(# "pct_cli",
+columns_to_try <- c(
+  # "pct_cli",
   # "pct_ili",
   "pct_fever",
   "pct_cough",
@@ -237,7 +295,8 @@ columns_to_try <- c(# "pct_cli",
   "pct_finances_very_worried",
   "pct_finances_somewhat_worried",
   "pct_finances_notToo_worried",
-  "pct_finances_not_worried")
+  "pct_finances_not_worried"
+)
 
 
 file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
@@ -248,7 +307,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 opt_correls <- data.frame()
 
 for (file in files) {
-  tryCatch({
+  #tryCatch({
     iso_code_country <- substr(file, 1, 2)
     cat("doing ", iso_code_country, ": ")
     ## Load UMD regressors ----
@@ -307,24 +366,75 @@ for (file in files) {
       mutate(date = as.Date(date)) %>%
       mutate(y = deaths) %>%
       mutate(y = rollmean(y, 1, fill = NA)) %>%
-      filter(!is.na(y)) 
+      filter(!is.na(y))
+    
+    #########
     
     
-    opt_correl_single_country <- doCorrelations(df_deaths = df_deaths, df_umd= df_umd, columns_to_try=columns_to_try, iso_code_country=iso_code_country)
+    ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
+    
+    firstCutoff <- as.Date("2020-07-01")
+    endDate <- max(df_umd$date)-30
+    
+    cutoff <- endDate
+    cutoffs <- vector()
+    while (cutoff > firstCutoff) {
+      cutoffs <- append(cutoffs, cutoff, after = 0)
+      cutoff <- cutoff - 15
+      #print(cutoffs)
+    }
+    
+    #print (cutoffs)
+    
    
     
-    ## GLM ----
-    doGLM(df_deaths=df_deaths, df_umd=df_umd, iso_code_country=iso_code_country, opt_correl_single_country=opt_correl_single_country)
-    
+    for (cutoff in cutoffs) {
+      # select training set
+      df_deaths_train <-
+        df_deaths %>% filter(date <= cutoff)
+      df_umd_train <-
+        df_umd %>% filter(date <= cutoff)
+      
+      # select test set
+      df_deaths_test <-
+        df_deaths %>% filter(date > cutoff)
+      df_umd_test <-
+        df_umd %>% filter(date > cutoff)
+      
+      ###########
+      
+      opt_correl_single_country <-
+        doCorrelations(
+          toPredict = df_deaths_train,
+          modelPar = df_umd_train,
+          columns_to_try = columns_to_try,
+          iso_code_country = iso_code_country
+        )
+      
+      ## GLM ----
+      m <-
+        doGLM(
+          toPredict = df_deaths_train,
+          modelPar = df_umd_train,
+          iso_code_country = iso_code_country,
+          opt_correl_single_country = opt_correl_single_country
+        )
+      
+      doTest(m = m,
+             testSignals = df_umd_test,
+             testResp = df_deaths_test)
+    }
     message("succeeded")
-  }, error = function(cond) {
-    message(paste("error in country", iso_code_country))
-  #  message(cond)
-  })
-}
+
+#    },
+#    error = function(cond) {
+#      message(paste("error in country", iso_code_country))
+#        message(cond)
+#    })
+ }
+
 
 # glimpse(opt_correls)
 
-write.csv(opt_correls, file = paste0(
-  "../data/estimates-symptom-lags/optimal-lags.csv"
-))
+# write.csv(opt_correls,
+#           file = paste0("../data/estimates-symptom-lags/optimal-lags.csv"))
