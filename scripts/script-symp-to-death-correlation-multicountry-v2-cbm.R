@@ -121,13 +121,18 @@ columns_to_try <- c(# "pct_cli",
   "pct_enough_toEat_very_worried",
   "pct_enough_toEat_somewhat_worried",
   "pct_enough_toEat_notToo_worried",
-  "pct_enough_toEat_not_worried")
+  "pct_enough_toEat_not_worried"
+#  "cases_contagious",
+#  "cases_active",
+#  "cases",
+#  "cases_daily"
 #,
 #  "pct_chills",
 #  "pct_finances_very_worried",
 #  "pct_finances_somewhat_worried",
 #  "pct_finances_notToo_worried",
-#  "pct_finances_not_worried")
+#  "pct_finances_not_worried"
+)
 
 
 file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
@@ -137,9 +142,9 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 
 opt_correls <- data.frame()
 
-file <- "FR_UMD_country_nobatch_past_smooth.csv"
-#for (file in files) {
-#  tryCatch({
+#file <- "AE_UMD_country_nobatch_past_smooth.csv"
+for (file in files) {
+  tryCatch({
     iso_code_country <- substr(file, 1, 2)
     cat("doing ", iso_code_country, ": ")
     ## Load UMD regressors ----
@@ -177,7 +182,11 @@ file <- "FR_UMD_country_nobatch_past_smooth.csv"
           "-estimate.csv"
         )
       ) %>%
-      mutate(date = as.Date(date))
+      mutate(date = as.Date(date)) %>% 
+      dplyr::select(date,cases,cases_daily,cases_contagious,cases_active)
+    
+    # CBM
+    #df_umd <- df_umd %>% full_join(df_ccfr, by = "date")
     
     ## Load NSUM regressors TODO
     
@@ -197,7 +206,7 @@ file <- "FR_UMD_country_nobatch_past_smooth.csv"
       #df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
       mutate(date = as.Date(date)) %>%
       mutate(y = deaths) %>%
-      mutate(y = rollmean(y, 7, fill = NA)) %>%
+      mutate(y = rollmean(y, 1, fill = NA)) %>%
       mutate(deaths = round(y)) %>% # CBM change
       filter(!is.na(y)) # %>% 
 #      dplyr::select(date, deaths)
@@ -217,7 +226,7 @@ file <- "FR_UMD_country_nobatch_past_smooth.csv"
       df_response = df_deaths,
       df_add_regressors = df_umd,
       columns_to_try = columns_to_try,
-      min_lag = 7,
+      min_lag = 14,
       max_lag = 60)
     
     # extract lag with significant-maximum correlation by signal:
@@ -335,12 +344,10 @@ file <- "FR_UMD_country_nobatch_past_smooth.csv"
     )
     
     message("succeeded")
-#  }, error = function(cond) {
-#    message(paste("error in country", iso_code_country))
-#  })
-#}
+  }, error = function(cond) {message(paste("error in country", iso_code_country))})
+}
 
-# glimpse(opt_correls)
+glimpse(opt_correls)
 
 write.csv(opt_correls, file = paste0(
   "../data/estimates-symptom-lags/optimal-lags.csv"
