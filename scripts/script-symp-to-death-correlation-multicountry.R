@@ -138,8 +138,8 @@ for (file in files) {
           win_size <-
             as.integer(max(df_response$date) - min(df_response$date))
           
-          correl <-
-            cor(df_response$y, df_single_symp[, column_in], method = "spearman")
+          # correl <-
+          #   cor(df_response$y, df_single_symp[, column_in], method = "spearman")
           corTest <-
             cor.test(df_response$y, df_single_symp[, column_in], method = "spearman")
           
@@ -185,7 +185,7 @@ for (file in files) {
       
     }
     
-    
+    print("\n")
     print(all_correls)
     
     p <-
