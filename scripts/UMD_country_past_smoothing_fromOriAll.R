@@ -14,7 +14,7 @@ file_in <- ".*_country_full.csv" #"_UMD_country_data.csv"
 file_out_path <- "../data/estimates-umd-unbatched/PlotData/"
 file_out <- "_UMD_country_nobatch_past_smooth.csv"
 
-populationfile <-"../data/common_data/country_population_umd.csv"
+populationfile <-"../data/common-data/country_population_umd.csv"
 popdt <- read.csv(populationfile,fileEncoding = "UTF-8")
 
 countriesToExclude <- c("AFG", "ALB", "ASM", "BEN", "BFA" )
