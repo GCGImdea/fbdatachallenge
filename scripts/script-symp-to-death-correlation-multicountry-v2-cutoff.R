@@ -6,7 +6,9 @@ library(foreign)
 library(MASS)
 library(ggplot2)
 library(grid) # annotate a ggplot
-
+library(Metrics)
+milag=7
+mxlag=60
 check_lags <-
   function(df_response,
            df_add_regressors,
@@ -44,34 +46,39 @@ check_lags <-
         
         # correl <-
         #   cor(df_response$y, df_single_symp[, column_in], method = "spearman")
-        print(paste("doing column",column_in, "lag ",date_shift, " response rows ",nrow(df_response), "df_single_symp rows ",nrow(df_response)))
-        print("df response")
-        print (df_response$y)
-        print ("predictor")
-        print(df_single_symp[, column_in])
-        tryCatch({
-        corTest <-
-          cor.test(df_response$y, df_single_symp[, column_in], method = "spearman")
-     
-        df_correl <-
-          data.frame(
-            shift = date_shift,
-            correlations = corTest$estimate,
-            pval = corTest$p.value,
-            win_size = win_size,
-            signal = column_in
-          )
-      }, error=function(cond){
-        df_correl <-
-          data.frame(
-            shift = date_shift,
-            correlations = 0,
-            pval = 0,
-            win_size = win_size,
-            signal = column_in
-          )
-      })
-        df_out <- rbind(df_out, df_correl)
+       # print(paste("doing column",column_in, "lag ",date_shift, " response rows ",nrow(df_response), "df_single_symp rows ",nrow(df_response)))
+       # print("df response")
+      #  print (df_response$y)
+      #  print ("predictor")
+      #  print(df_single_symp[, column_in])
+        if (sum(is.na(df_single_symp[, column_in]))==0){
+          corTest <-
+            cor.test(df_response$y, df_single_symp[, column_in], method = "spearman")
+          
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = corTest$estimate,
+              pval = corTest$p.value,
+              win_size = win_size,
+              signal = column_in
+            )
+          # }, error=function(cond){
+          #   df_correl <-
+          #     data.frame(
+          #       shift = date_shift,
+          #       correlations = 0,
+          #       pval = 1,
+          #       win_size = win_size,
+          #       signal = column_in
+          #     )
+          # })
+          df_out <- rbind(df_out, df_correl)
+        } else {
+          print(paste("got NAs for column ",column_in, " and date shift ", date_shift))
+        }#endif
+        
+        
       } # loop-date_shift
     } # loop-column_in
     
@@ -88,20 +95,22 @@ doCorrelations <-
            iso_code_country) {
     ## Correlations ----
     # compute all correlations for all lags in min_lag to max_lag:
+    print(paste("columns to try size",length(columns_to_try)))
     correls_single_country <- check_lags(
       df_response = toPredict,
       df_add_regressors = modelPar,
       columns_to_try = columns_to_try,
-      min_lag = 7,
-      max_lag = 60
+      min_lag = milag,
+      max_lag = mxlag
     )
-    
-    # extract lag with significant-maximum correlation by signal:
+    print(paste("correls_single_country size",nrow(correls_single_country)))
+    # extract lag with significant-maximum correlation by signal:----
     opt_correl_single_country <- correls_single_country %>%
       filter(pval <= 0.05) %>%
       group_by(signal) %>%
       filter(abs(correlations) == max(abs(correlations))) %>%
       ungroup()
+    print(paste("opt_correls_single_country size",nrow(opt_correl_single_country)))
     
     # opt_correl_single_country <-
     #   opt_correl_single_country[-duplicated(opt_correl_single_country[ , c("correlations", "signal")]),]
@@ -133,6 +142,8 @@ doCorrelations <-
       width = 10,
       height = 7
     )
+    print(paste("opt_correls_single_country size",nrow(opt_correl_single_country)))
+    print(unique(opt_correl_single_country$signal))
     return (opt_correl_single_country)
   }
 
@@ -145,21 +156,35 @@ doGLM <-
     # contruct a single data frame with response and regressors:
     df_glm <- toPredict %>%
       select(date, deaths)
-    
+  #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
     for (indep_var in unique(opt_correl_single_country$signal)) {
       df_indep_var_temp <- modelPar %>%
         select(date, all_of(indep_var)) %>%
         mutate(date = date +
                  opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var])
+    #  print("iteration")
+     # print(df_indep_var_temp)
       df_glm <- df_glm %>% full_join(df_indep_var_temp, by = "date")
       
     }
+    minglmdate=min(df_glm$date)
+    maxglmdate=max(df_glm$date)
+    print(paste("minglmdate with NAs ",minglmdate, " ", as.Date(minglmdate)))
+    print(paste("maxglmdate with NAs",maxglmdate, " ", as.Date(maxglmdate)))
     # get only complete cases (remove rows with NAs)
+#    print ("df_glm before removing NAs")
+#    print (df_glm)
     df_glm <- df_glm[complete.cases(df_glm), ]
-    
+#    print ("df_glm after removing NAs")
+#    print (df_glm)
     # fit model (DO NOT USE DATE!!!):
     m1 <- glm.nb(deaths ~ . - date , data = df_glm)
     #summary(m1)
+    minglmdate=min(df_glm$date)
+    maxglmdate=max(df_glm$date)
+    print(paste("minglmdate ",minglmdate, " ", as.Date(minglmdate)))
+    print(paste("maxglmdate ",maxglmdate, " ", as.Date(maxglmdate)))
+    
     
     # Stepwise regression model
     m1 <- stepAIC(m1, direction = "both",
@@ -178,10 +203,20 @@ doGLM <-
 
 doTest <- function(m, testSignals, testResp) {
   # keep only kept regressors and date
-  df_pred <-
-    df_pred[, (names(df_pred) %in% c(labels(m$terms), "date"))]
+  testSignals <-
+    testSignals[, (names(testSignals) %in% c(labels(m$terms), "date"))]
   # get only complete cases (remove rows with NAs)
-  df_pred <- df_pred[complete.cases(df_pred), ]
+  testSignals <- testSignals[complete.cases(testSignals), ]
+  minTestDate <- min(testSignals$date)
+  maxTestDate <- max(testSignals$date)
+  testResp <- testResp %>% filter(date >= minTestDate, date <= maxTestDate)
+  if (nrow(testSignals)!=nrow(testResp)){
+    print ("Error different number of rows ")
+    print (paste0(nrow(testSignals),nrow(testResp)))
+    stop("aborting")
+  } else {
+    print (paste0("good", nrow(testSignals),nrow(testResp)))
+  }
   
   ## Plot + CI
   ## grab the inverse link function
@@ -199,10 +234,19 @@ doTest <- function(m, testSignals, testResp) {
     )
   
   
-  mape <- mean(abs ((testResp - prediction) / testResp))
-  mae <- mean(abs(testResp - prediction))
-  mse <- mean((testResp - prediction) ^ 2)
-  rmse <- sqrt(mse)
+  mape <- mape(testResp$deaths, prediction$fit_resp)
+  mae <- mae(testResp$deaths, prediction$fit_resp)
+  mse <- mse(testResp$deaths, prediction$fit_resp)
+  rmse1 <- sqrt(mse) 
+  rmse2 <- rmse(testResp$deaths, prediction$fit_resp)
+
+  # normalized mean square error?
+  
+  print(paste("mape=", mape))
+  print(paste("mae=", mae))
+  print(paste("mse=", mse))
+  print(paste("rmse=", rmse1))
+  print(paste("rmse=", rmse2))
   #
   #
   #
@@ -308,130 +352,150 @@ opt_correls <- data.frame()
 
 for (file in files) {
   #tryCatch({
-    iso_code_country <- substr(file, 1, 2)
-    cat("doing ", iso_code_country, ": ")
-    ## Load UMD regressors ----
+  iso_code_country <- substr(file, 1, 2)
+  cat("doing ", iso_code_country, ": ")
+  ## Load UMD regressors ----
+  
+  #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
+  data_df <-
+    read.csv(
+      paste0(
+        "../data/estimates-umd-unbatched/PlotData/",
+        iso_code_country ,
+        "_UMD_country_nobatch_past_smooth.csv"
+      )
+    )
+  
+  
+  data_df$date <- as.Date(data_df$date)
+  
+  ## remove "..._smooth", "..._high/low"
+  df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
+  #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
+  df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
+  df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
+  df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
+  df_umd <- df_umd * data_df$population / 100
+  df_umd$date <- data_df$date
+  
+  colnames(df_umd)
+  
+  ## Load CCFR regressors
+  df_ccfr <-
+    read.csv(
+      paste0(
+        "../data/estimates-ccfr-based/PlotData/",
+        iso_code_country,
+        "-estimate.csv"
+      )
+    ) %>%
+    mutate(date = as.Date(date))
+  
+  ## Load NSUM regressors TODO
+  
+  #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
+  #  mutate(date = as.Date(date) )
+  
+  ## Load number of deaths ----
+  
+  df_deaths <-
+    read.csv(
+      paste0(
+        "../data/estimates-confirmed/PlotData/",
+        iso_code_country,
+        "-estimate.csv"
+      )
+    ) %>%
+    #df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
+    mutate(date = as.Date(date)) %>%
+    mutate(y = deaths) %>%
+    mutate(y = rollmean(y, 1, fill = NA)) %>%
+    filter(!is.na(y))
+  
+  #########
+  
+  
+  ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
+  
+  firstCutoff <- as.Date("2020-09-01")
+  endDate <- max(df_umd$date)
+  
+  cutoff <- endDate - mxlag
+  cutoffs <- vector()
+  while (cutoff > firstCutoff) {
+    cutoffs <- append(cutoffs, cutoff, after = 0)
+    cutoff <- cutoff - 15
+    #print(cutoffs)
+  }
+  
+  print (cutoffs)
+  
+  print(df_deaths)
+  
+  for (cutoff in cutoffs) {
+    # select training set
+    df_deaths_train <-
+      df_deaths %>% filter(date <= cutoff) 
+    df_umd_train <-
+      df_umd %>% filter(date <= cutoff)
     
-    #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
-    data_df <-
-      read.csv(
-        paste0(
-          "../data/estimates-umd-unbatched/PlotData/",
-          iso_code_country ,
-          "_UMD_country_nobatch_past_smooth.csv"
-        )
+    # select test set
+    df_deaths_test <-
+      df_deaths %>% filter(date > cutoff)
+    df_umd_test <-
+      df_umd %>% filter(date > cutoff)
+    
+    # call Correl ----
+    print(paste("doing CORREL for cutoff ",as.Date(cutoff)))
+    opt_correl_single_country <-
+      doCorrelations(
+        toPredict = df_deaths_train,
+        modelPar = df_umd_train,
+        columns_to_try = columns_to_try,
+        iso_code_country = iso_code_country
       )
     
-    
-    data_df$date <- as.Date(data_df$date)
-    
-    ## remove "..._smooth", "..._high/low"
-    df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
-    #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
-    df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
-    df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
-    df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
-    df_umd <- df_umd * data_df$population / 100
-    df_umd$date <- data_df$date
-    
-    colnames(df_umd)
-    
-    ## Load CCFR regressors
-    df_ccfr <-
-      read.csv(
-        paste0(
-          "../data/estimates-ccfr-based/PlotData/",
-          iso_code_country,
-          "-estimate.csv"
-        )
-      ) %>%
-      mutate(date = as.Date(date))
-    
-    ## Load NSUM regressors TODO
-    
-    #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
-    #  mutate(date = as.Date(date) )
-    
-    ## Load number of deaths ----
-    
-    df_deaths <-
-      read.csv(
-        paste0(
-          "../data/estimates-confirmed/PlotData/",
-          iso_code_country,
-          "-estimate.csv"
-        )
-      ) %>%
-      #df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
-      mutate(date = as.Date(date)) %>%
-      mutate(y = deaths) %>%
-      mutate(y = rollmean(y, 1, fill = NA)) %>%
-      filter(!is.na(y))
-    
-    #########
-    
-    
-    ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
-    
-    firstCutoff <- as.Date("2020-07-01")
-    endDate <- max(df_umd$date)-30
-    
-    cutoff <- endDate
-    cutoffs <- vector()
-    while (cutoff > firstCutoff) {
-      cutoffs <- append(cutoffs, cutoff, after = 0)
-      cutoff <- cutoff - 15
-      #print(cutoffs)
+    ## call GLM ----
+    print(paste("doing GLM for cutoff ", as.Date(cutoff)))
+    print (opt_correl_single_country, n=Inf)
+    m <-
+      doGLM(
+        toPredict = df_deaths_train,
+        modelPar = df_umd_train,
+        iso_code_country = iso_code_country,
+        opt_correl_single_country = opt_correl_single_country
+      )
+    print(paste("doing TESTING for cutoff ", as.Date(cutoff)))
+    # call Test ----
+    # but before shift the test set to the future
+    shiftedTest <- df_umd_test %>%
+      select(date)
+    for (indep_var in unique(opt_correl_single_country$signal)) {
+      df_indep_var_temp <- df_umd_test %>%
+        select(date, all_of(indep_var)) %>%
+        mutate(date = date +
+                 opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var])
+      #  print("iteration")
+      # print(df_indep_var_temp)
+      shiftedTest <- shiftedTest %>% full_join(df_indep_var_temp, by = "date")
+      
     }
     
-    #print (cutoffs)
     
-   
     
-    for (cutoff in cutoffs) {
-      # select training set
-      df_deaths_train <-
-        df_deaths %>% filter(date <= cutoff)
-      df_umd_train <-
-        df_umd %>% filter(date <= cutoff)
-      
-      # select test set
-      df_deaths_test <-
-        df_deaths %>% filter(date > cutoff)
-      df_umd_test <-
-        df_umd %>% filter(date > cutoff)
-      
-      ###########
-      
-      opt_correl_single_country <-
-        doCorrelations(
-          toPredict = df_deaths_train,
-          modelPar = df_umd_train,
-          columns_to_try = columns_to_try,
-          iso_code_country = iso_code_country
-        )
-      
-      ## GLM ----
-      m <-
-        doGLM(
-          toPredict = df_deaths_train,
-          modelPar = df_umd_train,
-          iso_code_country = iso_code_country,
-          opt_correl_single_country = opt_correl_single_country
-        )
-      
-      doTest(m = m,
-             testSignals = df_umd_test,
-             testResp = df_deaths_test)
-    }
-    message("succeeded")
-
-#    },
-#    error = function(cond) {
-#      message(paste("error in country", iso_code_country))
-#        message(cond)
-#    })
- }
+    
+    doTest(m = m,
+           testSignals = shiftedTest,
+           testResp = df_deaths_test)
+  }
+  message("succeeded")
+  
+  #    },
+  #    error = function(cond) {
+  #      message(paste("error in country", iso_code_country))
+  #        message(cond)
+  #    })
+}
 
 
 # glimpse(opt_correls)
