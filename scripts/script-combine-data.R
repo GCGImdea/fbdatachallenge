@@ -13,8 +13,9 @@ load_and_combine <-
     ## Load and clean official data targets
     loaded_confirmed_df <-read.csv(paste0("../data/estimates-confirmed/PlotData/",code,"-estimate.csv"))
     
-    loaded_confirmed_df <- loaded_confirmed_df %>%
-      mutate(date = as.Date(date))
+    df_confirmed <- loaded_confirmed_df %>%
+      mutate(date = as.Date(date)) %>%
+      dplyr::select(date,deaths,cases)
     
     pop <- loaded_confirmed_df$population[1]
     cat("[loaded confirmed]")
@@ -34,7 +35,7 @@ load_and_combine <-
     loaded_ccfr_df <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", code ,"-estimate.csv"))
     df_ccfr <- loaded_ccfr_df %>% 
       mutate(date = as.Date(date)) %>% 
-      dplyr::select(date,cases,cases_daily,cases_contagious,cases_active)
+      dplyr::select(date,cases_daily,cases_contagious,cases_active)
     
     cat("[loaded CCFR]")    
 #    cat(colnames(loaded_ccfr_df))
@@ -58,6 +59,8 @@ load_and_combine <-
     {
       all_df <- all_df %>% full_join(df_nsum, by = "date")
     }
+    
+    all_df <- all_df %>% full_join(df_confirmed, by = "date")
     
     cat(colnames(all_df))
     return(all_df)
