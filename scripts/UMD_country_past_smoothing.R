@@ -9,9 +9,9 @@ library(stringr)
 source("smooth_column_past.R")
 smooth_param <- 15
 
-file_in_path <- "../data/estimates-umd-batches/"
+file_in_path <- "../data/estimates-umd-batches/PlotData/"
 file_in <- "_UMD_country_data.csv"
-file_out_path <- "../data/estimates-umd-batches/PlotData/"
+file_out_path <- "../data/estimates-umd-batches/past-smooth/"
 file_out <- "_UMD_country_past_smooth.csv"
 
 countries <- c("ES", "BR")
@@ -74,7 +74,7 @@ pct_to_smooth <- c("pct_cli",
 for (country in countries){
   cat("Country:", country, "\n")
   ## Load data ----
-  dt <- read.csv(paste0(file_in_path, country, "/", country, file_in),
+  dt <- read.csv(paste0(file_in_path, country, file_in),
                  fileEncoding = "UTF-8")
   dt$date <- as.Date(dt$date)
   
