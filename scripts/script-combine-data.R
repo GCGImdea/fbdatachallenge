@@ -139,7 +139,7 @@ for (file in files) {
 }
 
 # Debug: Optionaly reduce to some countries to run faster
-iso_codes <- c("PT","ES")
+iso_codes <- c("ES")
 
 # Load and process given countries
 for (code in iso_codes)
@@ -158,6 +158,10 @@ for (code in iso_codes)
     s_df <- all_df %>% dplyr::select(date,signal)
     x_df <- x_df %>% full_join(s_df, by = "date")
   }
+  x_df <- x_df[complete.cases(x_df), ]
+  
+  rx <- max(x_df$date)
+  lx <- min(x_df$date)
   
   
 }
