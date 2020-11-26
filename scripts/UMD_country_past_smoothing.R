@@ -9,9 +9,9 @@ library(stringr)
 source("smooth_column_past.R")
 smooth_param <- 15
 
-file_in_path <- "../data/estimates-umd-batches/PlotData/"
+file_in_path <- "../data/estimates-umd-batches/country/"
 file_in <- "_UMD_country_data.csv"
-file_out_path <- "../data/estimates-umd-batches/past-smooth/"
+file_out_path <- "../data/estimates-umd-batches/country/"
 file_out <- "_UMD_country_past_smooth.csv"
 
 countries <- c("ES", "BR")
