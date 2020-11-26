@@ -9,7 +9,6 @@ library(grid) # annotate a ggplot
 
 load_and_combine <-
   function(code, nsum=FALSE) {
-    all_df <- data.frame()
     
     ## Load and clean official data targets
     loaded_confirmed_df <-read.csv(paste0("../data/estimates-confirmed/PlotData/",code,"-estimate.csv"))
@@ -53,6 +52,14 @@ load_and_combine <-
     
     ## Stitch together data frames ...
     
+    all_df <- df_umd %>% full_join(df_ccfr, by = "date")
+    
+    if (nsum)
+    {
+      all_df <- all_df %>% full_join(df_nsum, by = "date")
+    }
+    
+    cat(colnames(all_df))
     return(all_df)
   }
 
