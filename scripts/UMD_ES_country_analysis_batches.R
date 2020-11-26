@@ -200,14 +200,14 @@ df_out <- batch_effect(df_batch_in = dt,
 ## Savings ----
 
 write.csv(df_out,
-          "../data/estimates-umd-batches/ES/ES_UMD_country_data_by_batch_size.csv",
+          "../data/estimates-umd-batches/country/ES_UMD_country_data_by_batch_size.csv",
           row.names = FALSE)
 
 # select a single batch size:
 df_save <- df_out %>% filter(b_size_denom == 1000)
 
 write.csv(df_save,
-          "../data/estimates-umd-batches/ES/ES_UMD_country_data.csv",
+          "../data/estimates-umd-batches/country/ES_UMD_country_data.csv",
           row.names = FALSE)
 
 ## Some plots ----
