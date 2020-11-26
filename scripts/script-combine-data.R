@@ -62,9 +62,70 @@ load_and_combine <-
     
     all_df <- all_df %>% full_join(df_confirmed, by = "date")
     
-    cat(colnames(all_df))
+#    cat(colnames(all_df))
     return(all_df)
   }
+
+signal_to_match <- "deaths"
+
+signals_to_try <- c(
+  "pct_fever",
+  "pct_cough",
+  "pct_difficulty_breathing",
+  "pct_fatigue",
+  "pct_stuffy_runny_nose",
+  "pct_aches_muscle_pain",
+  "pct_sore_throat",
+  "pct_chest_pain",
+  "pct_nausea",
+  "pct_anosmia_ageusia",
+  "pct_eye_pain",
+  "pct_headache",
+  "pct_cmnty_sick",
+  "pct_ever_tested",
+  "pct_tested_recently",
+  "pct_worked_outside_home",
+  "pct_grocery_outside_home",
+  "pct_ate_outside_home",
+  "pct_spent_time_with_non_hh",
+  "pct_attended_public_event",
+  "pct_used_public_transit",
+  "pct_direct_contact_with_non_hh",
+  "pct_wear_mask_all_time",
+  "pct_wear_mask_most_time",
+  "pct_wear_mask_half_time",
+  "pct_wear_mask_some_time",
+  "pct_wear_mask_none_time",
+  "pct_no_public",
+  "pct_feel_nervous_all_time",
+  "pct_feel_nervous_most_time",
+  "pct_feel_nervous_some_time",
+  "pct_feel_nervous_little_time",
+  "pct_feel_nervous_none_time",
+  "pct_feel_depressed_all_time",
+  "pct_feel_depressed_most_time",
+  "pct_feel_depressed_some_time",
+  "pct_feel_depressed_little_time",
+  "pct_feel_depressed_none_time",
+  "pct_worried_ill_covid19_very",
+  "pct_worried_ill_covid19_somewhat",
+  "pct_worried_ill_covid19_notTooWorried",
+  "pct_worried_ill_covid19_notWorried",
+  "pct_enough_toEat_very_worried",
+  "pct_enough_toEat_somewhat_worried",
+  "pct_enough_toEat_notToo_worried",
+  "pct_enough_toEat_not_worried"
+  #  "cases_contagious",
+  #  "cases_active",
+  #  "cases",
+  #  "cases_daily"
+  #,
+  #  "pct_chills",
+  #  "pct_finances_very_worried",
+  #  "pct_finances_somewhat_worried",
+  #  "pct_finances_notToo_worried",
+  #  "pct_finances_not_worried"
+)
 
 # Files to consider, could be other source of names
 file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
@@ -83,8 +144,22 @@ iso_codes <- c("PT","ES")
 # Load and process given countries
 for (code in iso_codes)
 {
-  cat("; Doing ", code, ": ")
+  cat(" Doing ", code, ": ")
   all_df <- load_and_combine(code,TRUE)
+  
+  y <- signal_to_match
+  y_df <- all_df %>% dplyr::select(date,y)
+  ry <- max(y_df$date)
+  ly <- min(y_df$date)
+  
+  x_df <- all_df %>% dplyr::select(date)
+  for (signal in signals_to_try)
+  {
+    s_df <- all_df %>% dplyr::select(date,signal)
+    x_df <- x_df %>% full_join(s_df, by = "date")
+  }
+  
+  
 }
 
 
