@@ -142,7 +142,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 
 opt_correls <- data.frame()
 
-#file <- "AE_UMD_country_nobatch_past_smooth.csv"
+file <- "PT_UMD_country_nobatch_past_smooth.csv"
 for (file in files) {
   tryCatch({
     iso_code_country <- substr(file, 1, 2)
@@ -343,7 +343,14 @@ for (file in files) {
            ), width = 10, height = 7
     )
     
-    message("succeeded")
+    #CBM
+    t <- max(df_glm$date)
+    strawman <- abs((df_glm %>% filter(date == t))$deaths - (df_pred %>% filter(date == t+7))$deaths_post)
+    modeldev <- abs((df_pred %>% filter(date == t))$fit_resp_smooth - (df_pred %>% filter(date == t+7))$deaths_post)
+    scaled_abs_err <- modeldev/strawman
+    message(paste("sca 7 =",scaled_abs_err))
+    
+#    message("succeeded")
   }, error = function(cond) {message(paste("error in country", iso_code_country))})
 }
 
