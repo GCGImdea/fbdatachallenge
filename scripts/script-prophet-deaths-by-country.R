@@ -32,21 +32,26 @@ propheting_data <- function(df_response,
                                            pattern = name_target_var, 
                                            replacement = "y")
     
+    df_in_prophet <- df_in_prophet %>% mutate(y = pmax(y, 0))
+    
+    # construct future (whole date period + 2 weeks):
+    future <- data.frame(ds = df_in_prophet$ds + 14) %>% 
+      left_join(df_in_prophet, by = "ds") 
+    
+    # now past (whole date period):
+    df_past <- df_in_prophet 
+    
     if (grwth == 'logistic') {
-      # df_in_prophet$cap <- df_in_prophet$population / 2
-      df_in_prophet$cap <- max(df_in_prophet$deaths) * 3
-      df_in_prophet$floor <- 0
+      future$cap <- max(future$y, na.rm = T) * 1.5
+      future$floor <- 0
+      
+      df_past$cap <- max(df_past$y, na.rm = T) * 1.5
+      df_past$floor <- 0
     }
-    
-    # construct future (whole date period):
-    future <- df_in_prophet
-    # now past (all but the last 7 days):
-    df_past <- df_in_prophet %>% filter(ds < (max(ds)-7))
-    
     
     ## Forecasting response with no extra regressors ----
     
-    m <- prophet(changepoint.range = 0.98,
+    m <- prophet(changepoint.range = 0.99,
                  changepoint.prior.scale = chg_point_prior,
                  growth = grwth,
                  yearly.seasonality = F,
@@ -90,6 +95,10 @@ propheting_data <- function(df_response,
     df.p <- performance_metrics(df.cv)
     df_cv_performance_out <- df.p
     
+    write.csv(df_cv_performance_out, 
+              file = paste0(out_path_forecast_response, "CV-Performance/", 
+                                                   country, "-cv-performance.csv"))
+    
     df.p <- pivot_longer(data = df.p, 
                          cols = colnames(df.p)[-1],
                          names_to = "performance", values_to = "value")
@@ -122,8 +131,6 @@ propheting_data <- function(df_response,
     
   )
   
-  
-  
 }
 
 ## DO for different countries ----
@@ -134,6 +141,8 @@ file_in_deaths_pattern <- ".*-estimate.csv"
 out_path_forecast_response <- "../data/estimates-prophet-deaths/"
 
 files <- dir(file_in_deaths, pattern = file_in_deaths_pattern)
+
+list_df_cv_performance <- list()
 
 for (file in files) {
   iso_code_country <- substr(file, 1, 2)
@@ -158,6 +167,14 @@ for (file in files) {
                               chg_point_prior = 0.5, 
                               to_plot = T)
   
+  if (!is.na(df_out_prophet)) {
+    list_df_cv_performance[[file]] <- df_out_prophet[["df_cv_performance"]]
+  }
+  
   # cat("----> ", iso_code_country, ": ")
   # message("success ")
 }
+
+save(list_df_cv_performance, 
+     file = paste0(out_path_forecast_response, 
+                   "all-countries-cv-performance.Rdata"))
