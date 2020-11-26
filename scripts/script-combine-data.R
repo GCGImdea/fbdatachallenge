@@ -147,6 +147,7 @@ for (code in iso_codes)
   cat(" Doing ", code, ": ")
   all_df <- load_and_combine(code,TRUE)
   
+  ## Prepare sources and target 
   y <- signal_to_match
   y_df <- all_df %>% dplyr::select(date,y)
   ry <- max(y_df$date)
@@ -159,9 +160,12 @@ for (code in iso_codes)
     x_df <- x_df %>% full_join(s_df, by = "date")
   }
   x_df <- x_df[complete.cases(x_df), ]
-  
-  rx <- max(x_df$date)
+    rx <- max(x_df$date)
   lx <- min(x_df$date)
+  
+  ## todo
+  
+  ## Calculate correlations
   
   
 }
