@@ -200,10 +200,11 @@ signals_nsum <- c(
   "p_cases_stillsick"
 )
 
-signals_to_try <- c(signals_umd,signals_ccfr,signals_nsum) 
+#signals_to_try <- c(signals_umd,signals_ccfr) 
+#signals_to_try <- c(signals_umd,signals_ccfr,signals_nsum) 
 #signals_to_try <- signals_nsum
 #signals_to_try <- signals_ccfr
-#signals_to_try <- signals_umd
+signals_to_try <- signals_umd
 
 lag <- 14 # decide here the min lag and only project up to cutoff+lag
 
@@ -219,13 +220,13 @@ for (file in files) {
 }
 
 # Debug: Optionaly reduce to some countries to run faster
-iso_codes <- c("PT")
+iso_codes <- c("AT")
 
 # Load and process given countries
 for (code in iso_codes)
 {
   cat(" Doing ", code, ": ")
-  all_df <- load_and_combine(code,TRUE)
+  all_df <- load_and_combine(code,FALSE)
   
   ## Prepare sources and target 
   y <- signal_to_match
@@ -390,7 +391,19 @@ for (code in iso_codes)
          ), width = 10, height = 7
   )
   
-
+  
+  sae <- c()
+  for (i in seq(1,lag-1))
+  {
+    predi <- x_plot_df[x_plot_df$date==(cutoff+i),]$fit_resp_smooth
+    straw0 <- x_plot_df[x_plot_df$date==(cutoff),]$y_pre
+    valuei <- x_plot_df[x_plot_df$date==(cutoff+i),]$y_post
+    sca_abs_err <- abs(valuei-predi)/(abs(valuei-straw0)+10^-6)
+    sae <- c(sae,sca_abs_err)
+    print(paste0("day ",i," scaled absolute error=",sca_abs_err))
+  }
+  print(mean(sae))
+    
   
   
 }
