@@ -194,13 +194,13 @@ batch_effect <- function(df_batch_in, denom2try, col_string_vec){
 #                        denom2try = seq(1000, 5000, by = 500))
 
 df_out <- batch_effect(df_batch_in = dt, 
-                       denom2try = c(1000, 2000), 
+                       denom2try = c(1000, 2000, 3000, 4000, 5000), 
                        col_string_vec = all_pct_to_smooth )
 
 ## Savings ----
 
 write.csv(df_out,
-          "../data/estimates-umd-batches/country/ES_UMD_country_data_by_batch_size.csv",
+          "../data/estimates-umd-batches/PlotData/ES_UMD_country_data_by_batch_size.csv",
           row.names = FALSE)
 
 # select a single batch size:
