@@ -14,11 +14,18 @@ stable_regressors <- c()
 
 for (country_model in files_model) {
   
-  temp_coeffs <- read.csv(paste0(files_model_path, country_model)) %>% 
-    dplyr::select(starts_with("coef")) %>%
-    distinct()
+  temp_model_data <- read.csv(paste0(files_model_path, country_model))
+  
+  temp_coeffs <- temp_model_data %>% 
+    dplyr::select(starts_with("coef")) %>% distinct()
   
   colnames(temp_coeffs) <- str_replace(colnames(temp_coeffs), "coef_", "")
+  
+  names_no_intercept <- colnames(temp_coeffs)[!str_detect(colnames(temp_coeffs), "Intercept")]
+  
+  temp_coeffs[, names_no_intercept] <- 
+    temp_coeffs[, names_no_intercept]*colMeans(temp_model_data[, names_no_intercept])
+  
   stable_regressors <- c(stable_regressors, colnames(temp_coeffs))
   
   country_code <- str_sub(country_model, 1, 2)

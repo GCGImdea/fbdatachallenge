@@ -16,6 +16,7 @@ do_smoothing <- function(country = "ES",
   
   cat("Smoothing ", country, " with path ", estimates_path, "\n")
   dt <- read.csv(paste0(estimates_path, "PlotData/", country, "-estimate.csv"), as.is = T)
+  dt_past <- dt
   if (nrow(dt) >= smooth_param) {
     # --- Smoothing
     
@@ -36,7 +37,7 @@ do_smoothing <- function(country = "ES",
     , silent = F)
     cat("Smoothing p_cases...\n")
     try(
-    dt <- smooth_column_past(dt, "p_cases", basis_dim = smooth_param, link_in ="log", monotone = T)
+    dt_past <- smooth_column_past(dt_past, "p_cases", basis_dim = smooth_param, link_in ="log", monotone = T)
     , silent = F)
     
     cat("Smoothing p_cases_fatalities...\n")
@@ -45,7 +46,7 @@ do_smoothing <- function(country = "ES",
     , silent = F)
     cat("Smoothing p_cases_fatalities...\n")
     try(
-    dt <- smooth_column_past(dt, "p_cases_fatalities", basis_dim = smooth_param, link_in ="log", monotone = T)
+    dt_past <- smooth_column_past(dt_past, "p_cases_fatalities", basis_dim = smooth_param, link_in ="log", monotone = T)
     , silent = F)
 
     cat("Smoothing p_cases_recent...\n")
@@ -54,7 +55,7 @@ do_smoothing <- function(country = "ES",
     , silent = F)
     cat("Smoothing p_cases_recent...\n")
     try(
-    dt <- smooth_column_past(dt, "p_cases_recent", basis_dim = smooth_param, link_in ="log", monotone = F)
+    dt_past <- smooth_column_past(dt_past, "p_cases_recent", basis_dim = smooth_param, link_in ="log", monotone = F)
     , silent = F)
     
     cat("Smoothing p_cases_stillsick...\n")
@@ -63,25 +64,19 @@ do_smoothing <- function(country = "ES",
     , silent = F)
     cat("Smoothing p_cases_stillsick...\n")
     try(
-    dt <- smooth_column_past(dt, "p_cases_stillsick", basis_dim = smooth_param, link_in ="log", monotone = F)
+    dt_past <- smooth_column_past(dt_past, "p_cases_stillsick", basis_dim = smooth_param, link_in ="log", monotone = F)
     , silent = F)
     
-    # --- Computing the daily differences of cases
-    
-    # dt$p_daily <- c(0 , diff(dt$p_cases))
-    # dt[["p_cases_smooth"]][is.na(dt[["p_cases_smooth"]])] <- 0
-    # dt$p_daily_smooth <- c(0 , diff(dt$p_cases_smooth))
-    # 
-    # #total active cases
-    # dt$p_active <- cumsum(c(dt$p_daily[1:active_window],
-    #                         diff(dt$p_daily, lag = active_window)))
-    # dt$p_active_smooth <- cumsum(c(dt$p_daily_smooth[1:active_window],
-    #                                diff(dt$p_daily_smooth, lag = active_window)))
+
     # --- Saving new data
     
-    dir.create(paste0(estimates_path, "PlotData/"), showWarnings = F)
+    dir.create(paste0(estimates_path, "smooth/"), showWarnings = F)
     cat(paste0("::- script-W: Writing the smoothed region based estimate summary for ", country, "..\n"))
-    write.csv(dt, paste0(estimates_path, "PlotData/", country, "-estimate-smooth.csv"),
+    write.csv(dt, paste0(estimates_path, "smooth/", country, "-estimate-smooth.csv"),
+              row.names = FALSE)
+    dir.create(paste0(estimates_path, "past_smooth/"), showWarnings = F)
+    cat(paste0("::- script-W: Writing the smoothed region based estimate summary for ", country, "..\n"))
+    write.csv(dt_past, paste0(estimates_path, "past_smooth/", country, "-estimate-past-smooth.csv"),
               row.names = FALSE)
   }
 }

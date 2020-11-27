@@ -30,10 +30,10 @@ dev.off()
 # -- Active cases
 png(file = paste0(estimates_path, "plots/", country, "-active-estimate.png"))
 
-plot(dt$fecha, dt$p_active*100, type="l", xlab = "Date", 
+plot(dt$fecha, dt$p_cases_stillsick*100, type="l", xlab = "Date", 
      ylab = "% active cases", main = paste0("Active cases (Reach ", reach_text,")"))
 lines(dt$fecha, dt$p_cases_recent*100,lty=1,col="blue")
-lines(dt$fecha, dt$p_active_smooth*100,lty=1,col="magenta")
+lines(dt$fecha, dt$p_cases_stillsick_smooth*100,lty=1,col="magenta")
 lines(dt$fecha, dt$p_cases_recent_smooth*100,lty=1,col="red")
 legend("topright", 
        legend=c("Active from cumulative", "Recent", "Active from smoothed cumulative", 
@@ -46,12 +46,12 @@ dev.off()
 
 cat("Plotting ES\n")
 do_plotting("ES", path_W, "per response")
-do_plotting("ES", path_W_dunbar, "67.24397")
+#do_plotting("ES", path_W_dunbar, "67.24397")
 cat("Plotting BR\n")
 do_plotting("BR", path_W, "per response")
-do_plotting("BR", path_W_dunbar, "59.06486")
+#do_plotting("BR", path_W_dunbar, "59.06486")
 cat("Plotting US\n")
 do_plotting("US", path_W, "per response")
-do_plotting("US", path_W_dunbar, "37.45614")
+#do_plotting("US", path_W_dunbar, "37.45614")
 do_plotting("PT", path_W, "per response")
-do_plotting("PT", path_W_dunbar, "65.00961")
+#do_plotting("PT", path_W_dunbar, "65.00961")

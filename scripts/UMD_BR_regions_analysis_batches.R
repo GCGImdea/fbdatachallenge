@@ -166,30 +166,30 @@ dt$region <- NA
 ## Add 'region' code
 dt$region[dt$region_agg == "Acre"] <- "BRAC"
 dt$region[dt$region_agg == "Alagoas"] <- "BRAL"
-dt$region[dt$region_agg == "Amapá"] <- "BRAP"
+dt$region[dt$region_agg == "Amap?"] <- "BRAP"
 dt$region[dt$region_agg == "Amazonas"] <- "BRAM"
 dt$region[dt$region_agg == "Bahia"] <- "BRBA"
-dt$region[dt$region_agg == "Ceará"] <- "BRCE"
+dt$region[dt$region_agg == "Cear?"] <- "BRCE"
 dt$region[dt$region_agg == "Distrito Federal"] <- "BRDF"
-dt$region[dt$region_agg == "Espírito Santo"] <- "BRES"
-dt$region[dt$region_agg == "Goiás"] <- "BRGO"
-dt$region[dt$region_agg == "Maranhão"] <- "BRMA"
+dt$region[dt$region_agg == "Esp?rito Santo"] <- "BRES"
+dt$region[dt$region_agg == "Goi?s"] <- "BRGO"
+dt$region[dt$region_agg == "Maranh?o"] <- "BRMA"
 dt$region[dt$region_agg == "Mato Grosso"] <- "BRMT"
 dt$region[dt$region_agg == "Mato Grosso do Sul"] <- "BRMS"
 dt$region[dt$region_agg == "Minas Gerais"] <- "BRMG"
-dt$region[dt$region_agg == "Paraná"] <- "BRPR"
-dt$region[dt$region_agg == "Paraíba"] <- "BRPB"
-dt$region[dt$region_agg == "Pará"] <- "BRPA"
+dt$region[dt$region_agg == "Paran?"] <- "BRPR"
+dt$region[dt$region_agg == "Para?ba"] <- "BRPB"
+dt$region[dt$region_agg == "Par?"] <- "BRPA"
 dt$region[dt$region_agg == "Pernambuco"] <- "BRPE"
-dt$region[dt$region_agg == "Piauí"] <- "BRPI"
+dt$region[dt$region_agg == "Piau?"] <- "BRPI"
 dt$region[dt$region_agg == "Rio de Janeiro"] <- "BRRJ"
 dt$region[dt$region_agg == "Rio Grande do Norte"] <- "BRRN"
 dt$region[dt$region_agg == "Rio Grande do Sul"] <- "BRRS"
-dt$region[dt$region_agg == "Rondônia"] <- "BRRO"
+dt$region[dt$region_agg == "Rond?nia"] <- "BRRO"
 dt$region[dt$region_agg == "Roraima"] <- "BRRR"
 dt$region[dt$region_agg == "Santa Catarina"] <- "BRSC"
 dt$region[dt$region_agg == "Sergipe"] <- "BRSE"
-dt$region[dt$region_agg == "São Paulo"] <- "BRSP"
+dt$region[dt$region_agg == "S?o Paulo"] <- "BRSP"
 dt$region[dt$region_agg == "Tocantins"] <- "BRTO"
 
 ## Get region population
@@ -285,7 +285,7 @@ write.csv(df_out %>% filter(b_size_denom == d_to_save) ,
 
 ## All regions and all batch sizes in a single file:
 write.csv(df_out,
-          "../data/estimates-umd-batches/BR/BR_UMD_data_by_batch_size.csv", 
+          "../data/estimates-umd-batches/PlotData/BR_UMD_data_by_batch_size.csv", 
           row.names = FALSE)
 
 ## Plot by batch size ----
