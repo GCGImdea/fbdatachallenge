@@ -137,8 +137,8 @@ dt <- data %>%
 
 dt$date <- as.Date(dt$date)
 
-## Consider data starting on 2020-05-08
-dt <- dt %>% filter(date > "2020-05-07")
+## Consider data starting on 2020-05-05
+dt <- dt %>% filter(date > "2020-05-04")
 
 # retain only the unweighted percentages
 dt <- dt[ , !str_detect(colnames(dt), pattern = "weighted")]
@@ -164,12 +164,12 @@ unique(dt$region_agg)
 dt$region <- NA
 
 ## Add 'region' code
-dt$region[dt$region_agg == "Andaluc?a"] <- "ESAN"
-dt$region[dt$region_agg == "Arag?n"] <- "ESAR"
+dt$region[dt$region_agg == "Andalucía"] <- "ESAN"
+dt$region[dt$region_agg == "Aragón"] <- "ESAR"
 dt$region[dt$region_agg == "Cantabria"] <- "ESCB"
-dt$region[dt$region_agg == "Castilla y Le?n"] <- "ESCL"
+dt$region[dt$region_agg == "Castilla y León"] <- "ESCL"
 dt$region[dt$region_agg == "Castilla-La Mancha"] <- "ESCM"
-dt$region[dt$region_agg == "Catalu?a"] <- "ESCT"
+dt$region[dt$region_agg == "Cataluña"] <- "ESCT"
 dt$region[dt$region_agg == "Comunidad Foral de Navarra"] <- "ESNC"
 dt$region[dt$region_agg == "Comunidad Valenciana"] <- "ESVC"
 dt$region[dt$region_agg == "Comunidad de Madrid"] <- "ESMD"
@@ -178,9 +178,9 @@ dt$region[dt$region_agg == "Galicia"] <- "ESGA"
 dt$region[dt$region_agg == "Islas Baleares"] <- "ESIB"
 dt$region[dt$region_agg == "Islas Canarias"] <- "ESCN"
 dt$region[dt$region_agg == "La Rioja"] <- "ESRI"
-dt$region[dt$region_agg == "Pa?s Vasco"] <- "ESPV"
+dt$region[dt$region_agg == "País Vasco"] <- "ESPV"
 dt$region[dt$region_agg == "Principado de Asturias"] <- "ESAS"
-dt$region[dt$region_agg == "Regi?n de Murcia"] <- "ESMC"
+dt$region[dt$region_agg == "Región de Murcia"] <- "ESMC"
 dt$region[dt$region_agg == "Ceuta"] <- "ESMC"
 dt$region[dt$region_agg == "Melilla"] <- "ESMC"
 dt$region[dt$region_agg == "Ceuta y Melilla"] <- "ESCE_ML"
@@ -206,7 +206,7 @@ dt <- dt %>% filter(region != "ESRI")
 ## Remove Navarra (have too many wholes)
 dt <- dt %>% filter(region != "ESNC")
 
-dt$region <- as.factor(dt$region)
+#dt$region <- as.factor(dt$region)
 
 ## Compute batch-smoothed estimates ----
 df_out <- data.frame()
