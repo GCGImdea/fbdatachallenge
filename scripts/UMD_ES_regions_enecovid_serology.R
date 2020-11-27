@@ -117,6 +117,8 @@ dtall <- rbind(dtall, dt_r2_s2)
 dtall <- rbind(dtall, dt_r3_s1)
 dtall <- rbind(dtall, dt_r3_s2)
 
+dtall <- dtall[dtall$pct_ene_cli > 0,]
+
 aux <- colMeans(dtall[sapply(dtall, is.numeric)], na.rm=TRUE)
 ratio <- aux["pct_ene_cli"] / aux
 
@@ -132,9 +134,9 @@ for (s in colnames(to_correct)) {
   corrected[s] <- cor
   #mean(abs((dtall$pct_ene_cli-cor$pct_direct_contact_with_non_hh_smooth_low)/dtall$pct_ene_cli)) * 100
   
-  err <- sum(abs(cor - to_correct["pct_ene_cli"]) )
-  aerror <- aerror %>% add_row(signal = s, abs_error = err)
-  cat("mape:", err)
+  mape <- sum(abs(cor - to_correct["pct_ene_cli"]) / to_correct["pct_ene_cli"]) / nrow(to_correct)
+  aerror <- aerror %>% add_row(signal = s, abs_error = mape)
+  cat("mape:", mape)
 }
 
 write.csv(aerror, "../data/estimates-umd-batches/ES/serology/abs-error.csv", row.names = FALSE)
