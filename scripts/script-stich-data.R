@@ -1,5 +1,6 @@
 library(dplyr)
 load_and_combine <- function(code, nsum = FALSE) {
+  cat("\n working on ", code)
     ## Load and clean official data targets
     loaded_confirmed_df <- read.csv(paste0("../data/estimates-confirmed/PlotData/", code, "-estimate.csv"))
     df_confirmed <- loaded_confirmed_df %>%
@@ -37,9 +38,9 @@ load_and_combine <- function(code, nsum = FALSE) {
     ## Load NSUM and clean regressors, not all countries have this
     if (nsum) {
       loaded_nsum_df <- read.csv(paste0("../data/estimates-W/past_smooth/", code, "-estimate-past-smooth.csv"))
-      df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases, p_cases_recent, p_cases_fatalities, p_cases_stillsick,
-                                                  p_cases_past_smooth, p_cases_fatalities_past_smooth,
-                                                  p_cases_recent_past_smooth, p_cases_stillsick_past_smooth)
+      df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases, p_cases_recent, p_cases_fatalities, p_cases_stillsick)
+                                                  # p_cases_past_smooth, p_cases_fatalities_past_smooth,
+                                                  # p_cases_recent_past_smooth, p_cases_stillsick_past_smooth)
       df_nsum <- df_nsum * pop
       df_nsum$date <- as.Date(loaded_nsum_df$date)
       
@@ -65,4 +66,11 @@ load_and_combine <- function(code, nsum = FALSE) {
 }
 
 #save data for countries of interest
-load_and_combine(code = "ES", nsum = T)
+#load_and_combine(code = "ES", nsum = T)
+interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", 
+              "CL", "FR", "GB")
+              #"US", "CY")
+dd <- sapply(interest, load_and_combine, nsum = T)
+
+
+
