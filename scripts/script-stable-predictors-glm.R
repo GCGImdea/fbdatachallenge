@@ -62,6 +62,27 @@ for (country_code in names(coeffs_by_country)) {
   df_coeffs[country_code, colnames(temp_coeffs)] = as.numeric(temp_coeffs)
 }
 
+## NO -- Standardize:
+
+df_coeffs_std <- as.data.frame(df_coeffs)
+
+df_coeffs_std <- pivot_longer(df_coeffs_std, colnames(df_coeffs_std), names_to = "Signal", values_to = "Coefficient")
+
+## Ascending by mean
+p_coeffs_by_median <- ggplot(df_coeffs_std, aes(x = reorder(Signal, Coefficient, median, ), y = Coefficient)) +
+  geom_boxplot(outlier.alpha = 0.1 ) +
+  theme_light(base_size = 15) +
+  xlab("") + ylab("Coefficient values (standardized)") +
+  ylim(-5, 5) +
+  labs(title = "Increasing order by median") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
+p_coeffs_by_median
+
+ggsave(plot = p_coeffs_by_median, 
+       filename = paste0(
+         "../data/estimates-symptom-lags/coeffs-no-standard-boxplot-by-median.png"
+       ), width = 12, height = 10
+)
 
 ## Standardize:
 
