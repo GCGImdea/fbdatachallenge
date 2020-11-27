@@ -75,7 +75,9 @@ load_and_combine <-
     
     df_confirmed <- loaded_confirmed_df %>%
       mutate(date = as.Date(date)) %>%
-      dplyr::select(date,deaths,cases)
+      dplyr::select(date,deaths,cases) 
+    df_confirmed$cases = pmax(df_confirmed$cases,0) # get rid of negatives
+    df_confirmed$deaths = pmax(df_confirmed$deaths,0) # get rid of negatives
     
     pop <- loaded_confirmed_df$population[1]
     cat("[loaded confirmed]")
@@ -130,7 +132,7 @@ opt_correls <- data.frame()
 
 signal_to_match <- "cases"
 
-signals_to_try <- c(
+signals_umd <- c(
   "pct_fever",
   "pct_cough",
   "pct_difficulty_breathing",
@@ -177,17 +179,33 @@ signals_to_try <- c(
   "pct_enough_toEat_somewhat_worried",
   "pct_enough_toEat_notToo_worried",
   "pct_enough_toEat_not_worried"
-  #  "cases_contagious",
-  #  "cases_active",
-  #  "cases",
-  #  "cases_daily"
-  #,
   #  "pct_chills",
   #  "pct_finances_very_worried",
   #  "pct_finances_somewhat_worried",
   #  "pct_finances_notToo_worried",
   #  "pct_finances_not_worried"
 )
+
+signals_ccfr <- c(
+  "cases",
+  "cases_daily",
+  "cases_active",
+  "cases_contagious"
+)
+
+signals_nsum <- c(
+  "p_cases",
+  "p_cases_recent",
+  "p_cases_fatalities",
+  "p_cases_stillsick"
+)
+
+signals_to_try <- c(signals_umd,signals_ccfr,signals_nsum) 
+#signals_to_try <- signals_nsum
+#signals_to_try <- signals_ccfr
+#signals_to_try <- signals_umd
+
+lag <- 14 # decide here the min lag and only project up to cutoff+lag
 
 # Files to consider, could be other source of names
 file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
@@ -246,7 +264,7 @@ for (code in iso_codes)
     df_response = y_pre_df,
     df_add_regressors = x_df,
     columns_to_try = signals_to_try,
-    min_lag = 14,
+    min_lag = lag,
     max_lag = 60)
   
   # extract lag with significant-maximum correlation by signal:
@@ -296,6 +314,8 @@ for (code in iso_codes)
 
   # Copy predictors for later predict
   x_predict_df <- x_shift_df
+  # optionally impose a limit
+  x_predict_df <- x_predict_df %>% filter(date <= cutoff + lag)
   
   # join target for training
   xy_train_df <- x_shift_df
@@ -323,6 +343,8 @@ for (code in iso_codes)
   x_predict_df <- x_predict_df[ , (names(x_predict_df) %in% c(labels(m1$terms),"date"))]
   # get only complete cases (remove rows with NAs)
   x_predict_df <- x_predict_df[complete.cases(x_predict_df), ]
+  
+  print(labels(m1$terms))
   
   ## Plot + CI
   ## grab the inverse link function
