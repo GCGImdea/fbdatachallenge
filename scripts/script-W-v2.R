@@ -539,8 +539,8 @@ provincial_regional_estimate_w_only <- function(countrycode = "ES",
   if(write_summary_file == T){
     dir.create(paste0(estimates_path, "PlotData/"), showWarnings = F)
     cat(paste0("::- script-W: Writing the region based estimate summary for ", countrycode, "..\n"))
-    write.csv(region_based_estimate, paste0(estimates_path, "PlotData/",
-                                            countrycode, "-estimate.csv"))
+    write.csv(region_based_estimate, paste0(estimates_path, "PlotData/", countrycode, "-estimate.csv"),
+              row.names = FALSE)
   } else{
     return(region_based_estimate)
     }

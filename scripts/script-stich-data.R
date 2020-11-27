@@ -38,9 +38,11 @@ load_and_combine <- function(code, nsum = FALSE) {
     ## Load NSUM and clean regressors, not all countries have this
     if (nsum) {
       loaded_nsum_df <- read.csv(paste0("../data/estimates-W/past_smooth/", code, "-estimate-past-smooth.csv"))
-      df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases, p_cases_recent, p_cases_fatalities, p_cases_stillsick)
+      
+      # df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases, p_cases_recent, p_cases_fatalities, p_cases_stillsick)
                                                   # p_cases_past_smooth, p_cases_fatalities_past_smooth,
                                                   # p_cases_recent_past_smooth, p_cases_stillsick_past_smooth)
+      df_nsum <- subset(loaded_nsum_df, select = -c(date) )
       df_nsum <- df_nsum * pop
       df_nsum$date <- as.Date(loaded_nsum_df$date)
       
