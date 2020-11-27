@@ -36,9 +36,10 @@ load_and_combine <- function(code, nsum = FALSE) {
     
     ## Load NSUM and clean regressors, not all countries have this
     if (nsum) {
-      loaded_nsum_df <- read.csv(paste0("../data/estimates-W/PlotData/", code, "-estimate.csv"))
-      df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases, p_cases_recent,
-                                                  p_cases_fatalities, p_cases_stillsick)
+      loaded_nsum_df <- read.csv(paste0("../data/estimates-W/past_smooth/", code, "-estimate-past-smooth.csv"))
+      df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases, p_cases_recent, p_cases_fatalities, p_cases_stillsick,
+                                                  p_cases_past_smooth, p_cases_fatalities_past_smooth,
+                                                  p_cases_recent_past_smooth, p_cases_stillsick_past_smooth)
       df_nsum <- df_nsum * pop
       df_nsum$date <- as.Date(loaded_nsum_df$date)
       
@@ -47,15 +48,17 @@ load_and_combine <- function(code, nsum = FALSE) {
     
     ## Stitch together data frames ...
     
-    all_df <- df_umd %>% full_join(df_ccfr, by = "date")
+    all_df <- df_confirmed %>% full_join(df_ccfr, by = "date")
     
     if (nsum)
     {
       all_df <- all_df %>% full_join(df_nsum, by = "date")
     }
     
-    all_df <- all_df %>% full_join(df_confirmed, by = "date")
+    all_df <- all_df %>% full_join(df_umd, by = "date")
+    
     #    cat(colnames(all_df))
+    all_df <- all_df[order(all_df$date),]
     out_path <- paste0("../data/all_giant_df/", code, "_alldf.csv")
     write.csv(all_df, out_path)
     cat("[saved data]")
