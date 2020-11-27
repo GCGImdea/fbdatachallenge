@@ -25,68 +25,49 @@ check_lags <-
     
     for (column_in in columns_to_try) {
       for (date_shift in seq(min_lag, max_lag)) {
-        df_single_symp <- df_add_regressors[, c("date", column_in)]
-        
-        # time shifting in extra regressors:
-        df_single_symp$date <-
-          as.Date(df_single_symp$date) + date_shift
-        # TO FIXME. DO JOIN TO HANDLE MISSING DATES
-        # set the same dates in df_response and df_single_symp:
-        joined <- df_single_symp %>% inner_join( df_response, by="date")
-        
-        
-        
-        
-        # start_date <-
-        #   max(min(df_single_symp$date), min(df_response$date))
-        # end_date <-
-        #   min(max(df_single_symp$date), max(df_response$date))
-        # 
-        # df_single_symp <-
-        #   df_single_symp %>% filter(date >= start_date, date <= end_date)
-        # df_response <-
-        #   df_response %>% filter(date >= start_date, date <= end_date)
-        
-        # df_single_symp <- df_single_symp[1:165, ]
-        # df_response <- df_response[1:165, ]
+        # replaced these  df_single_symp <- df_add_regressors[, c("date", column_in)]
+        # df_single_symp$date <-
+        #  as.Date(df_single_symp$date) + date_shift
+        # joined <- (df_single_symp %>% select(date, column_in)) 
+        # by the following
+        joined <- df_add_regressors %>% select(date, column_in) %>% mutate(date=as.Date(date)+date_shift)%>% inner_join( df_response, by="date")
+        # remove NAs in what we want, we can do it because we only have column_in now
+        joined  <- joined[complete.cases(joined), ]
         
         win_size <-
           as.integer(max(joined$date) - min(joined$date))
         
-        # correl <-
-        #   cor(df_response$y, df_single_symp[, column_in], method = "spearman")
-        #     print(paste("doing column",column_in, "lag ",date_shift))
-        
-        if (sum(is.na(joined[, column_in]))==0){
-          tryCatch({
-            corTest <-
-              cor.test(joined$y, joined[, column_in], method = "spearman")
-            
-            df_correl <-
-              data.frame(
-                shift = date_shift,
-                correlations = corTest$estimate,
-                pval = corTest$p.value,
-                win_size = win_size,
-                signal = column_in
-              )
-          }, error=function(cond){
-            message("Error in correlation: ")
-            message(cond)
-            df_correl <-
-              data.frame(
-                shift = date_shift,
-                correlations = 0,
-                pval = 1,
-                win_size = win_size,
-                signal = column_in
-              )
-          })
-          df_out <- rbind(df_out, df_correl)
-        } else {
-          # print(paste("got NAs for column ",column_in, " and date shift ", date_shift))
-        }#endif
-        
+        # if (sum(is.na(joined[, column_in]))==0){
+        tryCatch({
+          corTest <-
+            cor.test(joined$y, joined[, column_in], method = "spearman")
+          
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = corTest$estimate,
+              pval = corTest$p.value,
+              win_size = win_size,
+              signal = column_in
+            )
+        }, error = function(cond){
+          message("Error in correlation: ")
+          message(cond)
+          traceback()
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = 0,
+              pval = 1,
+              win_size = win_size,
+              signal = column_in
+            )
+        })
+        df_out <- rbind(df_out, df_correl)
+        # } else {
+        #   # print(paste("got NAs for column ",column_in, " and date shift ", date_shift))
+        # }#endif
+        # 
         
       } # loop-date_shift
     } # loop-column_in
@@ -176,30 +157,16 @@ shiftSignals <- function(baseForOutputDF, inputDF, correl) {
 }
 
 doGLM <-
-  function(toPredict,
-           modelPar,
+  function(modelPar,
            iso_code_country) {
     
-    minglmdate=min(modelPar$date)
-    maxglmdate=max(modelPar$date)
-    #  print(paste("minglmdate with NAs ",minglmdate, " ", as.Date(minglmdate)))
-    #   print(paste("maxglmdate with NAs",maxglmdate, " ", as.Date(maxglmdate)))
-    # get only complete cases (remove rows with NAs)
-    #    print ("modelPar before removing NAs")
-    #    print (modelPar)
-    modelPar <- modelPar[complete.cases(modelPar), ]
-    #    print ("modelPar after removing NAs")
-    #    print (modelPar)
-    # fit model (DO NOT USE DATE!!!):
     
-    m1 <- glm.nb(deaths ~ . - date , data = modelPar)
+    modelPar <- modelPar[complete.cases(modelPar), ]
+    
+    
+    m1 <- glm.nb(y ~ . - date , data = modelPar)
     
     #summary(m1)
-    minglmdate=min(modelPar$date)
-    maxglmdate=max(modelPar$date)
-    #   print(paste("minglmdate ",minglmdate, " ", as.Date(minglmdate)))
-    #    print(paste("maxglmdate ",maxglmdate, " ", as.Date(maxglmdate)))
-    
     
     # Stepwise regression model
     m1 <- stepAIC(m1, direction = "both",
@@ -215,16 +182,9 @@ doGLM <-
     
   }
 
-doPrediction <- function(m, testSignals, testResp) {
-  if (nrow(testSignals)!=nrow(testResp)){
-    print ("Error different number of rows ")
-    print (paste0(nrow(testSignals),nrow(testResp)))
-    stop("aborting")
-  } else {
-    #print (paste0("good", nrow(testSignals),"=", nrow(testResp)))
-  }
+doPrediction <- function(m, testSignals) {
   
-  ## Plot + CI
+  
   ## grab the inverse link function
   ilink <- family(m)$linkinv
   ## add fit and se.fit on the **link** scale
@@ -234,77 +194,13 @@ doPrediction <- function(m, testSignals, testResp) {
                           )[1:2]),
                           c('fit_link', 'se_link'))) %>%
     mutate(
-      fit_resp  = ilink(fit_link),
-      right_upr = ilink(fit_link + (2 * se_link)),
-      right_lwr = ilink(fit_link - (2 * se_link))
+      fore  = ilink(fit_link),
+      fore_low = ilink(fit_link + (2 * se_link)),
+      fore_high = ilink(fit_link - (2 * se_link))
     )
   return (prediction)
 }
-# doTestShortRange <- function(m, testSignals, testResp, cutoff) {
-#   # keep only kept regressors and date
-#   testSignals <-
-#     testSignals[, (names(testSignals) %in% c(labels(m$terms), "date"))]
-#   # get only complete cases (remove rows with NAs)
-#   testSignals <- testSignals[complete.cases(testSignals), ]
-#   minTestDate <- min(testSignals$date)
-#   maxTestDate <- max(testSignals$date)
-#   testResp <- testResp %>% filter(date >= minTestDate, date <= maxTestDate)
-#   
-#   prediction=doPrediction(m=m,testSignals = testSignals, testResp = testResp)
-#   print(prediction)
-#   mape <- mape(testResp$deaths, prediction$fit_resp)
-#   mae <- mae(testResp$deaths, prediction$fit_resp)
-#   mse <- mse(testResp$deaths, prediction$fit_resp)
-#   rmse1 <- sqrt(mse) 
-#   rmse2 <- rmse(testResp$deaths, prediction$fit_resp)
-#   smape <-smape(testResp$deaths, prediction$fit_resp)
-#   # normalized mean square error?
-#   
-#   #TODO 
-#   # t <- max(df_glm$date)
-#   # strawman <- abs((df_glm %>% filter(date == t))$deaths - (df_pred %>% filter(date == t+7))$deaths_post)
-#   # modeldev <- abs((df_pred %>% filter(date == t))$fit_resp_smooth - (df_pred %>% filter(date == t+7))$deaths_post)
-#   # scaled_abs_err <- modeldev/strawman
-#   # message(paste(“sca 7 =“,scaled_abs_err))
-#   
-#   print(paste("results for cutoff ", as.Date(cutoff)))
-#   print(paste("mape=", mape))
-#   print(paste("smape=", smape))
-#   print(paste("mae=", mae))
-#   print(paste("mse=", mse))
-#   print(paste("rmse=", rmse1))
-#   print(paste("rmse=", rmse2))
-#   #
-#   #
-#   #
-#   # ## join with official deaths
-#   # my_colors <- c("Official" = "red",
-#   #                "Estimated" = "blue")
-#   #
-#   # # grob <- grobTree(textGrob(, x=0.1,  y=0.95, hjust=0,
-#   # #                           gp=gpar(col="black", fontsize=13, fontface="italic")))
-#   #
-#   # p_model <- ggplot(data = df_glm, aes(x = date) ) +
-#   #   geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
-#   #   geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
-#   #   geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
-#   #               alpha = 0.1, fill = my_colors["Estimated"]) +
-#   #   geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
-#   #   geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
-#   #   scale_color_manual(values = my_colors) +
-#   #   labs(x = "Date", y =  "Number of deaths", title = iso_code_country,  colour = "") +
-#   #   theme_light(base_size = 15) +
-#   #   theme(legend.position="bottom") # + annotation_custom(grob)
-#   # # p_model
-#   # ggsave(plot = p_model,
-#   #        filename = paste0(
-#   #          "../data/estimates-symptom-lags/Plots-GLM/",
-#   #          iso_code_country,
-#   #          "-deaths-vs-predicted.png"
-#   #        ), width = 10, height = 7
-#   # )
-#   
-# }
+
 
 
 getMinAndMaxDatesAsString <- function (df){
@@ -318,6 +214,7 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   testSignals <-
     testSignals[, (names(testSignals) %in% c(labels(m$terms), "date"))]
   # get only complete cases (remove rows with NAs)
+  testResp<-testResp[complete.cases(testResp), ] # this is probably redundant because we did it in the main
   testSignals <- testSignals[complete.cases(testSignals), ]
   minTestDate <- min(testSignals$date)
   maxTestDate <- max(testSignals$date)
@@ -330,18 +227,18 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   firstdate=min(joined$date)
   finaldate=max(joined$date)
   testWindow = finaldate - firstdate
-  prediction=doPrediction(m=m,testSignals = testSignals, testResp = testResp)
+  prediction=doPrediction(m=m,testSignals = testSignals)
   # print(prediction)
-  toWrite <-prediction %>% select(date, fit_resp, right_lwr, right_upr)
-  
-  metricDF$startDate <-firstdate
-  metricDF$endDate <-finaldate
-  metricDF$mape <- mape(testResp$deaths, prediction$fit_resp)
-  metricDF$mae <- mae(testResp$deaths, prediction$fit_resp)
-  metricDF$mse <- mse(testResp$deaths, prediction$fit_resp)
-  metricDF$rmse <- rmse(testResp$deaths, prediction$fit_resp)
-  # metricDF$nrmse <- nrmse(testResp$deaths, prediction$fit_resp)
-  metricDF$smape <-smape(testResp$deaths, prediction$fit_resp)
+  toWrite <-prediction %>% select(date, fore, fore_low, fore_high)
+  toWrite <- toWrite %>% left_join(testResp %>% select(date, y), by="date")
+  metricDF[1,"startDate"] <-firstdate
+  metricDF[1,"endDate"] <-finaldate
+  metricDF[1,"mape"] <- mape(testResp$y, prediction$fore)
+  metricDF[1,"mae"] <- mae(testResp$y, prediction$fore)
+  metricDF[1,"mse"] <- mse(testResp$y, prediction$fore)
+  metricDF[1,"rmse"] <- rmse(testResp$y, prediction$fore)
+  # metricDF$nrmse <- nrmse(testResp$y, prediction$fore)
+  metricDF[1,"smape"] <-smape(testResp$y, prediction$fore)
   
   
   
@@ -364,9 +261,9 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
     # #                           gp=gpar(col="black", fontsize=13, fontface="italic")))
     #
     # p_model <- ggplot(data = df_glm, aes(x = date) ) +
-    #   geom_line(aes(y = fit_resp, colour = "Estimated"), size = 1, alpha = 0.8) +
-    #   geom_point(aes(y = fit_resp, colour = "Estimated"), size = 1.5, alpha = 0.6) +
-    #   geom_ribbon(aes(ymin = right_lwr, ymax = right_upr),
+    #   geom_line(aes(y = fore, colour = "Estimated"), size = 1, alpha = 0.8) +
+    #   geom_point(aes(y = fore, colour = "Estimated"), size = 1.5, alpha = 0.6) +
+    #   geom_ribbon(aes(ymin = fore_low, ymax = fore_high),
     #               alpha = 0.1, fill = my_colors["Estimated"]) +
     #   geom_point(aes(y = deaths, colour = "Official"), size = 1.5, alpha = 0.6) +
     #   geom_line(aes(y = deaths, colour = "Official"), size = 0.2, alpha = 0.6) +
@@ -396,6 +293,60 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
 columns_to_try <- c(
   # "pct_cli",
   # "pct_ili",
+  ########## the two above were not used
+  # "pct_fever",
+  # "pct_cough",
+  # "pct_difficulty_breathing",
+  # "pct_fatigue",
+  # "pct_stuffy_runny_nose",
+  # "pct_aches_muscle_pain",
+  # "pct_sore_throat",
+  # "pct_chest_pain",
+  # "pct_nausea",
+  # "pct_anosmia_ageusia",
+  # "pct_eye_pain",
+  # "pct_headache",
+  # "pct_cmnty_sick",
+  # "pct_ever_tested",
+  # "pct_tested_recently",
+  # "pct_worked_outside_home",
+  # "pct_grocery_outside_home",
+  # "pct_ate_outside_home",
+  # "pct_spent_time_with_non_hh",
+  # "pct_attended_public_event",
+  # "pct_used_public_transit",
+  # "pct_direct_contact_with_non_hh",
+  # "pct_wear_mask_all_time",
+  # "pct_wear_mask_most_time",
+  # "pct_wear_mask_half_time",
+  # "pct_wear_mask_some_time",
+  # "pct_wear_mask_none_time",
+  # "pct_no_public",
+  # "pct_feel_nervous_all_time",
+  # "pct_feel_nervous_most_time",
+  # "pct_feel_nervous_some_time",
+  # "pct_feel_nervous_little_time",
+  # "pct_feel_nervous_none_time",
+  # "pct_feel_depressed_all_time",
+  # "pct_feel_depressed_most_time",
+  # "pct_feel_depressed_some_time",
+  # "pct_feel_depressed_little_time",
+  # "pct_feel_depressed_none_time",
+  # "pct_worried_ill_covid19_very",
+  # "pct_worried_ill_covid19_somewhat",
+  # "pct_worried_ill_covid19_notTooWorried",
+  # "pct_worried_ill_covid19_notWorried",
+  # "pct_enough_toEat_very_worried",
+  # "pct_enough_toEat_somewhat_worried",
+  # "pct_enough_toEat_notToo_worried",
+  # "pct_enough_toEat_not_worried",
+  # "pct_chills",
+  # "pct_finances_very_worried",
+  # "pct_finances_somewhat_worried",
+  # "pct_finances_notToo_worried",
+  # "pct_finances_not_worried"
+  
+  ##### the following are those carlos was using. 
   "pct_fever",
   "pct_cough",
   "pct_difficulty_breathing",
@@ -441,12 +392,7 @@ columns_to_try <- c(
   "pct_enough_toEat_very_worried",
   "pct_enough_toEat_somewhat_worried",
   "pct_enough_toEat_notToo_worried",
-  "pct_enough_toEat_not_worried",
-  "pct_chills",
-  "pct_finances_very_worried",
-  "pct_finances_somewhat_worried",
-  "pct_finances_notToo_worried",
-  "pct_finances_not_worried"
+  "pct_enough_toEat_not_worried"
 )
 
 
@@ -455,99 +401,104 @@ file_in_pattern <- ".*_UMD_country_nobatch_past_smooth.csv"
 
 files <- dir(file_in_path, pattern = file_in_pattern)
 
-countriesToExclude <- c("")
-countriesDone <- c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BG","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
+countriesToExclude <- c("AT","BG")
+countriesDone <- c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-
+countriesToDo <-c("GB")
 opt_correls <- data.frame()
 
 for (file in files) {
   #tryCatch({
   iso_code_country <- substr(file, 1, 2)
-  if (iso_code_country  %notin% countriesToExclude ){
+  #  if (iso_code_country  %notin% countriesToExclude ){
+  if (iso_code_country  %in% countriesToDo ){
     cat("doing ", iso_code_country, ": ")
     ## Load UMD regressors ----
-    tryCatch({
-      #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
-      data_df <-
-        read.csv(
-          paste0(
-            "../data/estimates-umd-unbatched/PlotData/",
-            iso_code_country ,
-            "_UMD_country_nobatch_past_smooth.csv"
-          )
+    
+    #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
+    data_df <-
+      read.csv(
+        paste0(
+          "../data/estimates-umd-unbatched/PlotData/",
+          iso_code_country ,
+          "_UMD_country_nobatch_past_smooth.csv"
         )
-      
-      
-      data_df$date <- as.Date(data_df$date)
-      
-      ## remove "..._smooth", "..._high/low"
-      df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
-      #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
-      df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
-      df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
-      df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
-      df_umd <- df_umd * data_df$population / 100
-      df_umd$date <- data_df$date
-      
-      colnames(df_umd)
-      
-      ## Load CCFR regressors
-      df_ccfr <-
-        read.csv(
-          paste0(
-            "../data/estimates-ccfr-based/PlotData/",
-            iso_code_country,
-            "-estimate.csv"
-          )
-        ) %>%
-        mutate(date = as.Date(date))
-      
-      ## Load NSUM regressors TODO
-      
-      #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
-      #  mutate(date = as.Date(date) )
-      
-      ## Load number of deaths ----
-      
-      df_deaths <-
-        read.csv(
-          paste0(
-            "../data/estimates-confirmed/PlotData/",
-            iso_code_country,
-            "-estimate.csv"
-          )
-        ) %>%
-        #df_deaths <- read.csv(paste0("../../coronasurveys/coronasurveys/data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
-        mutate(date = as.Date(date)) %>%
-        mutate(y = deaths) %>%
-        mutate(y = rollmean(y, 1, fill = NA)) %>%
-        filter(!is.na(y))
-      
-      #########
-      
-      
-      ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
-      
-      firstCutoff <- as.Date("2020-09-01")
-      endDate <- max(df_umd$date)
-      
-      cutoff <- endDate
-      cutoffs <- vector()
-      while (cutoff > firstCutoff) {
-        cutoffs <- append(cutoffs, cutoff, after = 0)
-        cutoff <- cutoff - 15
-        #print(cutoffs)
-      }
-      
-      #
-      #  print (cutoffs)
-      
-      # print(df_deaths)
-      strawmanPred=(df_deaths %>% filter(date==cutoff))$deaths
-      toWrite <- data.frame()
-      metricsToWrite<-data.frame()
-      for (cutoff in cutoffs) {
+      )
+    
+    
+    data_df$date <- as.Date(data_df$date)
+    
+    ## remove "..._smooth", "..._high/low"
+    df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
+    #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
+    df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
+    df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
+    df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
+    df_umd <- df_umd * data_df$population / 100
+    df_umd$date <- data_df$date
+    
+    colnames(df_umd)
+    
+    ## Load CCFR regressors
+    df_ccfr <-
+      read.csv(
+        paste0(
+          "../data/estimates-ccfr-based/PlotData/",
+          iso_code_country,
+          "-estimate.csv"
+        )
+      ) %>%
+      mutate(date = as.Date(date))
+    
+    ## Load NSUM regressors TODO
+    
+    #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
+    #  mutate(date = as.Date(date) )
+    
+    ## Load number of deaths ----
+    
+    df_deaths <-
+      read.csv(
+        paste0(
+          "../data/estimates-confirmed/PlotData/",
+          iso_code_country,
+          "-estimate.csv"
+        )
+      ) %>% mutate(date = as.Date(date))
+    df_deaths$deaths[df_deaths$deaths < 0] <- NA
+    df_deaths$cases[df_deaths$cases < 0] <- NA
+    
+    df_deaths <- df_deaths %>%
+      mutate(y = deaths) %>%
+      mutate(y = rollmean(y, 1, fill = NA)) %>%
+      select (date, y) %>%
+      filter(!is.na(y)) # keeping only what we need so that we can filter out NAs as follows
+    #########
+    # filter out NAs
+    df_deaths <- df_deaths[complete.cases(df_deaths), ]
+    
+    ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
+    
+    firstCutoff <- as.Date("2020-11-10")
+    endDate <- max(df_umd$date)
+    
+    cutoff <- endDate
+    cutoffs <- vector()
+    while (cutoff >= firstCutoff) {
+      cutoffs <- append(cutoffs, cutoff, after = 0)
+      cutoff <- cutoff - 15
+      #print(cutoffs)
+    }
+    
+    #
+    #  print (cutoffs)
+    
+    # print(df_deaths)
+    strawmanPred=(df_deaths %>% filter(date==cutoff))$y
+    toWrite <- data.frame()
+    metricsToWrite<-data.frame()
+    for (cutoff in cutoffs) {
+      tryCatch({
         # select training set
         df_deaths_train <-
           df_deaths %>% filter(date <= cutoff) 
@@ -569,8 +520,8 @@ for (file in files) {
             columns_to_try = columns_to_try,
             iso_code_country = iso_code_country
           )
-        
-        shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% select(date, deaths)), inputDF=df_umd_train, correl=opt_correl_single_country)
+        # Shift signals We will remove NAs from df_umd_test later
+        shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
         
         # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
         shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
@@ -583,13 +534,12 @@ for (file in files) {
         
         m <-
           doGLM(
-            toPredict = df_deaths_train,
             modelPar = shiftedTrainSignal,
             iso_code_country = iso_code_country
           )
         print(paste("doing TESTING for cutoff ", as.Date(cutoff)))
         # call Test ----
-        # but before shift the test set to the future
+        # but before shift the test set to the future We will remove NAs from df_umd_test later
         shiftedTest <- shiftSignals(baseForOutputDF=(df_umd_test %>% select(date)),
                                     inputDF=df_umd_test, correl=opt_correl_single_country)
         
@@ -599,9 +549,9 @@ for (file in files) {
         
         
         print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
-        metricDF<-list()
-        metricDF$cutoff=cutoff
-        metricDF$predType="nearFuture"
+        metricDF<-data.frame()
+        metricDF[1,"cutoff"]=as.Date(cutoff)
+        metricDF[1,"predType"]="nearFuture"
         outDF=doTest(m = m, 
                      testSignals = leftoverFromShifted,
                      testResp = df_deaths_test,
@@ -612,11 +562,11 @@ for (file in files) {
           outDF["strawman"]=NA
           outDF["scaled_abs_err"]=NA
           for (row in 1:nrow(outDF)) {
-            ourEstimate <- outDF[row, "fit_resp"]
-            date  <- outDF[row, "date"]
-            strawmandev <- abs(strawmanPred - (df_deaths_test %>% filter(date == cutoff+7))$deaths)+10^-6
+            ourEstimate <- outDF[row, "fore"]
+            curdate  <- outDF[row, "date"]
+            strawmandev <- abs(strawmanPred - (df_deaths_test %>% filter(date == curdate))$y)+10^-6
             
-            modeldev <- abs(ourEstimate - (df_deaths_test %>% filter(date == cutoff+7))$deaths)
+            modeldev <- abs(ourEstimate - (df_deaths_test %>% filter(date == curdate))$y)
             scaled_abs_err <- modeldev/strawmandev
             outDF[row,"strawman"]=strawmanPred
             outDF[row,"scaled_abs_err"]=scaled_abs_err
@@ -628,9 +578,9 @@ for (file in files) {
           metricsToWrite<-rbind(metricsToWrite, metricDF)
         }
         print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
-        metricDF<-list()
-        metricDF$cutoff=cutoff
-        metricDF$predType="nearFuture"
+        metricDF<-data.frame()
+        metricDF[1,"cutoff"]=as.Date(cutoff)
+        metricDF[1,"predType"]="nearFuture"
         outDF=doTest(m = m,
                      testSignals = shiftedTest,
                      testResp = df_deaths_test,
@@ -646,9 +596,9 @@ for (file in files) {
         }
         combinedSignals = rbind(leftoverFromShifted, shiftedSignals)
         print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
-        metricDF<-list()
-        metricDF$cutoff=cutoff
-        metricDF$predType="nearFuture"
+        metricDF<-data.frame()
+        metricDF[1,"cutoff"]=as.Date(cutoff)
+        metricDF[1,"predType"]="nearFuture"
         outDF=doTest(m = m,
                      testSignals = combinedSignals,
                      testResp = df_deaths_test,
@@ -662,18 +612,26 @@ for (file in files) {
           metricsToWrite<-rbind(metricsToWrite, metricDF)
           toWrite<-rbind(toWrite,outDF)
         }
-      }
+      },
+      error = function(cond) {
+        message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
+        message(cond)
+        traceback()
+      })
+    }
+    tryCatch({
       toWrite["lag"]=toWrite["date"]-toWrite["cutoff"]
-      #"","date","fit_resp","right_lwr","right_upr","cutoff","strawman","scaled_abs_err","predType","lag"
-      toWrite<-toWrite[,c(5,1,9,8,2,3,4,6,7)]
+      #"","date","fore","fore_low","fore_high","cutoff","strawman","scaled_abs_err","predType","lag"
+      toWrite<-toWrite[,c(6,1,10,9,2,3,4,5,7,8)]
       write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-estimates-lag-daily.csv"))
+      write.csv(metricsToWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-aggregatemetrics-lag.csv"))
       message("succeeded")
-      
-    },
-    error = function(cond) {
-      message(paste("error in country", iso_code_country))
-      message(cond)
+    }, error=function(cond){
+      message(paste("error writing country ",iso_code_country))
+      message (cond)
+      traceback()
     })
+    
   }
 }
 
