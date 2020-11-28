@@ -7,58 +7,62 @@ library(MASS)
 library(ggplot2)
 library(grid) # annotate a ggplot
 
-# Harold, check if you have newer version
 check_lags <-
   function(df_response,
            df_add_regressors,
            columns_to_try,
            min_lag = 7,
            max_lag = 60) {
-    
-#    df_response$date <- as.Date(df_response$date)
+    df_response$date <- as.Date(df_response$date)
     
     df_out <- data.frame()
     
     for (column_in in columns_to_try) {
-      for (date_shift in seq(min_lag,max_lag)) {
-        df_single_symp <- df_add_regressors[, c("date", column_in)]
-        
-        # time shifting in extra regressors:
-        df_single_symp$date <-
-          as.Date(df_single_symp$date) + date_shift
-        
-        # set the same dates in df_response and df_single_symp:
-        start_date <-
-          max(min(df_single_symp$date), min(df_response$date))
-        end_date <-
-          min(max(df_single_symp$date), max(df_response$date))
-        
-        df_single_symp <-
-          df_single_symp %>% filter(date >= start_date, date <= end_date)
-        df_response <-
-          df_response %>% filter(date >= start_date, date <= end_date)
-        
-        # df_single_symp <- df_single_symp[1:165, ]
-        # df_response <- df_response[1:165, ]
+      for (date_shift in seq(min_lag, max_lag)) {
+        # replaced these  df_single_symp <- df_add_regressors[, c("date", column_in)]
+        # df_single_symp$date <-
+        #  as.Date(df_single_symp$date) + date_shift
+        # joined <- (df_single_symp %>% select(date, column_in)) 
+        # by the following
+        joined <- df_add_regressors %>% dplyr::select(date, column_in) %>% mutate(date=as.Date(date)+date_shift)%>% inner_join( df_response, by="date")
+        # remove NAs in what we want, we can do it because we only have column_in now
+        joined  <- joined[complete.cases(joined), ]
         
         win_size <-
-          as.integer(max(df_response$date) - min(df_response$date))
+          as.integer(max(joined$date) - min(joined$date))
         
-        #        correl <-
-        #          cor(df_response$y, df_single_symp[, column_in], method = "spearman")
-        corTest <-
-          cor.test(df_response$y, df_single_symp[, column_in], method = "spearman")
-        
-        df_correl <-
-          data.frame(
-            shift = date_shift,
-            correlations = corTest$estimate,
-            pval = corTest$p.value,
-            win_size = win_size,
-            signal = column_in
-          )
-        
+        # if (sum(is.na(joined[, column_in]))==0){
+        tryCatch({
+          corTest <-
+            cor.test(joined$y, joined[, column_in], method = "spearman")
+          
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = corTest$estimate,
+              pval = corTest$p.value,
+              win_size = win_size,
+              signal = column_in
+            )
+        }, error = function(cond){
+          message("Error in correlation: ")
+          message(cond)
+          traceback()
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = 0,
+              pval = 1,
+              win_size = win_size,
+              signal = column_in
+            )
+        })
         df_out <- rbind(df_out, df_correl)
+        # } else {
+        #   # print(paste("got NAs for column ",column_in, " and date shift ", date_shift))
+        # }#endif
+        # 
+        
       } # loop-date_shift
     } # loop-column_in
     
@@ -67,66 +71,7 @@ check_lags <-
     
   } # end-check_lags
 
-load_and_combine <-
-  function(code, nsum=FALSE) {
-    
-    ## Load and clean official data targets
-    loaded_confirmed_df <-read.csv(paste0("../data/estimates-confirmed/PlotData/",code,"-estimate.csv"))
-    
-    df_confirmed <- loaded_confirmed_df %>%
-      mutate(date = as.Date(date)) %>%
-      dplyr::select(date,deaths,cases) 
-    df_confirmed$cases = pmax(df_confirmed$cases,0) # get rid of negatives
-    df_confirmed$deaths = pmax(df_confirmed$deaths,0) # get rid of negatives
-    
-    pop <- loaded_confirmed_df$population[1]
-    cat("[loaded confirmed]")
-    
-#    cat(colnames(loaded_confirmed_df))
-    
-    ## Load and clean UMD regressors ----
-    loaded_umd_df <- read.csv(paste0("../data/estimates-umd-unbatched/PlotData/", code ,"_UMD_country_nobatch_past_smooth.csv"))
-    df_umd <- loaded_umd_df %>% dplyr::select(starts_with("pct"))
-    df_umd <- df_umd * pop / 100
-    df_umd$date <- as.Date(loaded_umd_df$date)
-    
-    cat("[loaded UMD]")
-#    cat(colnames(loaded_umd_df))
-    
-    ## Load and clean CCFR regressors
-    loaded_ccfr_df <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", code ,"-estimate.csv"))
-    df_ccfr <- loaded_ccfr_df %>% 
-      mutate(date = as.Date(date)) %>% 
-      dplyr::select(date,cases_daily,cases_contagious,cases_active)
-    
-    cat("[loaded CCFR]")    
-#    cat(colnames(loaded_ccfr_df))
-    
-    ## Load NSUM and clean regressors, not all countries have this
-    if (nsum)
-    {
-      loaded_nsum_df <- read.csv(paste0("../data/estimates-W/PlotData/",code,"-estimate.csv"))
-      df_nsum <- loaded_nsum_df %>% dplyr::select(p_cases,p_cases_recent,p_cases_fatalities,p_cases_stillsick)
-      df_nsum <- df_nsum * pop
-      df_nsum$date <- as.Date(loaded_nsum_df$date)
- 
-      cat("[loaded NSUM]")
-    }
-    
-    ## Stitch together data frames ...
-    
-    all_df <- df_umd %>% full_join(df_ccfr, by = "date")
-    
-    if (nsum)
-    {
-      all_df <- all_df %>% full_join(df_nsum, by = "date")
-    }
-    
-    all_df <- all_df %>% full_join(df_confirmed, by = "date")
-    
-#    cat(colnames(all_df))
-    return(all_df)
-  }
+
 
 opt_correls <- data.frame()
 
@@ -264,9 +209,9 @@ signals_to_try <- c(signals_umd,signals_ccfr)
 
 lag <- 7 # decide here the min lag and only project up to cutoff+lag
 
-# Files to consider, could be other source of names
-file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
-file_in_pattern <- ".*_UMD_country_nobatch_past_smooth.csv"
+# Files to consider,
+file_in_path <- "../data/all_giant_df/"
+file_in_pattern <- ".*alldf.csv"
 files <- dir(file_in_path, pattern = file_in_pattern)
 
 # ISO codes to process
@@ -277,12 +222,14 @@ for (file in files) {
 
 # Debug: Optionaly reduce to some countries to run faster
 #iso_codes <- c("GB")
+iso_codes <- c("BR"", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 
 # Load and process given countries
 for (code in iso_codes)
 {
   cat(" Doing ", code, ": ")
-  all_df <- load_and_combine(code,FALSE)
+  all_df <- read.csv(paste0("../data/all_giant_df/", code, "_alldf.csv"))
+  all_df <- all_df %>% mutate(date = as.Date(date))
   
   ## Prepare sources and target 
   y <- signal_to_match
@@ -322,7 +269,7 @@ for (code in iso_codes)
     df_add_regressors = x_df,
     columns_to_try = signals_to_try,
     min_lag = lag,
-    max_lag = 60)
+    max_lag = 40)
   
   # extract lag with significant-maximum correlation by signal:
   opt_correl_single_country <- correls_single_country %>% 
