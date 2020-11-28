@@ -10,8 +10,140 @@ library(Metrics)
 milag=7
 mxlag=60
 plotCorrel=FALSE
-plotForecast=FALSE
+plotForecast=TRUE
 
+signal_to_match <- "deaths"
+#signal_to_match <- "cases"
+
+signals_umd <- c(
+  "pct_fever",
+  "pct_cough",
+  "pct_difficulty_breathing",
+  "pct_fatigue",
+  "pct_stuffy_runny_nose",
+  "pct_aches_muscle_pain",
+  "pct_sore_throat",
+  "pct_chest_pain",
+  "pct_nausea",
+  "pct_anosmia_ageusia",
+  "pct_eye_pain",
+  "pct_headache",
+  "pct_cmnty_sick",
+  "pct_ever_tested",
+  "pct_tested_recently",
+  "pct_worked_outside_home",
+  "pct_grocery_outside_home",
+  "pct_ate_outside_home",
+  "pct_spent_time_with_non_hh",
+  "pct_attended_public_event",
+  "pct_used_public_transit",
+  "pct_direct_contact_with_non_hh",
+  "pct_wear_mask_all_time",
+  "pct_wear_mask_most_time",
+  "pct_wear_mask_half_time",
+  "pct_wear_mask_some_time",
+  "pct_wear_mask_none_time",
+  "pct_no_public",
+  "pct_feel_nervous_all_time",
+  "pct_feel_nervous_most_time",
+  "pct_feel_nervous_some_time",
+  "pct_feel_nervous_little_time",
+  "pct_feel_nervous_none_time",
+  "pct_feel_depressed_all_time",
+  "pct_feel_depressed_most_time",
+  "pct_feel_depressed_some_time",
+  "pct_feel_depressed_little_time",
+  "pct_feel_depressed_none_time",
+  "pct_worried_ill_covid19_very",
+  "pct_worried_ill_covid19_somewhat",
+  "pct_worried_ill_covid19_notTooWorried",
+  "pct_worried_ill_covid19_notWorried",
+  "pct_enough_toEat_very_worried",
+  "pct_enough_toEat_somewhat_worried",
+  "pct_enough_toEat_notToo_worried",
+  "pct_enough_toEat_not_worried"
+  #  "pct_chills",
+  #  "pct_finances_very_worried",
+  #  "pct_finances_somewhat_worried",
+  #  "pct_finances_notToo_worried",
+  #  "pct_finances_not_worried"
+)
+
+signals_umd_past_smooth <- c(
+  "pct_fever_past_smooth",
+  "pct_cough_past_smooth",
+  "pct_difficulty_breathing_past_smooth",
+  "pct_fatigue_past_smooth",
+  "pct_stuffy_runny_nose_past_smooth",
+  "pct_aches_muscle_pain_past_smooth",
+  "pct_sore_throat_past_smooth",
+  "pct_chest_pain_past_smooth",
+  "pct_nausea_past_smooth",
+  "pct_anosmia_ageusia_past_smooth",
+  "pct_eye_pain_past_smooth",
+  "pct_headache_past_smooth",
+  "pct_cmnty_sick_past_smooth",
+  "pct_ever_tested_past_smooth",
+  "pct_tested_recently_past_smooth",
+  "pct_worked_outside_home_past_smooth",
+  "pct_grocery_outside_home_past_smooth",
+  "pct_ate_outside_home_past_smooth",
+  "pct_spent_time_with_non_hh_past_smooth",
+  "pct_attended_public_event_past_smooth",
+  "pct_used_public_transit_past_smooth",
+  "pct_direct_contact_with_non_hh_past_smooth",
+  "pct_wear_mask_all_time_past_smooth",
+  "pct_wear_mask_most_time_past_smooth",
+  "pct_wear_mask_half_time_past_smooth",
+  "pct_wear_mask_some_time_past_smooth",
+  "pct_wear_mask_none_time_past_smooth",
+  "pct_no_public_past_smooth",
+  "pct_feel_nervous_all_time_past_smooth",
+  "pct_feel_nervous_most_time_past_smooth",
+  "pct_feel_nervous_some_time_past_smooth",
+  "pct_feel_nervous_little_time_past_smooth",
+  "pct_feel_nervous_none_time_past_smooth",
+  "pct_feel_depressed_all_time_past_smooth",
+  "pct_feel_depressed_most_time_past_smooth",
+  "pct_feel_depressed_some_time_past_smooth",
+  "pct_feel_depressed_little_time_past_smooth",
+  "pct_feel_depressed_none_time_past_smooth",
+  "pct_worried_ill_covid19_very_past_smooth",
+  "pct_worried_ill_covid19_somewhat_past_smooth",
+  "pct_worried_ill_covid19_notTooWorried_past_smooth",
+  "pct_worried_ill_covid19_notWorried_past_smooth",
+  "pct_enough_toEat_very_worried_past_smooth",
+  "pct_enough_toEat_somewhat_worried_past_smooth",
+  "pct_enough_toEat_notToo_worried_past_smooth",
+  "pct_enough_toEat_not_worried_past_smooth"
+  #  "pct_chills",
+  #  "pct_finances_very_worried",
+  #  "pct_finances_somewhat_worried",
+  #  "pct_finances_notToo_worried",
+  #  "pct_finances_not_worried"
+)
+
+
+signals_ccfr <- c(
+  "cases",
+  "cases_daily",
+  "cases_active",
+  "cases_contagious"
+)
+
+signals_nsum <- c(
+  "p_cases",
+  "p_cases_recent",
+  "p_cases_fatalities",
+  "p_cases_stillsick"
+)
+
+#signals_to_try <- c(signals_umd,signals_ccfr) 
+#signals_to_try <- c(signals_umd,signals_ccfr,signals_nsum) 
+#signals_to_try <- signals_nsum
+#signals_to_try <- signals_ccfr
+#signals_to_try <- signals_umd_past_smooth
+signals_to_try <- signals_umd
 
 check_lags <-
   function(df_response,
@@ -214,7 +346,7 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   testSignals <-
     testSignals[, (names(testSignals) %in% c(labels(m$terms), "date"))]
   # get only complete cases (remove rows with NAs)
-  testResp<-testResp[complete.cases(testResp), ] # this is probably redundant because we did it in the main
+  testResp<-testResp[complete.cases(testResp), ] 
   testSignals <- testSignals[complete.cases(testSignals), ]
   minTestDate <- min(testSignals$date)
   maxTestDate <- max(testSignals$date)
@@ -253,6 +385,42 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   #
   #
   if (plotForecast){
+    
+    
+    # Add target for plotting
+    x_plot_df <- prediction %>% full_join(y_df, by="date")
+    # x_plot_df <- x_plot_df %>% full_join(y_pre_df, by="date")
+    # x_plot_df <- x_plot_df %>% full_join(y_post_df, by="date")
+    # Add a smoothed response
+    x_plot_df$fore_smooth <- rollmean(x_plot_df$fore, 1, fill = NA)
+    
+    
+    my_colors <- c("Actual Value" = "red", 
+                   "Estimated" = "blue", "Post" = "black")
+    
+    
+    p_model <- ggplot(data = x_plot_df, aes(x = date) ) +
+      geom_line(aes(y = fore_smooth, colour = "Estimated"), size = 1, alpha = 0.8) +
+      geom_point(aes(y = fore_smooth, colour = "Estimated"), size = 1.5, alpha = 0.6) +
+      geom_ribbon(aes(ymin = fore_low, ymax = fore_high),
+                  alpha = 0.1, fill = my_colors["Estimated"]) +
+      geom_point(aes(y = y, colour = "Fitting"), size = 1.5, alpha = 0.6) +
+      geom_line(aes(y = y, colour = "Fitting"), size = 0.2, alpha = 0.6) +
+      # geom_point(aes(y = y_post, colour = "Post"), size = 1.5, alpha = 0.6) +
+      # geom_line(aes(y = y_post, colour = "Post"), size = 0.2, alpha = 0.6) +     
+      # scale_color_manual(values = my_colors) +
+      labs(x = "Date", y =  paste("Number of ",signal_to_match), title = iso_code_country,  colour = "") +
+      theme_light(base_size = 15) +
+      theme(legend.position="bottom") # + annotation_custom(grob)
+    # p_model
+    ggsave(plot = p_model, 
+           filename = paste0(
+             "../data/estimates-symptom-lags/cutoffs/Plots/",
+             iso_code_country,"-",signal_to_match,"-", cutoff,
+             "-forecast-glm.png"
+           ), width = 10, height = 7
+    )
+    
     # ## join with official deaths
     # my_colors <- c("Official" = "red",
     #                "Estimated" = "blue")
@@ -282,129 +450,22 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   }
   return (toWrite)
 }
-# columns_to_try = c(
-#   "pct_anosmia_ageusia_past_smooth",
-#   "pct_sore_throat_past_smooth",
-#   "pct_fever_past_smooth",
-#   "pct_cmnty_sick_past_smooth",
-#   "pct_direct_contact_with_non_hh_past_smooth"
-# )
-
-columns_to_try <- c(
-  # "pct_cli",
-  # "pct_ili",
-  ########## the two above were not used
-  # "pct_fever",
-  # "pct_cough",
-  # "pct_difficulty_breathing",
-  # "pct_fatigue",
-  # "pct_stuffy_runny_nose",
-  # "pct_aches_muscle_pain",
-  # "pct_sore_throat",
-  # "pct_chest_pain",
-  # "pct_nausea",
-  # "pct_anosmia_ageusia",
-  # "pct_eye_pain",
-  # "pct_headache",
-  # "pct_cmnty_sick",
-  # "pct_ever_tested",
-  # "pct_tested_recently",
-  # "pct_worked_outside_home",
-  # "pct_grocery_outside_home",
-  # "pct_ate_outside_home",
-  # "pct_spent_time_with_non_hh",
-  # "pct_attended_public_event",
-  # "pct_used_public_transit",
-  # "pct_direct_contact_with_non_hh",
-  # "pct_wear_mask_all_time",
-  # "pct_wear_mask_most_time",
-  # "pct_wear_mask_half_time",
-  # "pct_wear_mask_some_time",
-  # "pct_wear_mask_none_time",
-  # "pct_no_public",
-  # "pct_feel_nervous_all_time",
-  # "pct_feel_nervous_most_time",
-  # "pct_feel_nervous_some_time",
-  # "pct_feel_nervous_little_time",
-  # "pct_feel_nervous_none_time",
-  # "pct_feel_depressed_all_time",
-  # "pct_feel_depressed_most_time",
-  # "pct_feel_depressed_some_time",
-  # "pct_feel_depressed_little_time",
-  # "pct_feel_depressed_none_time",
-  # "pct_worried_ill_covid19_very",
-  # "pct_worried_ill_covid19_somewhat",
-  # "pct_worried_ill_covid19_notTooWorried",
-  # "pct_worried_ill_covid19_notWorried",
-  # "pct_enough_toEat_very_worried",
-  # "pct_enough_toEat_somewhat_worried",
-  # "pct_enough_toEat_notToo_worried",
-  # "pct_enough_toEat_not_worried",
-  # "pct_chills",
-  # "pct_finances_very_worried",
-  # "pct_finances_somewhat_worried",
-  # "pct_finances_notToo_worried",
-  # "pct_finances_not_worried"
-  
-  ##### the following are those carlos was using. 
-  "pct_fever",
-  "pct_cough",
-  "pct_difficulty_breathing",
-  "pct_fatigue",
-  "pct_stuffy_runny_nose",
-  "pct_aches_muscle_pain",
-  "pct_sore_throat",
-  "pct_chest_pain",
-  "pct_nausea",
-  "pct_anosmia_ageusia",
-  "pct_eye_pain",
-  "pct_headache",
-  "pct_cmnty_sick",
-  "pct_ever_tested",
-  "pct_tested_recently",
-  "pct_worked_outside_home",
-  "pct_grocery_outside_home",
-  "pct_ate_outside_home",
-  "pct_spent_time_with_non_hh",
-  "pct_attended_public_event",
-  "pct_used_public_transit",
-  "pct_direct_contact_with_non_hh",
-  "pct_wear_mask_all_time",
-  "pct_wear_mask_most_time",
-  "pct_wear_mask_half_time",
-  "pct_wear_mask_some_time",
-  "pct_wear_mask_none_time",
-  "pct_no_public",
-  "pct_feel_nervous_all_time",
-  "pct_feel_nervous_most_time",
-  "pct_feel_nervous_some_time",
-  "pct_feel_nervous_little_time",
-  "pct_feel_nervous_none_time",
-  "pct_feel_depressed_all_time",
-  "pct_feel_depressed_most_time",
-  "pct_feel_depressed_some_time",
-  "pct_feel_depressed_little_time",
-  "pct_feel_depressed_none_time",
-  "pct_worried_ill_covid19_very",
-  "pct_worried_ill_covid19_somewhat",
-  "pct_worried_ill_covid19_notTooWorried",
-  "pct_worried_ill_covid19_notWorried",
-  "pct_enough_toEat_very_worried",
-  "pct_enough_toEat_somewhat_worried",
-  "pct_enough_toEat_notToo_worried",
-  "pct_enough_toEat_not_worried"
-)
 
 
-file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
-file_in_pattern <- ".*_UMD_country_nobatch_past_smooth.csv"
+y <- signal_to_match
+
+#file_in_path <- "../data/estimates-umd-unbatched/PlotData/"
+#file_in_pattern <- ".*_UMD_country_nobatch_past_smooth.csv"
+
+file_in_path <- "../data/all_giant_df/"
+file_in_pattern <- ".*alldf.csv"
 
 files <- dir(file_in_path, pattern = file_in_pattern)
 
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("PT")
+countriesToDo <-c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -421,76 +482,63 @@ for (file in files) {
     }
     if (choice){
       cat("doing ", iso_code_country, ": ")
-      ## Load UMD regressors ----
+      all_df <- read.csv(paste0("../data/all_giant_df/", iso_code_country, "_alldf.csv"))
+      all_df <- all_df %>% mutate(date = as.Date(date))
+      y <- signal_to_match
+      y_df <- all_df %>% dplyr::select(date,y)
+      colnames(y_df) <- c("date","y")
       
-      #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
-      data_df <-
-        read.csv(
-          paste0(
-            "../data/estimates-umd-unbatched/PlotData/",
-            iso_code_country ,
-            "_UMD_country_nobatch_past_smooth.csv"
-          )
-        )
+      x_df <- all_df %>% dplyr::select(date)
+      for (signal in signals_to_try)
+      {
+        s_df <- all_df %>% dplyr::select(date,signal)
+        x_df <- x_df %>% full_join(s_df, by = "date")
+      }
       
+      # I think the following line should not be done commented out
+      # x_df <- x_df[complete.cases(x_df), ]
+          
+      # ## remove "..._smooth", "..._high/low"
+      # x_df <- data_df[, str_detect(colnames(data_df), "pct_")]
+      # #x_df <- x_df[, !str_detect(colnames(x_df), "smooth")]
+      # x_df <- x_df[, !str_detect(colnames(x_df), "high")]
+      # x_df <- x_df[, !str_detect(colnames(x_df), "low")]
+      # x_df <- x_df[, !str_detect(colnames(x_df), "batched")]
+      # x_df <- x_df * data_df$population / 100
+      # x_df$date <- data_df$date
+      # 
+      # colnames(x_df)
       
-      data_df$date <- as.Date(data_df$date)
+     
       
-      ## remove "..._smooth", "..._high/low"
-      df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
-      #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
-      df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
-      df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
-      df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
-      df_umd <- df_umd * data_df$population / 100
-      df_umd$date <- data_df$date
+     
       
-      colnames(df_umd)
+      # y_df <-
+      #   read.csv(
+      #     paste0(
+      #       "../data/estimates-confirmed/PlotData/",
+      #       iso_code_country,
+      #       "-estimate.csv"
+      #     )
+      #   ) %>% mutate(date = as.Date(date))
+      # y_df$deaths[y_df$deaths < 0] <- NA
+      # y_df$cases[y_df$cases < 0] <- NA
       
-      ## Load CCFR regressors
-      df_ccfr <-
-        read.csv(
-          paste0(
-            "../data/estimates-ccfr-based/PlotData/",
-            iso_code_country,
-            "-estimate.csv"
-          )
-        ) %>%
-        mutate(date = as.Date(date))
-      
-      ## Load NSUM regressors TODO
-      
-      #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
-      #  mutate(date = as.Date(date) )
-      
-      ## Load number of deaths ----
-      
-      df_deaths <-
-        read.csv(
-          paste0(
-            "../data/estimates-confirmed/PlotData/",
-            iso_code_country,
-            "-estimate.csv"
-          )
-        ) %>% mutate(date = as.Date(date))
-      df_deaths$deaths[df_deaths$deaths < 0] <- NA
-      df_deaths$cases[df_deaths$cases < 0] <- NA
-      
-      df_deaths <- df_deaths %>%
-        mutate(y = deaths) %>%
-        mutate(y = rollmean(y, 1, fill = NA)) %>%
-        dplyr::select (date, y) %>%
-        filter(!is.na(y)) # keeping only what we need so that we can filter out NAs as follows
-      #########
-      # filter out NAs
-      df_deaths <- df_deaths[complete.cases(df_deaths), ]
+      # y_df <- y_df %>%
+      #   mutate(y = deaths) %>%
+      #   mutate(y = rollmean(y, 1, fill = NA)) %>%
+      #   dplyr::select (date, y) %>%
+      #   filter(!is.na(y)) # keeping only what we need so that we can filter out NAs as follows
+      # #########
+      # # filter out NAs
+      # y_df <- y_df[complete.cases(y_df), ]
       
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
-      firstCutoff <- as.Date("2020-11-10")
-      endDate <- max(df_umd$date)
+      firstCutoff <- as.Date("2020-9-10")
+      lastCutoff <- as.Date("2020-11-10")
       
-      cutoff <- endDate
+      cutoff <- lastCutoff
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
         cutoffs <- append(cutoffs, cutoff, after = 0)
@@ -501,35 +549,36 @@ for (file in files) {
       #
       #  print (cutoffs)
       
-      # print(df_deaths)
-      strawmanPred=(df_deaths %>% filter(date==cutoff))$y
+      # print(y_df)
+      strawmanPred=(y_df %>% filter(date==cutoff))$y
       toWrite <- data.frame()
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
+        cutoff=as.Date(cutoff)
         tryCatch({
           # dplyr::select training set
-          df_deaths_train <-
-            df_deaths %>% filter(date <= cutoff) 
-          df_umd_train <-
-            df_umd %>% filter(date <= cutoff)
+          y_df_train <-
+            y_df %>% filter(date <= cutoff) 
+          x_df_train <-
+            x_df %>% filter(date <= cutoff)
           
           # dplyr::select test set
-          df_deaths_test <-
-            df_deaths %>% filter(date > cutoff)
-          df_umd_test <-
-            df_umd %>% filter(date > cutoff)
+          y_df_test <-
+            y_df %>% filter(date > cutoff)
+          x_df_test <-
+            x_df %>% filter(date > cutoff)
           
           # call Correl ----
           print(paste("doing CORREL for cutoff ",as.Date(cutoff)))
           opt_correl_single_country <-
             doCorrelations(
-              toPredict = df_deaths_train,
-              modelPar = df_umd_train,
-              columns_to_try = columns_to_try,
+              toPredict = y_df_train,
+              modelPar = x_df_train,
+              columns_to_try = signals_to_try,
               iso_code_country = iso_code_country
             )
           # Shift train signals 
-          shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% dplyr::select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
+          shiftedSignals <- shiftSignals(baseForOutputDF=(y_df_train %>% dplyr::select(date, y)), inputDF=x_df_train, correl=opt_correl_single_country)
           
           # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
           shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
@@ -547,21 +596,19 @@ for (file in files) {
             )
           print(paste("doing TESTING for cutoff ", as.Date(cutoff)))
           # call Test ----
-          # but before shift the test set to the future We will remove NAs from df_umd_test later
-          shiftedTest <- shiftSignals(baseForOutputDF=(df_umd_test %>% dplyr::select(date)),
-                                      inputDF=df_umd_test, correl=opt_correl_single_country)
+          # but before shift the test set to the future We will remove NAs from x_df_test later
+          shiftedTest <- shiftSignals(baseForOutputDF=(x_df_test %>% dplyr::select(date)),
+                                      inputDF=x_df_test, correl=opt_correl_single_country)
           
           
           
           #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
           
           
-          # TODO add this selection of signals for all predictions
-          # # now for prediction keep only kept regressors and date
-          # x_predict_df <- x_predict_df[ , (names(x_predict_df) %in% c(labels(m1$terms),"date"))]
-          # # get only complete cases (remove rows with NAs)
-          # x_predict_df <- x_predict_df[complete.cases(x_predict_df), ]
-          # # end TODO
+        
+          # restrict as suggested by carlos. Complete cases is done in doTest
+          leftoverFromShifted <- leftoverFromShifted[ , (names(leftoverFromShifted) %in% c(labels(m$terms),"date"))]
+          shiftedTest <- shiftedTest[ , (names(shiftedTest) %in% c(labels(m$terms),"date"))]
           
           print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
           metricDF<-data.frame()
@@ -569,7 +616,7 @@ for (file in files) {
           metricDF[1,"predType"]="nearFuture"
           outDF=doTest(m = m, 
                        testSignals = leftoverFromShifted,
-                       testResp = df_deaths_test,
+                       testResp = y_df_test,
                        cutoff = cutoff,
                        metricDF = metricDF)
           if (nrow(outDF)>0){
@@ -579,9 +626,9 @@ for (file in files) {
             for (row in 1:nrow(outDF)) {
               ourEstimate <- outDF[row, "fore"]
               curdate  <- outDF[row, "date"]
-              strawmandev <- abs(strawmanPred - (df_deaths_test %>% filter(date == curdate))$y)+10^-6
+              strawmandev <- abs(strawmanPred - (y_df_test %>% filter(date == curdate))$y)+10^-6
               
-              modeldev <- abs(ourEstimate - (df_deaths_test %>% filter(date == curdate))$y)
+              modeldev <- abs(ourEstimate - (y_df_test %>% filter(date == curdate))$y)
               scaled_abs_err <- modeldev/strawmandev
               outDF[row,"strawman"]=strawmanPred
               outDF[row,"scaled_abs_err"]=scaled_abs_err
@@ -603,7 +650,7 @@ for (file in files) {
           metricDF[1,"predType"]="farFuture"
           outDF=doTest(m = m,
                        testSignals = shiftedTest,
-                       testResp = df_deaths_test,
+                       testResp = y_df_test,
                        cutoff=cutoff,
                        metricDF = metricDF)
           if (nrow(outDF)>0){
@@ -626,7 +673,7 @@ for (file in files) {
           metricDF[1,"predType"]="nearFar"
           outDF=doTest(m = m,
                        testSignals = combinedSignals,
-                       testResp = df_deaths_test,
+                       testResp = y_df_test,
                        cutoff=cutoff,
                        metricDF = metricDF)
           if (nrow(outDF)>0){
