@@ -4,14 +4,14 @@ library(ggplot2)
 library(stringr)
 library(tidyverse)
 
+input_file <- "../data/estimates-umd-batches/ES/ES_UMD_data.csv"
+serology_path <- "../data/estimates-umd-batches/serology/"
 
 ## Load data ----
-dt <- read.csv("../data/estimates-umd-batches/ES/ES_UMD_data.csv", 
-                 fileEncoding = "UTF-8")
+dt <- read.csv(input_file, fileEncoding = "UTF-8")
 dt <- subset(dt, select = -c(country_region_numeric,total_responses, b_size_denom) )
 
-dtene <- read.csv("../data/estimates-umd-batches/ES/serology/enecovid-analysis.csv", 
-                fileEncoding = "UTF-8")
+dtene <- read.csv(paste0(serology_path, "enecovid-analysis.csv"), fileEncoding = "UTF-8")
 
 ## Add 'region' code
 dt$region[dt$region_agg == "Andalucía"] <- "ESAN"
@@ -87,12 +87,12 @@ dt_r2_s2 <- dt_r2_s2[order(dt_r2_s2$regioncode),]
 dt_r3_s1 <- dt_r3_s1[order(dt_r3_s1$regioncode),]
 dt_r3_s2 <- dt_r3_s2[order(dt_r3_s2$regioncode),]
 
-write.csv(dt_r1_s1, "../data/estimates-umd-batches/ES/serology/r1_s1_UMD_data.csv", row.names = FALSE)
-write.csv(dt_r1_s2, "../data/estimates-umd-batches/ES/serology/r1_s2_UMD_data.csv", row.names = FALSE)
-write.csv(dt_r2_s1, "../data/estimates-umd-batches/ES/serology/r2_s1_UMD_data.csv", row.names = FALSE)
-write.csv(dt_r2_s2, "../data/estimates-umd-batches/ES/serology/r2_s2_UMD_data.csv", row.names = FALSE)
-write.csv(dt_r3_s1, "../data/estimates-umd-batches/ES/serology/r3_s1_UMD_data.csv", row.names = FALSE)
-write.csv(dt_r3_s2, "../data/estimates-umd-batches/ES/serology/r3_s2_UMD_data.csv", row.names = FALSE)
+write.csv(dt_r1_s1, paste0(serology_path, "r1_s1_UMD_data.csv"), row.names = FALSE)
+write.csv(dt_r1_s2, paste0(serology_path, "r1_s2_UMD_data.csv"), row.names = FALSE)
+write.csv(dt_r2_s1, paste0(serology_path, "r2_s1_UMD_data.csv"), row.names = FALSE)
+write.csv(dt_r2_s2, paste0(serology_path, "r2_s2_UMD_data.csv"), row.names = FALSE)
+write.csv(dt_r3_s1, paste0(serology_path, "r3_s1_UMD_data.csv"), row.names = FALSE)
+write.csv(dt_r3_s2, paste0(serology_path, "r3_s2_UMD_data.csv"), row.names = FALSE)
 
 dt_r1_s1$week <- "r1_s1"
 dt_r1_s2$week <- "r1_s2"
@@ -122,14 +122,21 @@ dtall <- dtall[dtall$pct_ene_cli > 0,]
 aux <- colMeans(dtall[sapply(dtall, is.numeric)], na.rm=TRUE)
 ratio <- aux["pct_ene_cli"] / aux
 
-write.csv(ratio, "../data/estimates-umd-batches/ES/serology/ratios.csv") #, row.names = FALSE)
+write.csv(ratio, paste0(serology_path, "ratios.csv")) #, row.names = FALSE)
 
 to_correct <- dtall[sapply(dtall, is.numeric)]
+to_correct <- subset(to_correct, select = -c(pct_finances_very_worried) )
+to_correct <- subset(to_correct, select = -c(pct_finances_somewhat_worried) )
+to_correct <- subset(to_correct, select = -c(pct_finances_notToo_worried) )
+to_correct <- subset(to_correct, select = -c(pct_finances_not_worried) )
+
 corrected <- dtall
 
 aerror <- data.frame(signal=character(), abs_error=numeric())
+correl <- data.frame(signal=character(), estimate=numeric(), pvalue=numeric())
 
 for (s in colnames(to_correct)) {
+  cat("signal: ", s, "\n")
   cor <- to_correct[s] * ratio[s]
   corrected[s] <- cor
   #mean(abs((dtall$pct_ene_cli-cor$pct_direct_contact_with_non_hh_smooth_low)/dtall$pct_ene_cli)) * 100
@@ -137,7 +144,11 @@ for (s in colnames(to_correct)) {
   mape <- sum(abs(cor - to_correct["pct_ene_cli"]) / to_correct["pct_ene_cli"]) / nrow(to_correct)
   aerror <- aerror %>% add_row(signal = s, abs_error = mape)
   cat("mape:", mape)
+  
+  res <- cor.test(to_correct$pct_ene_cli, cor[,s], method = "pearson")
+  correl <- correl %>% add_row(signal = s, estimate = res$estimate, pvalue = res$p.value)
 }
 
-write.csv(aerror, "../data/estimates-umd-batches/ES/serology/abs-error.csv", row.names = FALSE)
-write.csv(corrected, "../data/estimates-umd-batches/ES/serology/corrected.csv", row.names = FALSE)
+write.csv(aerror, paste0(serology_path, "abs-error.csv"), row.names = FALSE)
+write.csv(correl, paste0(serology_path, "correlations.csv"), row.names = FALSE)
+write.csv(corrected, paste0(serology_path, "corrected.csv"), row.names = FALSE)
