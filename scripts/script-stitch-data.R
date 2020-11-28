@@ -7,7 +7,7 @@ load_and_combine <- function(code, nsum = FALSE) {
     loaded_confirmed_df <- read.csv(paste0("../data/estimates-confirmed/PlotData/", code, "-estimate.csv"))
     df_confirmed <- loaded_confirmed_df %>%
       mutate(date = as.Date(date)) %>%
-      dplyr::select(date, deaths, cases)
+      dplyr::select(date, deaths, cases, population)
     # df_confirmed$cases = pmax(df_confirmed$cases, 0) # get rid of negatives
     # df_confirmed$deaths = pmax(df_confirmed$deaths, 0) # get rid of negatives
     df_confirmed$deaths[df_confirmed$deaths < 0] <- NA
