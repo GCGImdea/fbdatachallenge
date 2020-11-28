@@ -528,7 +528,7 @@ for (file in files) {
               columns_to_try = columns_to_try,
               iso_code_country = iso_code_country
             )
-          # Shift signals We will remove NAs from df_umd_test later
+          # Shift train signals 
           shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% dplyr::select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
           
           # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
@@ -592,14 +592,15 @@ for (file in files) {
             toWrite<-rbind(toWrite,outDF)
             metricsToWrite<-rbind(metricsToWrite, metricDF)
           }
+          
+          
+          
+          # doing far future test
+          
           print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
           metricDF<-data.frame()
           metricDF[1,"cutoff"]=as.Date(cutoff)
-          metricDF[1,"predType"]="nearFuture"
-          
-          
-          
-          
+          metricDF[1,"predType"]="farFuture"
           outDF=doTest(m = m,
                        testSignals = shiftedTest,
                        testResp = df_deaths_test,
@@ -613,16 +614,16 @@ for (file in files) {
             metricsToWrite<-rbind(metricsToWrite, metricDF)
             toWrite<-rbind(toWrite,outDF)
           }
-          combinedSignals = rbind(leftoverFromShifted, shiftedSignals)
+          
+          
+          
+          # do nearfar  test
+          
+          combinedSignals = rbind(leftoverFromShifted, shiftedTest)
           print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
           metricDF<-data.frame()
           metricDF[1,"cutoff"]=as.Date(cutoff)
-          metricDF[1,"predType"]="farFuture"
-          
-          
-          
-          
-          
+          metricDF[1,"predType"]="nearFar"
           outDF=doTest(m = m,
                        testSignals = combinedSignals,
                        testResp = df_deaths_test,
@@ -636,7 +637,7 @@ for (file in files) {
             metricsToWrite<-rbind(metricsToWrite, metricDF)
             toWrite<-rbind(toWrite,outDF)
           }
-          #TODO add stuff after if from above
+          
         },
         error = function(cond) {
           message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
