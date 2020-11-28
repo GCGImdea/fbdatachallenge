@@ -222,7 +222,7 @@ for (file in files) {
 
 # Debug: Optionaly reduce to some countries to run faster
 #iso_codes <- c("GB")
-iso_codes <- c("BR"", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+iso_codes <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 
 # Load and process given countries
 for (code in iso_codes)
