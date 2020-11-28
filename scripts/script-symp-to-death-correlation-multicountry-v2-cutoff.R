@@ -28,9 +28,9 @@ check_lags <-
         # replaced these  df_single_symp <- df_add_regressors[, c("date", column_in)]
         # df_single_symp$date <-
         #  as.Date(df_single_symp$date) + date_shift
-        # joined <- (df_single_symp %>% select(date, column_in)) 
+        # joined <- (df_single_symp %>% dplyr::select(date, column_in)) 
         # by the following
-        joined <- df_add_regressors %>% select(date, column_in) %>% mutate(date=as.Date(date)+date_shift)%>% inner_join( df_response, by="date")
+        joined <- df_add_regressors %>% dplyr::select(date, column_in) %>% mutate(date=as.Date(date)+date_shift)%>% inner_join( df_response, by="date")
         # remove NAs in what we want, we can do it because we only have column_in now
         joined  <- joined[complete.cases(joined), ]
         
@@ -145,7 +145,7 @@ doCorrelations <-
 shiftSignals <- function(baseForOutputDF, inputDF, correl) {
   for (indep_var in unique(correl$signal)) {
     df_indep_var_temp <- inputDF %>%
-      select(date, all_of(indep_var)) %>%
+      dplyr::select(date, all_of(indep_var)) %>%
       mutate(date = date +
                correl$shift[correl$signal == indep_var])
     #  print("iteration")
@@ -188,7 +188,7 @@ doPrediction <- function(m, testSignals) {
   ## grab the inverse link function
   ilink <- family(m)$linkinv
   ## add fit and se.fit on the **link** scale
-  prediction <- bind_cols(testSignals %>% select(date),
+  prediction <- bind_cols(testSignals %>% dplyr::select(date),
                           setNames(as_tibble(predict(
                             m, testSignals, se.fit = TRUE
                           )[1:2]),
@@ -229,8 +229,8 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   testWindow = finaldate - firstdate
   prediction=doPrediction(m=m,testSignals = testSignals)
   # print(prediction)
-  toWrite <-prediction %>% select(date, fore, fore_low, fore_high)
-  toWrite <- toWrite %>% left_join(testResp %>% select(date, y), by="date")
+  toWrite <-prediction %>% dplyr::select(date, fore, fore_low, fore_high)
+  toWrite <- toWrite %>% left_join(testResp %>% dplyr::select(date, y), by="date")
   metricDF[1,"startDate"] <-firstdate
   metricDF[1,"endDate"] <-finaldate
   metricDF[1,"mape"] <- mape(testResp$y, prediction$fore)
@@ -404,7 +404,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("GB")
+countriesToDo <-c("PT")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -479,7 +479,7 @@ for (file in files) {
       df_deaths <- df_deaths %>%
         mutate(y = deaths) %>%
         mutate(y = rollmean(y, 1, fill = NA)) %>%
-        select (date, y) %>%
+        dplyr::select (date, y) %>%
         filter(!is.na(y)) # keeping only what we need so that we can filter out NAs as follows
       #########
       # filter out NAs
@@ -507,13 +507,13 @@ for (file in files) {
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
         tryCatch({
-          # select training set
+          # dplyr::select training set
           df_deaths_train <-
             df_deaths %>% filter(date <= cutoff) 
           df_umd_train <-
             df_umd %>% filter(date <= cutoff)
           
-          # select test set
+          # dplyr::select test set
           df_deaths_test <-
             df_deaths %>% filter(date > cutoff)
           df_umd_test <-
@@ -529,7 +529,7 @@ for (file in files) {
               iso_code_country = iso_code_country
             )
           # Shift signals We will remove NAs from df_umd_test later
-          shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
+          shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% dplyr::select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
           
           # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
           shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
@@ -548,7 +548,7 @@ for (file in files) {
           print(paste("doing TESTING for cutoff ", as.Date(cutoff)))
           # call Test ----
           # but before shift the test set to the future We will remove NAs from df_umd_test later
-          shiftedTest <- shiftSignals(baseForOutputDF=(df_umd_test %>% select(date)),
+          shiftedTest <- shiftSignals(baseForOutputDF=(df_umd_test %>% dplyr::select(date)),
                                       inputDF=df_umd_test, correl=opt_correl_single_country)
           
           
