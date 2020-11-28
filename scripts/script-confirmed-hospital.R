@@ -5,7 +5,7 @@ library(httr)
 library(zoo)
 
 data_url <- "https://opendata.ecdc.europa.eu/covid19/hospitalicuadmissionrates/csv/data.csv"
-estimates_path <- "../data/estimates-confirmed/PlotData/"
+estimates_path <- "../data/estimates-confirmed/hospital/"
 country_table <- "../data/common-data/country_population_ecdc.csv"
 # country_names_occupancy <- c( "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus",
 #                     "Czechia", "Denmark", "Estonia", "Finland", "France", "Germany", "Greece",
