@@ -401,238 +401,252 @@ file_in_pattern <- ".*_UMD_country_nobatch_past_smooth.csv"
 
 files <- dir(file_in_path, pattern = file_in_pattern)
 
-countriesToExclude <- c("AT","BG")
-countriesDone <- c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
+countriesToExclude <- c("") # c("AT","BG")
+countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
 countriesToDo <-c("GB")
 opt_correls <- data.frame()
 
+excludeVsChoose=FALSE # true for excluding countries and false for choosing them
+
+
+
 for (file in files) {
-  #tryCatch({
-  iso_code_country <- substr(file, 1, 2)
-  #  if (iso_code_country  %notin% countriesToExclude ){
-  if (iso_code_country  %in% countriesToDo ){
-    cat("doing ", iso_code_country, ": ")
-    ## Load UMD regressors ----
-    
-    #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
-    data_df <-
-      read.csv(
-        paste0(
-          "../data/estimates-umd-unbatched/PlotData/",
-          iso_code_country ,
-          "_UMD_country_nobatch_past_smooth.csv"
-        )
-      )
-    
-    
-    data_df$date <- as.Date(data_df$date)
-    
-    ## remove "..._smooth", "..._high/low"
-    df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
-    #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
-    df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
-    df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
-    df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
-    df_umd <- df_umd * data_df$population / 100
-    df_umd$date <- data_df$date
-    
-    colnames(df_umd)
-    
-    ## Load CCFR regressors
-    df_ccfr <-
-      read.csv(
-        paste0(
-          "../data/estimates-ccfr-based/PlotData/",
-          iso_code_country,
-          "-estimate.csv"
-        )
-      ) %>%
-      mutate(date = as.Date(date))
-    
-    ## Load NSUM regressors TODO
-    
-    #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
-    #  mutate(date = as.Date(date) )
-    
-    ## Load number of deaths ----
-    
-    df_deaths <-
-      read.csv(
-        paste0(
-          "../data/estimates-confirmed/PlotData/",
-          iso_code_country,
-          "-estimate.csv"
-        )
-      ) %>% mutate(date = as.Date(date))
-    df_deaths$deaths[df_deaths$deaths < 0] <- NA
-    df_deaths$cases[df_deaths$cases < 0] <- NA
-    
-    df_deaths <- df_deaths %>%
-      mutate(y = deaths) %>%
-      mutate(y = rollmean(y, 1, fill = NA)) %>%
-      select (date, y) %>%
-      filter(!is.na(y)) # keeping only what we need so that we can filter out NAs as follows
-    #########
-    # filter out NAs
-    df_deaths <- df_deaths[complete.cases(df_deaths), ]
-    
-    ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
-    
-    firstCutoff <- as.Date("2020-11-10")
-    endDate <- max(df_umd$date)
-    
-    cutoff <- endDate
-    cutoffs <- vector()
-    while (cutoff >= firstCutoff) {
-      cutoffs <- append(cutoffs, cutoff, after = 0)
-      cutoff <- cutoff - 15
-      #print(cutoffs)
+  tryCatch({
+    iso_code_country <- substr(file, 1, 2)
+    if (excludeVsChoose){
+      choice <- (iso_code_country  %notin% countriesToExclude)
+    } else {
+      choice <- (iso_code_country  %in% countriesToDo)
     }
-    
-    #
-    #  print (cutoffs)
-    
-    # print(df_deaths)
-    strawmanPred=(df_deaths %>% filter(date==cutoff))$y
-    toWrite <- data.frame()
-    metricsToWrite<-data.frame()
-    for (cutoff in cutoffs) {
-      tryCatch({
-        # select training set
-        df_deaths_train <-
-          df_deaths %>% filter(date <= cutoff) 
-        df_umd_train <-
-          df_umd %>% filter(date <= cutoff)
-        
-        # select test set
-        df_deaths_test <-
-          df_deaths %>% filter(date > cutoff)
-        df_umd_test <-
-          df_umd %>% filter(date > cutoff)
-        
-        # call Correl ----
-        print(paste("doing CORREL for cutoff ",as.Date(cutoff)))
-        opt_correl_single_country <-
-          doCorrelations(
-            toPredict = df_deaths_train,
-            modelPar = df_umd_train,
-            columns_to_try = columns_to_try,
-            iso_code_country = iso_code_country
+    if (choice){
+      cat("doing ", iso_code_country, ": ")
+      ## Load UMD regressors ----
+      
+      #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
+      data_df <-
+        read.csv(
+          paste0(
+            "../data/estimates-umd-unbatched/PlotData/",
+            iso_code_country ,
+            "_UMD_country_nobatch_past_smooth.csv"
           )
-        # Shift signals We will remove NAs from df_umd_test later
-        shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
-        
-        # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
-        shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
-        
-        leftoverFromShifted <- shiftedSignals %>% filter(date > cutoff)
-        ## call GLM ----
-        
-        print(paste("doing GLM for cutoff ", as.Date(cutoff)))
-        #print (opt_correl_single_country, n=Inf)
-        
-        m <-
-          doGLM(
-            modelPar = shiftedTrainSignal,
-            iso_code_country = iso_code_country
+        )
+      
+      
+      data_df$date <- as.Date(data_df$date)
+      
+      ## remove "..._smooth", "..._high/low"
+      df_umd <- data_df[, str_detect(colnames(data_df), "pct_")]
+      #df_umd <- df_umd[, !str_detect(colnames(df_umd), "smooth")]
+      df_umd <- df_umd[, !str_detect(colnames(df_umd), "high")]
+      df_umd <- df_umd[, !str_detect(colnames(df_umd), "low")]
+      df_umd <- df_umd[, !str_detect(colnames(df_umd), "batched")]
+      df_umd <- df_umd * data_df$population / 100
+      df_umd$date <- data_df$date
+      
+      colnames(df_umd)
+      
+      ## Load CCFR regressors
+      df_ccfr <-
+        read.csv(
+          paste0(
+            "../data/estimates-ccfr-based/PlotData/",
+            iso_code_country,
+            "-estimate.csv"
           )
-        print(paste("doing TESTING for cutoff ", as.Date(cutoff)))
-        # call Test ----
-        # but before shift the test set to the future We will remove NAs from df_umd_test later
-        shiftedTest <- shiftSignals(baseForOutputDF=(df_umd_test %>% select(date)),
-                                    inputDF=df_umd_test, correl=opt_correl_single_country)
-        
-        
-        
-        #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
-        
-        
-        print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
-        metricDF<-data.frame()
-        metricDF[1,"cutoff"]=as.Date(cutoff)
-        metricDF[1,"predType"]="nearFuture"
-        outDF=doTest(m = m, 
-                     testSignals = leftoverFromShifted,
-                     testResp = df_deaths_test,
-                     cutoff = cutoff,
-                     metricDF = metricDF)
-        if (nrow(outDF)>0){
-          outDF["cutoff"]=as.Date(cutoff)
-          outDF["strawman"]=NA
-          outDF["scaled_abs_err"]=NA
-          for (row in 1:nrow(outDF)) {
-            ourEstimate <- outDF[row, "fore"]
-            curdate  <- outDF[row, "date"]
-            strawmandev <- abs(strawmanPred - (df_deaths_test %>% filter(date == curdate))$y)+10^-6
-            
-            modeldev <- abs(ourEstimate - (df_deaths_test %>% filter(date == curdate))$y)
-            scaled_abs_err <- modeldev/strawmandev
-            outDF[row,"strawman"]=strawmanPred
-            outDF[row,"scaled_abs_err"]=scaled_abs_err
-            # message(paste(“sca 7 =“,scaled_abs_err))
-          }
-          outDF["predType"]="nearFuture"
+        ) %>%
+        mutate(date = as.Date(date))
+      
+      ## Load NSUM regressors TODO
+      
+      #df_nsum <- read.csv(paste0("../data/estimates-ccfr-based/PlotData/", iso_code_country,"-estimate.csv")) %>%
+      #  mutate(date = as.Date(date) )
+      
+      ## Load number of deaths ----
+      
+      df_deaths <-
+        read.csv(
+          paste0(
+            "../data/estimates-confirmed/PlotData/",
+            iso_code_country,
+            "-estimate.csv"
+          )
+        ) %>% mutate(date = as.Date(date))
+      df_deaths$deaths[df_deaths$deaths < 0] <- NA
+      df_deaths$cases[df_deaths$cases < 0] <- NA
+      
+      df_deaths <- df_deaths %>%
+        mutate(y = deaths) %>%
+        mutate(y = rollmean(y, 1, fill = NA)) %>%
+        select (date, y) %>%
+        filter(!is.na(y)) # keeping only what we need so that we can filter out NAs as follows
+      #########
+      # filter out NAs
+      df_deaths <- df_deaths[complete.cases(df_deaths), ]
+      
+      ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
+      
+      firstCutoff <- as.Date("2020-11-10")
+      endDate <- max(df_umd$date)
+      
+      cutoff <- endDate
+      cutoffs <- vector()
+      while (cutoff >= firstCutoff) {
+        cutoffs <- append(cutoffs, cutoff, after = 0)
+        cutoff <- cutoff - 15
+        #print(cutoffs)
+      }
+      
+      #
+      #  print (cutoffs)
+      
+      # print(df_deaths)
+      strawmanPred=(df_deaths %>% filter(date==cutoff))$y
+      toWrite <- data.frame()
+      metricsToWrite<-data.frame()
+      for (cutoff in cutoffs) {
+        tryCatch({
+          # select training set
+          df_deaths_train <-
+            df_deaths %>% filter(date <= cutoff) 
+          df_umd_train <-
+            df_umd %>% filter(date <= cutoff)
           
-          toWrite<-rbind(toWrite,outDF)
-          metricsToWrite<-rbind(metricsToWrite, metricDF)
-        }
-        print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
-        metricDF<-data.frame()
-        metricDF[1,"cutoff"]=as.Date(cutoff)
-        metricDF[1,"predType"]="nearFuture"
-        outDF=doTest(m = m,
-                     testSignals = shiftedTest,
-                     testResp = df_deaths_test,
-                     cutoff=cutoff,
-                     metricDF = metricDF)
-        if (nrow(outDF)>0){
-          outDF["cutoff"]=as.Date(cutoff)
-          outDF["strawman"]=NA
-          outDF["scaled_abs_err"]=NA
-          outDF["predType"]="farFuture"
-          metricsToWrite<-rbind(metricsToWrite, metricDF)
-          toWrite<-rbind(toWrite,outDF)
-        }
-        combinedSignals = rbind(leftoverFromShifted, shiftedSignals)
-        print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
-        metricDF<-data.frame()
-        metricDF[1,"cutoff"]=as.Date(cutoff)
-        metricDF[1,"predType"]="nearFuture"
-        outDF=doTest(m = m,
-                     testSignals = combinedSignals,
-                     testResp = df_deaths_test,
-                     cutoff=cutoff,
-                     metricDF = metricDF)
-        if (nrow(outDF)>0){
-          outDF["cutoff"]=as.Date(cutoff)
-          outDF["strawman"]=NA
-          outDF["scaled_abs_err"]=NA
-          outDF["predType"]="nearFar"
-          metricsToWrite<-rbind(metricsToWrite, metricDF)
-          toWrite<-rbind(toWrite,outDF)
-        }
-      },
-      error = function(cond) {
-        message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
-        message(cond)
+          # select test set
+          df_deaths_test <-
+            df_deaths %>% filter(date > cutoff)
+          df_umd_test <-
+            df_umd %>% filter(date > cutoff)
+          
+          # call Correl ----
+          print(paste("doing CORREL for cutoff ",as.Date(cutoff)))
+          opt_correl_single_country <-
+            doCorrelations(
+              toPredict = df_deaths_train,
+              modelPar = df_umd_train,
+              columns_to_try = columns_to_try,
+              iso_code_country = iso_code_country
+            )
+          # Shift signals We will remove NAs from df_umd_test later
+          shiftedSignals <- shiftSignals(baseForOutputDF=(df_deaths_train %>% select(date, y)), inputDF=df_umd_train, correl=opt_correl_single_country)
+          
+          # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
+          shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
+          
+          leftoverFromShifted <- shiftedSignals %>% filter(date > cutoff)
+          ## call GLM ----
+          
+          print(paste("doing GLM for cutoff ", as.Date(cutoff)))
+          #print (opt_correl_single_country, n=Inf)
+          
+          m <-
+            doGLM(
+              modelPar = shiftedTrainSignal,
+              iso_code_country = iso_code_country
+            )
+          print(paste("doing TESTING for cutoff ", as.Date(cutoff)))
+          # call Test ----
+          # but before shift the test set to the future We will remove NAs from df_umd_test later
+          shiftedTest <- shiftSignals(baseForOutputDF=(df_umd_test %>% select(date)),
+                                      inputDF=df_umd_test, correl=opt_correl_single_country)
+          
+          
+          
+          #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
+          
+          
+          print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
+          metricDF<-data.frame()
+          metricDF[1,"cutoff"]=as.Date(cutoff)
+          metricDF[1,"predType"]="nearFuture"
+          outDF=doTest(m = m, 
+                       testSignals = leftoverFromShifted,
+                       testResp = df_deaths_test,
+                       cutoff = cutoff,
+                       metricDF = metricDF)
+          if (nrow(outDF)>0){
+            outDF["cutoff"]=as.Date(cutoff)
+            outDF["strawman"]=NA
+            outDF["scaled_abs_err"]=NA
+            for (row in 1:nrow(outDF)) {
+              ourEstimate <- outDF[row, "fore"]
+              curdate  <- outDF[row, "date"]
+              strawmandev <- abs(strawmanPred - (df_deaths_test %>% filter(date == curdate))$y)+10^-6
+              
+              modeldev <- abs(ourEstimate - (df_deaths_test %>% filter(date == curdate))$y)
+              scaled_abs_err <- modeldev/strawmandev
+              outDF[row,"strawman"]=strawmanPred
+              outDF[row,"scaled_abs_err"]=scaled_abs_err
+              # message(paste(“sca 7 =“,scaled_abs_err))
+            }
+            outDF["predType"]="nearFuture"
+            
+            toWrite<-rbind(toWrite,outDF)
+            metricsToWrite<-rbind(metricsToWrite, metricDF)
+          }
+          print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
+          metricDF<-data.frame()
+          metricDF[1,"cutoff"]=as.Date(cutoff)
+          metricDF[1,"predType"]="nearFuture"
+          outDF=doTest(m = m,
+                       testSignals = shiftedTest,
+                       testResp = df_deaths_test,
+                       cutoff=cutoff,
+                       metricDF = metricDF)
+          if (nrow(outDF)>0){
+            outDF["cutoff"]=as.Date(cutoff)
+            outDF["strawman"]=NA
+            outDF["scaled_abs_err"]=NA
+            outDF["predType"]="farFuture"
+            metricsToWrite<-rbind(metricsToWrite, metricDF)
+            toWrite<-rbind(toWrite,outDF)
+          }
+          combinedSignals = rbind(leftoverFromShifted, shiftedSignals)
+          print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
+          metricDF<-data.frame()
+          metricDF[1,"cutoff"]=as.Date(cutoff)
+          metricDF[1,"predType"]="nearFuture"
+          outDF=doTest(m = m,
+                       testSignals = combinedSignals,
+                       testResp = df_deaths_test,
+                       cutoff=cutoff,
+                       metricDF = metricDF)
+          if (nrow(outDF)>0){
+            outDF["cutoff"]=as.Date(cutoff)
+            outDF["strawman"]=NA
+            outDF["scaled_abs_err"]=NA
+            outDF["predType"]="nearFar"
+            metricsToWrite<-rbind(metricsToWrite, metricDF)
+            toWrite<-rbind(toWrite,outDF)
+          }
+        },
+        error = function(cond) {
+          message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
+          message(cond)
+          traceback()
+        })
+      }
+      tryCatch({
+        toWrite["lag"]=toWrite["date"]-toWrite["cutoff"]
+        #"","date","fore","fore_low","fore_high","cutoff","strawman","scaled_abs_err","predType","lag"
+        toWrite<-toWrite[,c(6,1,10,9,2,3,4,5,7,8)]
+        write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-estimates-lag-daily.csv"))
+        write.csv(metricsToWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-aggregatemetrics-lag.csv"))
+        message("succeeded")
+      }, error=function(cond){
+        message(paste("error writing country ",iso_code_country))
+        message (cond)
         traceback()
       })
+      
     }
-    tryCatch({
-      toWrite["lag"]=toWrite["date"]-toWrite["cutoff"]
-      #"","date","fore","fore_low","fore_high","cutoff","strawman","scaled_abs_err","predType","lag"
-      toWrite<-toWrite[,c(6,1,10,9,2,3,4,5,7,8)]
-      write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-estimates-lag-daily.csv"))
-      write.csv(metricsToWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-aggregatemetrics-lag.csv"))
-      message("succeeded")
-    }, error=function(cond){
-      message(paste("error writing country ",iso_code_country))
-      message (cond)
-      traceback()
-    })
-    
   }
+  ,error = function(cond){
+    message(paste("error in country", iso_code_country))
+    message(cond)
+    traceback()
+  })
 }
 
 
