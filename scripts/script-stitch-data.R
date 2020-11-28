@@ -86,4 +86,4 @@ interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 dd <- sapply(interest, load_and_combine, nsum = T)
 
 
-
+load_and_combine(code = "ES", nsum = T)
