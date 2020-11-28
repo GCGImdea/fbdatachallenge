@@ -556,6 +556,13 @@ for (file in files) {
           #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
           
           
+          # TODO add this selection of signals for all predictions
+          # # now for prediction keep only kept regressors and date
+          # x_predict_df <- x_predict_df[ , (names(x_predict_df) %in% c(labels(m1$terms),"date"))]
+          # # get only complete cases (remove rows with NAs)
+          # x_predict_df <- x_predict_df[complete.cases(x_predict_df), ]
+          # # end TODO
+          
           print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
           metricDF<-data.frame()
           metricDF[1,"cutoff"]=as.Date(cutoff)
@@ -589,6 +596,10 @@ for (file in files) {
           metricDF<-data.frame()
           metricDF[1,"cutoff"]=as.Date(cutoff)
           metricDF[1,"predType"]="nearFuture"
+          
+          
+          
+          
           outDF=doTest(m = m,
                        testSignals = shiftedTest,
                        testResp = df_deaths_test,
@@ -606,7 +617,12 @@ for (file in files) {
           print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
           metricDF<-data.frame()
           metricDF[1,"cutoff"]=as.Date(cutoff)
-          metricDF[1,"predType"]="nearFuture"
+          metricDF[1,"predType"]="farFuture"
+          
+          
+          
+          
+          
           outDF=doTest(m = m,
                        testSignals = combinedSignals,
                        testResp = df_deaths_test,
@@ -620,6 +636,7 @@ for (file in files) {
             metricsToWrite<-rbind(metricsToWrite, metricDF)
             toWrite<-rbind(toWrite,outDF)
           }
+          #TODO add stuff after if from above
         },
         error = function(cond) {
           message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
