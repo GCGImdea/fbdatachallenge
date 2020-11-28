@@ -1,4 +1,5 @@
 library(dplyr)
+library(quantgen) 
 my_append_shifts = function(df, shifts) {
   # Make sure that we have a complete record of dates for each geo_value (fill
   # with NAs as necessary)
@@ -71,7 +72,7 @@ end_day <- max(z$time_value)
 n <- 30
 lp_solver = "glpk"
 #####################################modelling################3
-library(quantgen) 
+
 res_list = vector("list", length = length(leads))
 for (i in 1:length(leads)) { 
   lead = leads[i]; cat("***", lead, "***\n")
@@ -135,6 +136,8 @@ for (i in 1:length(leads)) {
   }
 }
 res = do.call(rbind, res_list)
+
+
 #################
 library(tidyr)
 library(ggplot2)
