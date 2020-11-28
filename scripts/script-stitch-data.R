@@ -1,4 +1,6 @@
 library(dplyr)
+library(stringr)
+
 load_and_combine <- function(code, nsum = FALSE) {
   cat("\n working on ", code)
     ## Load and clean official data targets
@@ -68,9 +70,16 @@ load_and_combine <- function(code, nsum = FALSE) {
 }
 
 #save data for countries of interest
+
+interest <- list.files("../data/estimates-umd-unbatched/PlotData/", pattern="*.csv", full.names=FALSE)
+interest <- substring(interest, 1, 2)
+interest <- interest[interest != "HK"]
+interest <- interest[interest != "TW"]
+
+dd <- sapply(interest, load_and_combine, nsum = F)
+
 #load_and_combine(code = "ES", nsum = T)
-interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", 
-              "CL", "FR", "GB")
+interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
               #"US", "CY")
 dd <- sapply(interest, load_and_combine, nsum = T)
 
