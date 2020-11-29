@@ -12,6 +12,8 @@ library(caret)
 
 use_penalty = F # T: use penalized regression (elastic-net)
 alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
+remove_correlated = T # prior removal of highly correlated predictors
+cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
 
 milag=7
 mxlag=60
@@ -653,22 +655,25 @@ for (file in files) {
           leftoverFromShifted <- shiftedSignals %>% filter(date > cutoff) %>% dplyr::select(-y)
           
           ## Remove correlated vars----
-          # plug in the train data frame:
-          temp_shiftedTrainSignal <- shiftedTrainSignal[complete.cases(shiftedTrainSignal), ]
-          rm_high_correl <- findCorrelation(
-            cor( dplyr::select(temp_shiftedTrainSignal, !all_of(c("date", "y"))), 
-                 method = "spearman"),
-            cutoff = 0.9, # maybe use a higher number?
-            verbose = F,
-            names = T,
-            exact = T
-          )
+          if (remove_correlated) {
+            # plug in the train data frame:
+            temp_shiftedTrainSignal <- shiftedTrainSignal[complete.cases(shiftedTrainSignal), ]
+            rm_high_correl <- findCorrelation(
+              cor( dplyr::select(temp_shiftedTrainSignal, !all_of(c("date", "y"))), 
+                   method = "spearman"),
+              cutoff = cutoff_remove_correlated, 
+              verbose = F,
+              names = T,
+              exact = T
+            )
+            
+            # remove the variables from the analysis (bot train and test?)
+            shiftedTrainSignal <- shiftedTrainSignal %>% 
+              dplyr::select(!all_of(rm_high_correl))
+            leftoverFromShifted <- leftoverFromShifted %>% 
+              dplyr::select(!all_of(rm_high_correl))
+          } # end-if remove correlated
           
-          # remove the variables from the analysis (bot train and test?)
-          shiftedTrainSignal <- shiftedTrainSignal %>% 
-            dplyr::select(!all_of(rm_high_correl))
-          leftoverFromShifted <- leftoverFromShifted %>% 
-            dplyr::select(!all_of(rm_high_correl))
           
           ## call GLM ----
           
@@ -696,7 +701,11 @@ for (file in files) {
           shiftedTest <- shiftSignals(baseForOutputDF=(x_df_test %>% dplyr::select(date)),
                                       inputDF=x_df_test, correl=opt_correl_single_country)
           
-          
+          # remove the highly correlated signals:
+          if (remove_correlated) {
+            shiftedTest <- shiftedTest %>% 
+              dplyr::select(!all_of(rm_high_correl))
+          } # end-if remove correlated
           
           #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
           
