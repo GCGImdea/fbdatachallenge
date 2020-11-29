@@ -108,8 +108,8 @@ delphi_baseline <- function(country_code = "PT"){
       # Strawman model
       cat("0")
       y_hat = z_te %>% pull(case)
-      res_list[[i]][inds,]$err0 = abs(inv_trans(y_hat) - inv_trans(y_te))
-      res_list[[i]][inds,]$strawman = inv_trans(y_hat)
+      res_list[[i]][inds,]$err0 = abs((inv_trans(y_hat) * dt_population) - (inv_trans(y_te)*dt_population)) + 1e-6
+      res_list[[i]][inds,]$strawman = inv_trans(y_hat) * dt_population
       
       # Cases only model
       cat("1")
@@ -121,8 +121,8 @@ delphi_baseline <- function(country_code = "PT"){
         obj = quantile_lasso(as.matrix(x_tr[ok,]), y_tr[ok], tau = 0.5,
                              lambda = 0, lp_solver = lp_solver)
         y_hat = as.numeric(predict(obj, newx = as.matrix(x_te)))
-        res_list[[i]][inds,]$err1 = abs(inv_trans(y_hat) - inv_trans(y_te))
-        res_list[[i]][inds,]$case_model = inv_trans(y_hat)
+        res_list[[i]][inds,]$err1 = abs((inv_trans(y_hat) * dt_population) - (inv_trans(y_te)*dt_population)) 
+        res_list[[i]][inds,]$case_model = inv_trans(y_hat) * dt_population
       }
       
       # Cases and Facebook model
@@ -136,8 +136,8 @@ delphi_baseline <- function(country_code = "PT"){
         obj = quantile_lasso(as.matrix(x_tr[ok,]), y_tr[ok], tau = 0.5,
                              lambda = 0, lp_solver = lp_solver)
         y_hat = as.numeric(predict(obj, newx = as.matrix(x_te)))
-        res_list[[i]][inds,]$err2 = abs(inv_trans(y_hat) - inv_trans(y_te))
-        res_list[[i]][inds,]$case_fb_model = inv_trans(y_hat)
+        res_list[[i]][inds,]$err2 = abs((inv_trans(y_hat) * dt_population) - (inv_trans(y_te) * dt_population))
+        res_list[[i]][inds,]$case_fb_model = inv_trans(y_hat) * dt_population
       }
       
       
@@ -149,21 +149,26 @@ delphi_baseline <- function(country_code = "PT"){
            fb_sae = err2 / err0) %>%           # to strawman model
     ungroup() 
   res$real_date <- res$time_value + res$lead
+  
+  res <- res %>% select("time_value", "real_date", "err0", "err1", 
+                        "err2", "strawman", "case_model", "case_fb_model",
+                        "lead", "case_sae", "fb_sae")
+
 
   # read prediction 
-  dtpred <- read.csv(paste0("../data/estimates-symptom-lags/cutoffs/PlotData/", country_code, 
-                     "-estimates-lag-daily.csv"), as.is = T)
-  dtpred$date <- as.Date(dtpred$date)
-  dtpred2 <- full_join(dtpred,
-                       res %>% filter(lead == 7), # add only 7 lead predictions
-                       by = c("date" = "real_date"))
+  # dtpred <- read.csv(paste0("../data/estimates-symptom-lags/cutoffs/PlotData/", country_code, 
+  #                    "-estimates-lag-daily.csv"), as.is = T)
+  # dtpred$date <- as.Date(dtpred$date)
+  # dtpred2 <- full_join(dtpred,
+  #                      res %>% filter(lead == 7), # add only 7 lead predictions
+  #                      by = c("date" = "real_date"))
   cat("Writing baseline for: ", country_code, "...\n")
-  write.csv(dtpred2, paste0("../data/baseline_outputs/",
+  write.csv(res, paste0("../data/baseline_outputs/",
                             country_code, "-baseline.csv"))
 }
 
 # 
-interest <- list.files("../data/estimates-symptom-lags/cutoffs/PlotData/",
-                       pattern="*.csv", full.names=FALSE)
-interest <- unique(substring(interest, 1, 2))
+# interest <- list.files("../data/estimates-symptom-lags/cutoffs/PlotData/",
+#                        pattern="*.csv", full.names=FALSE)
+interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 dd <- sapply(interest, delphi_baseline)
