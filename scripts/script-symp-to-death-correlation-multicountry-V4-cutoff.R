@@ -23,6 +23,7 @@ plotForecast=TRUE
 signal_to_match <- "deaths"
 #signal_to_match <- "cases"
 
+basefileid <-paste0(signal_to_match,"-",milag,"-",mxlag,"-pen",use_penalty,"-alpha",alpha_in,"-rc",remove_correlated,"-co",cutoff_remove_correlated)
 signals_umd <- c(
   "pct_fever",
   "pct_cough",
@@ -268,7 +269,7 @@ doCorrelations <-
         plot = p,
         filename = paste0(
           "../data/estimates-symptom-lags/Plots-Correlations/",
-          iso_code_country,
+          fileid,
           "-predictor-correlation.png"
         ),
         width = 10,
@@ -623,6 +624,7 @@ for (file in files) {
       toWrite <- data.frame()
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
+        fileid <- paste(basefileid,"-",as.Date(cutoff))
         cutoff=as.Date(cutoff)
         tryCatch({
           # dplyr::select training set
@@ -715,7 +717,7 @@ for (file in files) {
           # Not doing it here it was already in doTest
           # leftoverFromShifted <- leftoverFromShifted[ , (names(leftoverFromShifted) %in% names)]
           # shiftedTest <- shiftedTest[ , (names(shiftedTest) %in% names)]
-          
+          tryCatch({
           print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
           metricDF<-data.frame()
           metricDF[1,"cutoff"]=as.Date(cutoff)
@@ -746,8 +748,13 @@ for (file in files) {
             metricsToWrite<-rbind(metricsToWrite, metricDF)
           }
           
-          
-          
+          }, error=function(cond){
+            message(paste("error in country", iso_code_country, " nearFuture for cutoff ", as.Date(cutoff)))
+            message(cond)
+            traceback()
+          })
+          tryCatch({
+            
           # doing far future test
           
           print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
@@ -768,7 +775,12 @@ for (file in files) {
             toWrite<-rbind(toWrite,outDF)
           }
           
-          
+          }, error=function(cond){
+            message(paste("error in country", iso_code_country, " farFuture for cutoff ", as.Date(cutoff)))
+            message(cond)
+            traceback()
+          })
+          tryCatch({
           
           # do nearfar  test
           
@@ -790,6 +802,11 @@ for (file in files) {
             metricsToWrite<-rbind(metricsToWrite, metricDF)
             toWrite<-rbind(toWrite,outDF)
           }
+          }, error=function(cond){
+            message(paste("error in country", iso_code_country, " nearFar for cutoff ", as.Date(cutoff)))
+            message(cond)
+            traceback()
+          })
           
         },
         error = function(cond) {
@@ -802,8 +819,8 @@ for (file in files) {
         toWrite["lag"]=toWrite["date"]-toWrite["cutoff"]
         #"","date","fore","fore_low","fore_high","cutoff","strawman","scaled_abs_err","predType","lag"
         toWrite<-toWrite[,c(6,1,10,9,2,3,4,5,7,8)]
-        write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-estimates-lag-daily.csv"))
-        write.csv(metricsToWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",iso_code_country,"-aggregatemetrics-lag.csv"))
+        write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",fileid,"-estimates-lag-daily.csv"))
+        write.csv(metricsToWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",fileid,"-aggregatemetrics-lag.csv"))
         message("succeeded")
       }, error=function(cond){
         message(paste("error writing country ",iso_code_country))
