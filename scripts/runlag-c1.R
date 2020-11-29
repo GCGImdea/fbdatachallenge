@@ -612,7 +612,7 @@ for (file in files) {
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
         cutoffs <- append(cutoffs, cutoff, after = 0)
-        cutoff <- cutoff - 15
+        cutoff <- cutoff - 1
         #print(cutoffs)
       }
       

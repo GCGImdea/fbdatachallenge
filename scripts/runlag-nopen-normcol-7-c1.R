@@ -12,7 +12,7 @@ library(caret)
 
 use_penalty = F # T: use penalized regression (elastic-net)
 alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
-remove_correlated = T # prior removal of highly correlated predictors
+remove_correlated = F # prior removal of highly correlated predictors
 cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
 
 milag=7
@@ -535,7 +535,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("PT","BR") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+countriesToDo <-c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -612,7 +612,7 @@ for (file in files) {
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
         cutoffs <- append(cutoffs, cutoff, after = 0)
-        cutoff <- cutoff - 15
+        cutoff <- cutoff - 1
         #print(cutoffs)
       }
       
