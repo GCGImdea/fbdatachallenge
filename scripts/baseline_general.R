@@ -152,7 +152,8 @@ delphi_baseline <- function(country_code = "PT"){
   
   res <- res %>% select("time_value", "real_date", "err0", "err1", 
                         "err2", "strawman", "case_model", "case_fb_model",
-                        "lead", "case_sae", "fb_sae")
+                        "lead", "case_sae", "fb_sae") %>% 
+    filter(lead == 7)
 
 
   # read prediction 
