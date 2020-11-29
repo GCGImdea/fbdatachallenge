@@ -8,6 +8,7 @@ library(ggplot2)
 library(grid) # annotate a ggplot
 library(Metrics)
 library(mpath) # lasso/elastic-net
+library(caret)
 
 use_penalty = F # T: use penalized regression (elastic-net)
 alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
