@@ -9,7 +9,7 @@ library(grid) # annotate a ggplot
 library(Metrics)
 library(mpath) # lasso/elastic-net
 
-use_penalty = T # T: use penalized regression (elastic-net)
+use_penalty = F # T: use penalized regression (elastic-net)
 alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
 
 milag=7
@@ -391,8 +391,17 @@ getMinAndMaxDatesAsString <- function (df){
 
 doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
   # keep only kept regressors and date
-  testSignals <-
-    testSignals[, (names(testSignals) %in% c(labels(m$terms), "date"))]
+  if (use_penalty){
+    nonzeros<-rownames(data.frame(coeffs = coef(m)) %>% filter(coeffs!=0))
+    nonzeros <- c(nonzeros,"date")
+    allcols <-names(testSignals)
+    toZero <- setdiff(allcols, nonzeros)
+    testSignals[,toZero]<-0 
+  } else {
+    testSignals <-
+      testSignals[, (names(testSignals) %in% c(labels(m$terms),"date"))]
+  }
+ 
   # get only complete cases (remove rows with NAs)
   testResp<-testResp[complete.cases(testResp), ] 
   testSignals <- testSignals[complete.cases(testSignals), ]
@@ -522,7 +531,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+countriesToDo <-c("PT","BR") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -640,7 +649,7 @@ for (file in files) {
           # keep only signals before cutoff after shifting, this is unnecessary but it does not hurt
           shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
           
-          leftoverFromShifted <- shiftedSignals %>% filter(date > cutoff)
+          leftoverFromShifted <- shiftedSignals %>% filter(date > cutoff) %>% dplyr::select(-y)
           ## call GLM ----
           
           #print (opt_correl_single_country, n=Inf)
@@ -674,8 +683,9 @@ for (file in files) {
           
         
           # restrict as suggested by carlos. Complete cases is done in doTest
-          leftoverFromShifted <- leftoverFromShifted[ , (names(leftoverFromShifted) %in% c(labels(m$terms),"date"))]
-          shiftedTest <- shiftedTest[ , (names(shiftedTest) %in% c(labels(m$terms),"date"))]
+          # Not doing it here it was already in doTest
+          # leftoverFromShifted <- leftoverFromShifted[ , (names(leftoverFromShifted) %in% names)]
+          # shiftedTest <- shiftedTest[ , (names(shiftedTest) %in% names)]
           
           print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
           metricDF<-data.frame()
