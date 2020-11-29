@@ -9,19 +9,19 @@ library(grid) # annotate a ggplot
 library(Metrics)
 library(mpath) # lasso/elastic-net
 library(caret)
-library(gsubfn)  
+library(gsubfn)  # need 0.7-0 or later
 
-use_penalty = F # T: use penalized regression (elastic-net)
-alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
-remove_correlated = T # prior removal of highly correlated predictors
-cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
+use_penalty = #PEN# # T: use penalized regression (elastic-net)
+alpha_in = #ALPHA# # tradeoff between Ridge and Lasso regression
+remove_correlated = #RMCL# # prior removal of highly correlated predictors
+cutoff_remove_correlated = #RMTH# # cutoff for remove_correlated
 
-milag=7
-mxlag=60
+milag=#MILAG#
+mxlag=#MXLAG#
 plotCorrel=FALSE
 plotForecast=TRUE
 
-signal_to_match <- "deaths"
+signal_to_match <- #SIG#
 #signal_to_match <- "cases"
 
 basefileid <-paste0(signal_to_match,"-",milag,"-",mxlag,"-pen",use_penalty,"-alpha",alpha_in,"-rmcc",remove_correlated,"-rmth",cutoff_remove_correlated)
@@ -153,7 +153,7 @@ signals_nsum <- c(
 #signals_to_try <- signals_nsum
 #signals_to_try <- signals_ccfr
 #signals_to_try <- signals_umd_past_smooth
-signals_to_try <- signals_umd
+signals_to_try <- #sigtotry#
 
 check_lags <-
   function(df_response,
@@ -606,9 +606,9 @@ for (file in files) {
       
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
-      firstCutoff <- as.Date("2020-9-10")
-      lastCutoff <- as.Date("2020-11-10")
-      cutoffinterval <- 15
+      firstCutoff <- as.Date("#FIRSTCUTOFF#")
+      lastCutoff <- as.Date("#LASTCUTOFF#")
+      cutoffinterval <- #CUTOFFINTERVAL#
       cutoff <- lastCutoff
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
