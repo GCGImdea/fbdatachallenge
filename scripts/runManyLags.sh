@@ -4,7 +4,7 @@ for PEN in TRUE FALSE; do
     for ALPHA in 0.5; do
 	for RMCL in TRUE FALSE; do
 	    for RMTH in 0.9; do
-		for MILAG in 7 ; do
+		for MILAG in 7 14; do
 		    for MXLAG in 60 ; do
 			for SIGTOMATCH in cases ; do
 			    for SIGTOTRY in signals_umd signals_umd,signals_ccfr signals_umd,signals_ccfr,signals_nsum; do
