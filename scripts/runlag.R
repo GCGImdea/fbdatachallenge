@@ -270,7 +270,7 @@ doCorrelations <-
         plot = p,
         filename = paste0(
           "../data/estimates-symptom-lags/Plots-Correlations/",
-          fileid,
+          fileid,"-",cutoff,
           "-predictor-correlation.png"
         ),
         width = 10,
@@ -609,6 +609,12 @@ for (file in files) {
       firstCutoff <- as.Date("#FIRSTCUTOFF#")
       lastCutoff <- as.Date("#LASTCUTOFF#")
       cutoffinterval <- #CUTOFFINTERVAL#
+        
+      fileid <- paste0(iso_code_country,"-",basefileid,"-",as.Date(firstCutoff),"-",as.Date(lastCutoff),"-",cutoffinterval,"-",
+                         ("pct_cough" %in% signals_to_try),"-",("cases" %in% signals_to_try), "-"
+                         ("p_cases" %in% signals_to_try),"-",("pct_cough_past_smooth" %in% signals_to_try))
+      
+        
       cutoff <- lastCutoff
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
@@ -625,8 +631,7 @@ for (file in files) {
       toWrite <- data.frame()
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
-        fileid <- paste0(iso_code_country,"-",basefileid,"-",as.Date(cutoff))
-        cutoff=as.Date(cutoff)
+           cutoff=as.Date(cutoff)
         tryCatch({
           # dplyr::select training set
           y_df_train <-
