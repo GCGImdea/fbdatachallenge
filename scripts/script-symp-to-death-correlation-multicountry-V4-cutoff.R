@@ -153,7 +153,7 @@ signals_nsum <- c(
 #signals_to_try <- signals_nsum
 #signals_to_try <- signals_ccfr
 #signals_to_try <- signals_umd_past_smooth
-signals_to_try <- signals_umd
+signals_to_try <- c(signals_umd)
 
 check_lags <-
   function(df_response,

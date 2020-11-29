@@ -21,7 +21,7 @@ mxlag=#MXLAG#
 plotCorrel=FALSE
 plotForecast=TRUE
 
-signal_to_match <- #SIGTOMATCH#
+signal_to_match <- "#SIGTOMATCH#"
 #signal_to_match <- "cases"
 
 basefileid <-paste0(signal_to_match,"-",milag,"-",mxlag,"-pen",use_penalty,"-alpha",alpha_in,"-rmcc",remove_correlated,"-rmth",cutoff_remove_correlated)
@@ -153,7 +153,7 @@ signals_nsum <- c(
 #signals_to_try <- signals_nsum
 #signals_to_try <- signals_ccfr
 #signals_to_try <- signals_umd_past_smooth
-signals_to_try <- #SIGTOTRY#
+signals_to_try <- c(#SIGTOTRY#)
 
 check_lags <-
   function(df_response,
