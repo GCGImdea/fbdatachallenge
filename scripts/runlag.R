@@ -194,8 +194,8 @@ check_lags <-
             )
         }, error = function(cond){
           message("Error in correlation: ")
-          message(cond)
-          traceback()
+          print(cond)
+          #traceback()
           df_correl <-
             data.frame(
               shift = date_shift,
@@ -758,8 +758,8 @@ for (file in files) {
           
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFuture for cutoff ", as.Date(cutoff)))
-            message(cond)
-            traceback()
+            print(cond)
+            #traceback()
           })
           tryCatch({
             
@@ -787,8 +787,8 @@ for (file in files) {
           
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " farFuture for cutoff ", as.Date(cutoff)))
-            message(cond)
-            traceback()
+            print(cond)
+            ##traceback()
           })
           tryCatch({
           
@@ -816,15 +816,15 @@ for (file in files) {
           }
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFar for cutoff ", as.Date(cutoff)))
-            message(cond)
-            traceback()
+            print(cond)
+            #traceback()
           })
           
         },
         error = function(cond) {
           message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
-          message(cond)
-          traceback()
+          print(cond)
+          #traceback()
         })
       }
       tryCatch({
@@ -849,16 +849,16 @@ for (file in files) {
         message("succeeded")
       }, error=function(cond){
         message(paste("error writing country ",iso_code_country))
-        message (cond)
-        traceback()
+        print (cond)
+        #traceback()
       })
       
     }
   }
   ,error = function(cond){
     message(paste("error in country", iso_code_country))
-    message(cond)
-    traceback()
+    print(cond)
+    #traceback()
   })
 }
 

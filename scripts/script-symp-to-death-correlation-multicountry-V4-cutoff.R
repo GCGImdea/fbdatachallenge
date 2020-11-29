@@ -11,7 +11,7 @@ library(mpath) # lasso/elastic-net
 library(caret)
 library(gsubfn)  
 
-use_penalty = F # T: use penalized regression (elastic-net)
+use_penalty = T # T: use penalized regression (elastic-net)
 alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
 remove_correlated = T # prior removal of highly correlated predictors
 cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
@@ -21,8 +21,8 @@ mxlag=60
 plotCorrel=FALSE
 plotForecast=TRUE
 
-signal_to_match <- "deaths"
-#signal_to_match <- "cases"
+#signal_to_match <- "deaths"
+signal_to_match <- "cases"
 
 basefileid <-paste0(signal_to_match,"-",milag,"-",mxlag,"-pen",use_penalty,"-alpha",alpha_in,"-rmcc",remove_correlated,"-rmth",cutoff_remove_correlated)
 signals_umd <- c(
@@ -194,7 +194,7 @@ check_lags <-
             )
         }, error = function(cond){
           message("Error in correlation: ")
-          message(cond)
+          print(cond)
           traceback()
           df_correl <-
             data.frame(
@@ -270,7 +270,7 @@ doCorrelations <-
         plot = p,
         filename = paste0(
           "../data/estimates-symptom-lags/Plots-Correlations/",
-          fileid,
+          fileid,"-",cutoff,
           "-predictor-correlation.png"
         ),
         width = 10,
@@ -606,9 +606,17 @@ for (file in files) {
       
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
-      firstCutoff <- as.Date("2020-9-10")
-      lastCutoff <- as.Date("2020-11-10")
-      cutoffinterval <- 15
+      
+      firstCutoff <- as.Date("2020-9-26")
+      lastCutoff <- as.Date("2020-9-26")
+      cutoffinterval <- 1
+      
+      fileid <- paste0(iso_code_country,"-",basefileid,"-",as.Date(firstCutoff),"-",as.Date(lastCutoff),"-",cutoffinterval,"-",
+                         ("pct_cough" %in% signals_to_try),"-",("cases" %in% signals_to_try), "-"
+                         ("p_cases" %in% signals_to_try),"-",("pct_cough_past_smooth" %in% signals_to_try))
+      
+        
+     
       cutoff <- lastCutoff
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
@@ -625,8 +633,7 @@ for (file in files) {
       toWrite <- data.frame()
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
-        fileid <- paste0(iso_code_country,"-",basefileid,"-",as.Date(cutoff))
-        cutoff=as.Date(cutoff)
+           cutoff=as.Date(cutoff)
         tryCatch({
           # dplyr::select training set
           y_df_train <-
@@ -753,7 +760,7 @@ for (file in files) {
           
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFuture for cutoff ", as.Date(cutoff)))
-            message(cond)
+            print(cond)
             traceback()
           })
           tryCatch({
@@ -782,7 +789,7 @@ for (file in files) {
           
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " farFuture for cutoff ", as.Date(cutoff)))
-            message(cond)
+            print(cond)
             traceback()
           })
           tryCatch({
@@ -811,14 +818,14 @@ for (file in files) {
           }
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFar for cutoff ", as.Date(cutoff)))
-            message(cond)
+            print(cond)
             traceback()
           })
           
         },
         error = function(cond) {
           message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
-          message(cond)
+          print(cond)
           traceback()
         })
       }
@@ -844,7 +851,7 @@ for (file in files) {
         message("succeeded")
       }, error=function(cond){
         message(paste("error writing country ",iso_code_country))
-        message (cond)
+        print (cond)
         traceback()
       })
       
@@ -852,7 +859,7 @@ for (file in files) {
   }
   ,error = function(cond){
     message(paste("error in country", iso_code_country))
-    message(cond)
+    print(cond)
     traceback()
   })
 }
