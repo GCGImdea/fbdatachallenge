@@ -650,6 +650,25 @@ for (file in files) {
           shiftedTrainSignal <- shiftedSignals %>% filter(date <= cutoff)
           
           leftoverFromShifted <- shiftedSignals %>% filter(date > cutoff) %>% dplyr::select(-y)
+          
+          ## Remove correlated vars----
+          # plug in the train data frame:
+          temp_shiftedTrainSignal <- shiftedTrainSignal[complete.cases(shiftedTrainSignal), ]
+          rm_high_correl <- findCorrelation(
+            cor( dplyr::select(temp_shiftedTrainSignal, !all_of(c("date", "y"))), 
+                 method = "spearman"),
+            cutoff = 0.9, # maybe use a higher number?
+            verbose = F,
+            names = T,
+            exact = T
+          )
+          
+          # remove the variables from the analysis (bot train and test?)
+          shiftedTrainSignal <- shiftedTrainSignal %>% 
+            dplyr::select(!all_of(rm_high_correl))
+          leftoverFromShifted <- leftoverFromShifted %>% 
+            dplyr::select(!all_of(rm_high_correl))
+          
           ## call GLM ----
           
           #print (opt_correl_single_country, n=Inf)
