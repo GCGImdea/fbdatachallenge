@@ -109,6 +109,7 @@ for (lag_in in 1:7) {
     mutate(date = as.Date(real_date)) %>% 
     filter(date >= min(df_no_col_rm$date) & date <= max(df_no_col_rm$date))
   
+  
   # 5-colors palettes:
   # my.palette <- c("red", "blue", "black", "magenta", "brown")
   my.palette <- c("#ef476f", "#ffd166", "#06d6a0", "#118ab2", "#073b4c")
@@ -166,6 +167,10 @@ for (lag_in in 1:7) {
          width = 9, height = 7)
   
   ## BOXPLOT ----
+  
+  df_col_rm %>% inner_join(df_baseline, by="date") %>% sele(y,strawman)
+  
+  
   df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
     rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
     rbind(data.frame(SAE = df_col_rm$scaled_abs_err, Model = "Remove Correlated")) %>% 
