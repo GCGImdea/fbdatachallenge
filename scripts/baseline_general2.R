@@ -48,7 +48,7 @@ delphi_baseline <- function(country_code = "PT"){
   dt_population <- dt$population[1]
   dt$cases[is.na(dt$cases)] <- 0
   dt <- dt %>% 
-    select(date, cases, deaths, population, pct_cli) %>% 
+    select(date, cases, deaths, population, pct_cmnty_cli) %>% 
     mutate(cases7day =  zoo::rollmean(cases, 7, fill = NA, align = "right"))
   dt$date <- as.Date(dt$date)
   
@@ -62,7 +62,7 @@ delphi_baseline <- function(country_code = "PT"){
                       cases7day_trans = trans(cases7day))
   
   ca <- dt %>% select(date, cases7day_trans) %>% 
-  rename(value = cases7day_trans, time_value = date)%>% 
+    rename(value = cases7day_trans, time_value = date)%>% 
     my_append_shifts(shifts = c(lags, leads))
   fb <- dt %>% select(date, pct_cli_trans) %>% 
     rename(value = pct_cli_trans, time_value = date)%>% 
@@ -154,8 +154,8 @@ delphi_baseline <- function(country_code = "PT"){
                         "err2", "strawman", "case_model", "case_fb_model",
                         "lead", "case_sae", "fb_sae") %>% 
     filter(lead == 7)
-
-
+  
+  
   # read prediction 
   # dtpred <- read.csv(paste0("../data/estimates-symptom-lags/cutoffs/PlotData/", country_code, 
   #                    "-estimates-lag-daily.csv"), as.is = T)
@@ -165,7 +165,7 @@ delphi_baseline <- function(country_code = "PT"){
   #                      by = c("date" = "real_date"))
   cat("Writing baseline for: ", country_code, "...\n")
   write.csv(res, paste0("../data/baseline_outputs/",
-                            country_code, "-baseline.csv"))
+                        country_code, "-baseline.csv"))
 }
 
 # 
@@ -174,12 +174,12 @@ delphi_baseline <- function(country_code = "PT"){
 # interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 # interest <- c("GR", "IE", "JP")
 
-# interest <- list.files("../data/estimates-umd-unbatched/PlotData/",
-#                        pattern="*.csv", full.names=FALSE)
-# interest <- substr(interest,1,2)  
-# interest <- interest[!(interest %in% c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB",
-#                             "GR", "IE", "JP"))]
+interest <- list.files("../data/estimates-umd-unbatched/PlotData/",
+                       pattern="*.csv", full.names=FALSE)
+interest <- substr(interest,1,2)  
+interest <- interest[!(interest %in% c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB",
+                                       "GR", "IE", "JP"))]
 # HK, TW problem
-#interest <- interest[53:length(interest)]
-interest <- c("UY", "UZ", "VE", "VN", "YE", "ZA")
+interest <- interest[53:length(interest)]
+
 dd <- sapply(interest, delphi_baseline)
