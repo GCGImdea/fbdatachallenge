@@ -173,7 +173,9 @@ for (lag_in in 1:7) {
   
   p_box <-  ggplot(df_box, aes(y = SAE, x = Model)) +
     geom_boxplot() +
-    theme_light(base_size = 15)
+    theme_light(base_size = 15) +
+    labs(x = "Model", y = "Scaled absolute error", 
+         title = paste0(country_iso, ": lag ", lag_in))
   # print(p_box)
   ggsave(plot = p_box,
          filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_rollmean_", k, "_boxplot_baseline_vs_glm.png"),
