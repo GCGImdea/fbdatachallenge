@@ -11,28 +11,26 @@ library(mpath) # lasso/elastic-net
 library(caret)
 library(gsubfn)  
 
-
-use_penalty = #PEN# # T: use penalized regression (elastic-net)
-alpha_in = #ALPHA# # tradeoff between Ridge and Lasso regression
-remove_correlated = #RMCL# # prior removal of highly correlated predictors
-cutoff_remove_correlated = #RMTH# # cutoff for remove_correlated
-
+use_penalty = T # T: use penalized regression (elastic-net)
+alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
+remove_correlated = T # prior removal of highly correlated predictors
+cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
 basis_dim_in=NA
-perform_smoothing = #SMOOTH# # prior smoothing of predictors (using smooth_column-v2.R)
+perform_smoothing = T # prior smoothing of predictors (using smooth_column-v2.R)
 if (perform_smoothing) {
   source("smooth_column-v2.R")
-  basis_dim_in = #BASISDIM#
+  basis_dim_in = 15
 }
-  
-milag=#MILAG#
-mxlag=#MXLAG#
+
+milag=7
+mxlag=60
 plotCorrel=FALSE
 plotForecast=TRUE
 
-signal_to_match <- "#SIGTOMATCH#"
-#signal_to_match <- "cases"
+#signal_to_match <- "deaths"
+signal_to_match <- "cases"
 
-basefileid <-paste0(signal_to_match,"-",milag,"-",mxlag,"-pen",use_penalty,"-alpha",alpha_in,"-rmcc",remove_correlated,"-rmth",cutoff_remove_correlated)
+basefileid <-paste0(signal_to_match,"-",milag,"-",mxlag,"-pen",use_penalty,"-alpha",alpha_in,"-rmcc",remove_correlated,"-rmth",cutoff_remove_correlated,"-smth",perform_smoothing,basis_dim_in)
 signals_umd <- c(
   "pct_fever",
   "pct_cough",
@@ -161,7 +159,7 @@ signals_nsum <- c(
 #signals_to_try <- signals_nsum
 #signals_to_try <- signals_ccfr
 #signals_to_try <- signals_umd_past_smooth
-signals_to_try <- c(#SIGTOTRY#)
+signals_to_try <- c(signals_umd)
 
 check_lags <-
   function(df_response,
@@ -203,7 +201,7 @@ check_lags <-
         }, error = function(cond){
           message("Error in correlation: ")
           print(cond)
-          #traceback()
+          traceback()
           df_correl <-
             data.frame(
               shift = date_shift,
@@ -544,7 +542,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR")
+countriesToDo <-c("PT","BR") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -614,15 +612,17 @@ for (file in files) {
       
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
-      firstCutoff <- as.Date("#FIRSTCUTOFF#")
-      lastCutoff <- as.Date("#LASTCUTOFF#")
-      cutoffinterval <- #CUTOFFINTERVAL#
-        
+      
+      firstCutoff <- as.Date("2020-9-26")
+      lastCutoff <- as.Date("2020-9-26")
+      cutoffinterval <- 1
+      
       fileid <- paste0(iso_code_country,"-",basefileid,"-",as.Date(firstCutoff),"-",as.Date(lastCutoff),"-",cutoffinterval,"-",
                          ("pct_cough" %in% signals_to_try),"-",("cases" %in% signals_to_try), "-"
                          ("p_cases" %in% signals_to_try),"-",("pct_cough_past_smooth" %in% signals_to_try))
       
         
+     
       cutoff <- lastCutoff
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
@@ -810,7 +810,7 @@ for (file in files) {
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFuture for cutoff ", as.Date(cutoff)))
             print(cond)
-            #traceback()
+            traceback()
           })
           tryCatch({
             
@@ -839,7 +839,7 @@ for (file in files) {
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " farFuture for cutoff ", as.Date(cutoff)))
             print(cond)
-            ##traceback()
+            traceback()
           })
           tryCatch({
           
@@ -868,14 +868,14 @@ for (file in files) {
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFar for cutoff ", as.Date(cutoff)))
             print(cond)
-            #traceback()
+            traceback()
           })
           
         },
         error = function(cond) {
           message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
           print(cond)
-          #traceback()
+          traceback()
         })
       }
       tryCatch({
@@ -918,7 +918,7 @@ for (file in files) {
       }, error=function(cond){
         message(paste("error writing country ",iso_code_country))
         print (cond)
-        #traceback()
+        traceback()
       })
       
     }
@@ -926,7 +926,7 @@ for (file in files) {
   ,error = function(cond){
     message(paste("error in country", iso_code_country))
     print(cond)
-    #traceback()
+    traceback()
   })
 }
 
