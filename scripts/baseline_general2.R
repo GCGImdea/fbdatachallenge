@@ -174,16 +174,16 @@ delphi_baseline <- function(country_code = "PT"){
 # interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 # interest <- c("GR", "IE", "JP")
 
-interest1 <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB",
-               "GR", "IE", "JP")
+# interest1 <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB",
+#                "GR", "IE", "JP")
 
-# interest <- list.files("../data/estimates-umd-unbatched/PlotData/",
-#                        pattern="*.csv", full.names=FALSE)
-# 
-# interest <- substr(interest,1,2)  
-# interest <- interest[!(interest %in% c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB",
-#                                        "GR", "IE", "JP", "HK", "TW"))]
+interest <- list.files("../data/estimates-umd-unbatched/PlotData/",
+                       pattern="*.csv", full.names=FALSE)
+
+interest <- substr(interest,1,2)
+interest <- interest[!(interest %in% c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB",
+                                       "GR", "IE", "JP", "HK", "TW"))]
 # # HK, TW problem
 # interest <- interest[53:length(interest)]
 
-dd <- sapply(interest1, delphi_baseline)
+dd <- sapply(interest, delphi_baseline)
