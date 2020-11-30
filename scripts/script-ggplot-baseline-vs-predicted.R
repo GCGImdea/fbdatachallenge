@@ -171,7 +171,7 @@ for (lag_in in 1:7) {
     rbind(data.frame(SAE = df_col_rm$scaled_abs_err, Model = "Remove Correlated")) %>% 
     rbind(data.frame(SAE = df_no_col_rm$scaled_abs_err, Model = "Retain Correlated"))
   
-  p_box <-  ggplot(df_box, aes(y = SAE, x = Model)) +
+  p_box1 <-  ggplot(df_box, aes(y = SAE, x = Model)) +
     geom_boxplot() +
     theme_light(base_size = 15) +
     labs(x = "Model", y = "Scaled absolute error", 
@@ -179,6 +179,20 @@ for (lag_in in 1:7) {
   # print(p_box)
   ggsave(plot = p_box,
          filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_rollmean_", k, "_boxplot_baseline_vs_glm.png"),
+         width = 9, height = 7)
+  
+  df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
+    # rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
+    rbind(data.frame(SAE = df_col_rm$scaled_abs_err, Model = "Remove Correlated")) %>% 
+    rbind(data.frame(SAE = df_no_col_rm$scaled_abs_err, Model = "Retain Correlated"))
+  p_box2 <-  ggplot(df_box, aes(y = SAE, x = Model)) +
+    geom_boxplot() +
+    theme_light(base_size = 15) +
+    labs(x = "Model", y = "Scaled absolute error", 
+         title = paste0(country_iso, ": lag ", lag_in))
+  # print(p_box)
+  ggsave(plot = p_box2,
+         filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_rollmean_", k, "_boxplot2_baseline_vs_glm.png"),
          width = 9, height = 7)
   
 }
