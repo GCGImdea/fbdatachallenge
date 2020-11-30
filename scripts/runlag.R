@@ -635,7 +635,7 @@ for (file in files) {
       #  print (cutoffs)
       
       # print(y_df)
-      strawmanPred=(y_df %>% filter(date==cutoff))$y
+      
       toWrite <- data.frame()
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
@@ -787,6 +787,7 @@ for (file in files) {
           outDF<- pairDF[[1]]
           metricDF <- pairDF[[2]]
           if (nrow(outDF)>0){
+            strawmanPred=(y_df %>% filter(date==cutoff))$y
             outDF["cutoff"]=as.Date(cutoff)
             outDF["strawman"]=NA
             outDF["scaled_abs_err"]=NA

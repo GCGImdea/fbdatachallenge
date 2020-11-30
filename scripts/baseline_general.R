@@ -171,5 +171,7 @@ delphi_baseline <- function(country_code = "PT"){
 # 
 # interest <- list.files("../data/estimates-symptom-lags/cutoffs/PlotData/",
 #                        pattern="*.csv", full.names=FALSE)
-interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+#interest <- c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+interest <- c("GR", "IE", "JP")
+
 dd <- sapply(interest, delphi_baseline)
