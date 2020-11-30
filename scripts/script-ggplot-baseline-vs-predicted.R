@@ -177,8 +177,8 @@ for (lag_in in 1:7) {
     labs(x = "Model", y = "Scaled absolute error", 
          title = paste0(country_iso, ": lag ", lag_in))
   # print(p_box)
-  ggsave(plot = p_box,
-         filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_rollmean_", k, "_boxplot_baseline_vs_glm.png"),
+  ggsave(plot = p_box1,
+         filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_boxplot_baseline_vs_glm.png"),
          width = 9, height = 7)
   
   df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
@@ -192,7 +192,7 @@ for (lag_in in 1:7) {
          title = paste0(country_iso, ": lag ", lag_in))
   # print(p_box)
   ggsave(plot = p_box2,
-         filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_rollmean_", k, "_boxplot2_baseline_vs_glm.png"),
+         filename =  paste0(path_out, country_iso, "_lag_", lag_in,"pen",pen,"-umd",umd,"-ccfr",ccfr,"-nsum",nsum,"-minlag",minlag, "_boxplot2_baseline_vs_glm.png"),
          width = 9, height = 7)
   
 }
