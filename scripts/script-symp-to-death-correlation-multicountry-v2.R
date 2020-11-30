@@ -6,6 +6,11 @@ library(foreign)
 library(MASS)
 library(ggplot2)
 library(grid) # annotate a ggplot
+library(caret)
+
+
+remove_correlated = T
+cutoff_remove_correlated = 0.9
 
 check_lags <-
   function(df_response,
@@ -13,51 +18,56 @@ check_lags <-
            columns_to_try,
            min_lag = 7,
            max_lag = 60) {
-    
     df_response$date <- as.Date(df_response$date)
     
     df_out <- data.frame()
     
     for (column_in in columns_to_try) {
-      for (date_shift in seq(min_lag,max_lag)) {
-        df_single_symp <- df_add_regressors[, c("date", column_in)]
-        
-        # time shifting in extra regressors:
-        df_single_symp$date <-
-          as.Date(df_single_symp$date) + date_shift
-        
-        # set the same dates in df_response and df_single_symp:
-        start_date <-
-          max(min(df_single_symp$date), min(df_response$date))
-        end_date <-
-          min(max(df_single_symp$date), max(df_response$date))
-        
-        df_single_symp <-
-          df_single_symp %>% filter(date >= start_date, date <= end_date)
-        df_response <-
-          df_response %>% filter(date >= start_date, date <= end_date)
-        
-        # df_single_symp <- df_single_symp[1:165, ]
-        # df_response <- df_response[1:165, ]
+      for (date_shift in seq(min_lag, max_lag)) {
+        # replaced these  df_single_symp <- df_add_regressors[, c("date", column_in)]
+        # df_single_symp$date <-
+        #  as.Date(df_single_symp$date) + date_shift
+        # joined <- (df_single_symp %>% dplyr::select(date, column_in)) 
+        # by the following
+        joined <- df_add_regressors %>% dplyr::select(date, column_in) %>% mutate(date=as.Date(date)+date_shift)%>% inner_join( df_response, by="date")
+        # remove NAs in what we want, we can do it because we only have column_in now
+        joined  <- joined[complete.cases(joined), ]
         
         win_size <-
-          as.integer(max(df_response$date) - min(df_response$date))
+          as.integer(max(joined$date) - min(joined$date))
         
-        correl <-
-          cor(df_response$y, df_single_symp[, column_in], method = "spearman")
-        corTest <-
-          cor.test(df_response$y, df_single_symp[, column_in], method = "spearman")
-        
-        df_correl <-
-          data.frame(
-            shift = date_shift,
-            correlations = corTest$estimate,
-            pval = corTest$p.value,
-            win_size = win_size,
-            signal = column_in
-          )
-        
+        # if (sum(is.na(joined[, column_in]))==0){
+        tryCatch({
+          corTest <-
+            cor.test(joined$y, joined[, column_in], method = "spearman")
+          
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = corTest$estimate,
+              pval = corTest$p.value,
+              win_size = win_size,
+              signal = column_in
+            )
+        }, error = function(cond){
+          message("Error in correlation: ")
+          message(cond)
+          traceback()
+          df_correl <-
+            data.frame(
+              shift = date_shift,
+              correlations = 0,
+              pval = 1,
+              win_size = win_size,
+              signal = column_in
+            )
+        })
         df_out <- rbind(df_out, df_correl)
+        # } else {
+        #   # print(paste("got NAs for column ",column_in, " and date shift ", date_shift))
+        # }#endif
+        # 
+        
       } # loop-date_shift
     } # loop-column_in
     
@@ -223,25 +233,23 @@ for (file in files) {
     opt_correls <- rbind(opt_correls, opt_correl_single_country)
     
     # plot of correlations for single country:
-    ifelse(!dir.exists(file.path("../data/estimates-umd-unbatched/", "Plots")), 
-           dir.create(file.path("../data/estimates-umd-unbatched/", "Plots")), FALSE)
+    # ifelse(!dir.exists(file.path("../data/estimates-umd-unbatched/", "Plots")), 
+    #        dir.create(file.path("../data/estimates-umd-unbatched/", "Plots")), FALSE)
     p <-
       ggplot(data = correls_single_country, aes(x = shift, y = correlations, color = signal)) +
       geom_line(alpha = 0.8) +
       ylim(-1, 1) +
       labs(title = iso_code_country) +
       theme_light()
-    ggsave(plot = p, 
-           filename = paste0(
-             "../data/estimates-symptom-lags/Plots-Correlations/",
-             iso_code_country,
-             "-predictor-correlation.png"
-           ), width = 10, height = 7
-    )
+    # ggsave(plot = p, 
+    #        filename = paste0(
+    #          "../data/estimates-symptom-lags/Plots-Correlations/",
+    #          iso_code_country,
+    #          "-predictor-correlation.png"
+    #        ), width = 10, height = 7
+    # )
     
-    ## GLM ----
-    
-    # contruct a single data frame with response and regressors:
+    # construct a single data frame with response and regressors:
     df_glm <- df_deaths %>% 
       dplyr::select(date, deaths)
     
@@ -251,12 +259,33 @@ for (file in files) {
         dplyr::select(date, all_of(indep_var)) %>% 
         mutate(date = date + 
                  opt_correl_single_country$shift[opt_correl_single_country$signal == indep_var]
-               )
+        )
       df_glm <- df_glm %>% full_join(df_indep_var_temp, by = "date")
       
     }
     # get only complete cases (remove rows with NAs)
     df_glm <- df_glm[complete.cases(df_glm), ]
+    
+    ## Remove correlated vars----
+    if (remove_correlated) {
+      # plug in the train data frame:
+      
+      rm_high_correl <- findCorrelation(
+        cor( dplyr::select(df_glm, !all_of(c("date", "deaths"))), 
+             method = "spearman"),
+        cutoff = cutoff_remove_correlated, 
+        verbose = F,
+        names = T,
+        exact = T
+      )
+      
+      # remove the variables from the analysis 
+      df_glm <- df_glm %>% 
+        dplyr::select(!all_of(rm_high_correl))
+      
+    } # end-if remove correlated
+    
+    ## GLM ----
     
     # # Lasso GLM-Negative Binomial:
     # library(mpath)
@@ -276,8 +305,8 @@ for (file in files) {
     # Stepwise regression model
     m1 <- stepAIC(m1, direction = "both", 
                           trace = FALSE)
-    summary(m1)
-    m1$anova
+    # summary(m1)
+    # m1$anova
     
     ## Plot + CI
     ## grab the inverse link function
@@ -347,13 +376,13 @@ for (file in files) {
       theme_light(base_size = 15) +
       theme(legend.position="bottom") # + annotation_custom(grob)
     # p_model
-    ggsave(plot = p_model, 
-           filename = paste0(
-             "../data/estimates-symptom-lags/Plots-GLM/",
-             iso_code_country,
-             "-deaths-vs-predicted.png"
-           ), width = 10, height = 7
-    )
+    # ggsave(plot = p_model, 
+    #        filename = paste0(
+    #          "../data/estimates-symptom-lags/Plots-GLM/",
+    #          iso_code_country,
+    #          "-deaths-vs-predicted.png"
+    #        ), width = 10, height = 7
+    # )
     
     message("succeeded")
   }, error = function(cond) {
@@ -367,46 +396,46 @@ write.csv(opt_correls, file = paste0(
   "../data/estimates-symptom-lags/optimal-lags.csv"
 ))
 
-## Study the stable signals:
-
-files_model_path <- "../data/estimates-symptom-lags/PlotData/"
-files_model <- dir(files_model_path)
-
-stable_regressors <- matrix(0, nrow = length(files_model), ncol = length(columns_to_try))
-colnames(stable_regressors) <- columns_to_try
-rownames(stable_regressors) <- str_sub(files_model, 1, 2)
-
-for (country_model in files_model) {
-  temp <- read.csv(paste0(files_model_path, country_model)) %>% 
-    dplyr::select(!starts_with("pvals")) %>% 
-    dplyr::select(!starts_with("coef")) %>% 
-    dplyr::select(!contains("X")) %>% 
-    dplyr::select(!contains("aic")) %>% 
-    dplyr::select(!contains("deviance")) %>% 
-    dplyr::select(!contains("fit")) %>% 
-    dplyr::select(!contains("deaths")) %>% 
-    dplyr::select(!contains("date")) %>% 
-    colnames()
-  stable_regressors[str_sub(country_model, 1, 2), temp] = 1
-  
-}
-
-times_stable_predictors <- sort(colSums(stable_regressors), decreasing = T)
-
-times_stable_predictors <- tibble(regressor = names(times_stable_predictors),
-                                      times = times_stable_predictors)
-
-head(times_stable_predictors)
-
-
-p_stable <- ggplot(times_stable_predictors, aes(x =regressor, y = times)) +
-  geom_col() +
-  theme_light(base_size = 15) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
-p_stable
-
-ggsave(plot = p_stable, 
-       filename = paste0(
-         "../data/estimates-symptom-lags/stable-regressors.png"
-       ), width = 12, height = 10
-)
+# ## Study the stable signals:
+# 
+# files_model_path <- "../data/estimates-symptom-lags/PlotData/"
+# files_model <- dir(files_model_path)
+# 
+# stable_regressors <- matrix(0, nrow = length(files_model), ncol = length(columns_to_try))
+# colnames(stable_regressors) <- columns_to_try
+# rownames(stable_regressors) <- str_sub(files_model, 1, 2)
+# 
+# for (country_model in files_model) {
+#   temp <- read.csv(paste0(files_model_path, country_model)) %>% 
+#     dplyr::select(!starts_with("pvals")) %>% 
+#     dplyr::select(!starts_with("coef")) %>% 
+#     dplyr::select(!contains("X")) %>% 
+#     dplyr::select(!contains("aic")) %>% 
+#     dplyr::select(!contains("deviance")) %>% 
+#     dplyr::select(!contains("fit")) %>% 
+#     dplyr::select(!contains("deaths")) %>% 
+#     dplyr::select(!contains("date")) %>% 
+#     colnames()
+#   stable_regressors[str_sub(country_model, 1, 2), temp] = 1
+#   
+# }
+# 
+# times_stable_predictors <- sort(colSums(stable_regressors), decreasing = T)
+# 
+# times_stable_predictors <- tibble(regressor = names(times_stable_predictors),
+#                                       times = times_stable_predictors)
+# 
+# head(times_stable_predictors)
+# 
+# 
+# p_stable <- ggplot(times_stable_predictors, aes(x =regressor, y = times)) +
+#   geom_col() +
+#   theme_light(base_size = 15) +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
+# p_stable
+# 
+# ggsave(plot = p_stable, 
+#        filename = paste0(
+#          "../data/estimates-symptom-lags/stable-regressors.png"
+#        ), width = 12, height = 10
+# )
