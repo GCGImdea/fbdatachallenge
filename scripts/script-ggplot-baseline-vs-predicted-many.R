@@ -6,7 +6,9 @@ path_baseline <- "../data/baseline_outputs/"
 path_out <- "../data/estimates-symptom-lags/Plots-baseline-vs-GLM/"
 
 try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
-try_countries <- c("CL", "FR")
+
+# set upper limit to boxplot (p_box2):
+y_lim_box = 10
 
 for (country_iso in try_countries) {
   
@@ -152,9 +154,11 @@ for (country_iso in try_countries) {
                 # rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
                 rbind(data.frame(SAE = df_col_rm$scaled_abs_err, Model = "Remove Correlated")) %>% 
                 rbind(data.frame(SAE = df_no_col_rm$scaled_abs_err, Model = "Retain Correlated"))
+              
               p_box2 <-  ggplot(df_box, aes(y = SAE, x = Model)) +
                 geom_boxplot() +
                 theme_light(base_size = 15) +
+                ylim(NA, y_lim_box) +
                 labs(x = "Model", y = "Scaled absolute error", 
                      title = paste0(country_iso, ": lag ", lag_in))
               # print(p_box2)
