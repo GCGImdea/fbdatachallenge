@@ -127,7 +127,7 @@ batch_effect <- function(df_batch_in, denom2try, col_string_vec){
 
 
 ## Load data ----
-data <- read.csv("../data/UMD_updated/Full Survey Data/region/esp_region_full.csv", 
+data <- read.csv("../data/UMD_updated/Full_Survey_Data/region/esp_region_full.csv", 
                  fileEncoding = "UTF-8")
 
 ## Filter overall >> overall
@@ -243,7 +243,7 @@ for (i in 1:length(selected_regions)){
   #                              "pct_fever")]))
   
   df_batch_in <- batch_effect(df_batch_in,
-                              denom2try = c(1000, 2000, 3000, 4000, 5000),
+                              denom2try = c(1000, 2000, 3000, 4000, 5000, 6000),
                               col_string_vec = all_pct_to_smooth)
 
   df_batch_in$region = region_code
@@ -288,8 +288,8 @@ for (batch_size in unique(df_out$b_size_denom)){
     geom_line(aes(y = batched_pct_cli_smooth), size = 1, alpha = 0.6, colour = "blue") +
     facet_wrap(~region) +
     theme_bw() + 
-    xlab("Date") + ylab("% symptomatic cases") + 
-    labs(title = "Spain: batched CSDC CLI (smooth)",
+    xlab("Date") + ylab("% cases") + 
+    labs(title = "Spain: batched pct_cli smoothed",
          subtitle = paste0("batch size = population / ", batch_size))
   # print(p1)
   ggsave(plot = p1,
@@ -311,8 +311,8 @@ for (region_code in unique(df_out$region)){
     geom_line(aes(y = batched_pct_cli_smooth), size = 1, alpha = 0.6, colour = "blue") +
     facet_wrap(~d) +
     theme_bw() + 
-    xlab("Date") + ylab("% symptomatic cases") + 
-    labs(title = paste0(region_code, ": batched CSDC CLI (smooth)"),
+    xlab("Date") + ylab("% cases") + 
+    labs(title = paste0(region_code, ": batched pct_cli smoothed"),
          subtitle = "d = population / batch size")
   # print(p2)
   ggsave(plot = p2, 

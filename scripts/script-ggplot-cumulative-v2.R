@@ -23,7 +23,7 @@ end_date <- "2020-11-02"
 
         dt_CCFR_BR <- read.csv(paste0(estimates_CCFR_path, "BR-estimate.csv"), as.is = T)
         dt_CCFR_BR$date <- as.Date(dt_CCFR_BR$date, format = "%Y-%m-%d")
-        dt_CCFR_BR <- dt_CCFR_BR[dt_CCFR_ES$date >= ymd(start_date) & dt_CCFR_ES$date <= ymd(end_date),]
+        dt_CCFR_BR <- dt_CCFR_BR[dt_CCFR_BR$date >= ymd(start_date) & dt_CCFR_BR$date <= ymd(end_date),]
 
         # dt_CCFR_US <- read.csv(paste0(estimates_CCFR_path, "US-estimate.csv"), as.is = T)
         # dt_CCFR_US$date <- as.Date(dt_CCFR_US$date, format = "%Y/%m/%d")
@@ -46,7 +46,7 @@ end_date <- "2020-11-02"
                 # geom_line(data=dt_CCFR_US, aes(y = 100*cum_cases/population, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidence", title = "CCFR vs Confirmed Cumulative",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidence", title = "Corrected-CFR vs Confirmed Cumulative",  colour = "") +
                 scale_color_manual(values = colors) + 
                 theme(legend.position = "bottom",
                       legend.text = element_text(size = 20),
@@ -64,12 +64,14 @@ end_date <- "2020-11-02"
 
 #do_NSUM_plotting <-function(countries){
         # estimates W
-        dt_NSUM_ES <- read.csv(paste0(estimates_NSUM_path, "ES-estimate.csv"), as.is = T)
+        dt_NSUM_ES <- read.csv(paste0(estimates_NSUM_path, "ES-estimate-smooth.csv"), as.is = T)
         dt_NSUM_ES$date <- as.Date(dt_NSUM_ES$date)
+        dt_NSUM_ES <- dt_NSUM_ES[dt_NSUM_ES$date >= ymd(start_date) & dt_NSUM_ES$date <= ymd(end_date),]
         dt_NSUM_ES %>% rename(p_NSUM_infected = p_cases_smooth) -> dt_NSUM_ES
         
-        dt_NSUM_BR <- read.csv(paste0(estimates_NSUM_path, "BR-estimate.csv"), as.is = T)
+        dt_NSUM_BR <- read.csv(paste0(estimates_NSUM_path, "BR-estimate-smooth.csv"), as.is = T)
         dt_NSUM_BR$date <- as.Date(dt_NSUM_BR$date)
+        dt_NSUM_BR <- dt_NSUM_BR[dt_NSUM_BR$date >= ymd(start_date) & dt_NSUM_BR$date <= ymd(end_date),]
         dt_NSUM_BR %>% rename(p_NSUM_infected = p_cases_smooth) -> dt_NSUM_BR
         
         # dt_NSUM_US <- read.csv(paste0(estimates_NSUM_path, "US-estimate.csv"), as.is = T)
@@ -94,7 +96,7 @@ end_date <- "2020-11-02"
                 # geom_line(data=dt_NSUM_US, aes(y = 100*p_cases, colour = "USA"), size =1, linetype = "dashed", alpha=0.5) +
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidence", title = "NSUM Estimates",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidence", title = "Indirect Survey Estimates",  colour = "") +
                 scale_color_manual(values = colors) + 
                 theme(legend.position = "bottom",
                       legend.text = element_text(size = 20),
@@ -129,7 +131,7 @@ end_date <- "2020-11-02"
                 # geom_line(data=dt_NSUM_US, aes(y = 100*p_NSUM_infected, colour = "USA"), size =1, linetype = "solid") + 
                 theme_bw() + 
                 #ylim(-0.1, up.limit) +
-                labs(x = "Date", y =  "% population cumulative incidence", title = "NSUM vs CCFR Estimates",  colour = "") +
+                labs(x = "Date", y =  "% population cumulative incidence", title = "Indirect Survey vs Corrected-CFR Estimates",  colour = "") +
                 scale_color_manual(values = colors) + 
                 theme(legend.position = "bottom",
                       legend.text = element_text(size = 20),

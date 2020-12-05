@@ -127,7 +127,7 @@ batch_effect <- function(df_batch_in, denom2try, col_string_vec){
 
 
 ## Load data ----
-data <- read.csv("../data/UMD_updated/Full Survey Data/region/bra_region_full.csv", 
+data <- read.csv("../data/UMD_updated/Full_Survey_Data/region/bra_region_full.csv", 
                  fileEncoding = "UTF-8")
 
 ## Filter overall >> overall

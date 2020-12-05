@@ -12,7 +12,7 @@ use_unsmoothed_UMD = T # write F if using the UMD's smoothed data
 
 if (use_unsmoothed_UMD) {
   ## Unsmoothed Data
-  data <- read.csv("../data/UMD_updated/Full Survey Data/country/bra_country_full.csv", 
+  data <- read.csv("../data/UMD_updated/Full_Survey_Data/country/bra_country_full.csv", 
                    fileEncoding = "UTF-8")
   
   ## Filter overall >> overall
@@ -25,7 +25,7 @@ if (use_unsmoothed_UMD) {
   # dt <- dt %>% filter(date > "2020-05-07")
 }else {
   ## Smoothed Data
-  data_s <- read.csv("../data/UMD_updated/Full Survey Data/region/smoothed/bra_region_full_smoothed.csv",
+  data_s <- read.csv("../data/UMD_updated/Full_Survey_Data/region/smoothed/bra_region_full_smoothed.csv",
                      fileEncoding = "UTF-8")
   
   ## Filter overall >> overall

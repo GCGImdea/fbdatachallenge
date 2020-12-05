@@ -9,7 +9,7 @@ library(tidyselect)
 source("smooth_column_past.R")
 smooth_param <- 15
 
-file_in_path <- "../data/UMD_updated/Full Survey Data/country" #../data/estimates-umd-batches/"
+file_in_path <- "../data/UMD_updated/Full_Survey_Data/country" #../data/estimates-umd-batches/"
 file_in <- ".*_country_full.csv" #"_UMD_country_data.csv"
 file_out_path <- "../data/estimates-umd-unbatched/PlotData/"
 file_out <- "_UMD_country_nobatch_past_smooth.csv"

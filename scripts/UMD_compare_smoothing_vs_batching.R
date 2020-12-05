@@ -5,7 +5,7 @@ library(dplyr)
 region_iso = "ESMD"
 
 ## Load data UMD's smoothed data
-data_s <- read.csv("../data/UMD/Full Survey Data/region/smoothed/esp_region_full_smoothed.csv",
+data_s <- read.csv("../data/UMD/Full_Survey_Data/region/smoothed/esp_region_full_smoothed.csv",
                  fileEncoding = "UTF-8")
 
 ## Filter overall >> overall
