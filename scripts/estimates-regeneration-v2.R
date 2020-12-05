@@ -3,6 +3,10 @@ library(tidyverse)
 library(readxl)
 library(httr)
 
+# Downlod the data from UMD repository
+try(source("script-import-UMD-onlyfullcountry.R"), silent = T)
+try(source("script-import-UMD-onlyfullregion.R"), silent = T)
+
 # Download the data about confirmed cases, deaths, hospital, icu, etc. and accumulate for weeks
 try(source("script-confirmed2.R"), silent = T) # Downloads all country cases and deaths from ECDC
 try(source("script-confirmed_ES_datadista.R"), silent = T) # Downloads regional Spanish cases, deaths, hospital and icu from Datadista github
