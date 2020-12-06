@@ -2,7 +2,7 @@
 library(dplyr)
 spain_population <- 46754778 # worldometer
 
-dtspain <- read.csv("../data/UMD/Full Survey Data/country/esp_country_full_new.csv") %>% 
+dtspain <- read.csv("../data/UMD/Full_Survey_Data/country/esp_country_full_new.csv") %>% 
   filter(gender == "overall", age_bucket == "overall")
 
 # daily estimate using unweighted data

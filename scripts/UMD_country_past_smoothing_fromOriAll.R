@@ -14,15 +14,16 @@ file_in <- ".*_country_full.csv" #"_UMD_country_data.csv"
 file_out_path <- "../data/estimates-umd-unbatched/PlotData/"
 file_out <- "_UMD_country_nobatch_past_smooth.csv"
 
-populationfile <-"../data/common-data/country_population_umd.csv"
+populationfile <-"../data/common-data/country_population_ecdc.csv"
 popdt <- read.csv(populationfile,fileEncoding = "UTF-8")
 
-countriesToExclude <- c("AFG", "ALB", "ASM", "BEN", "BFA" )
-countriesDone <- c("AGO", "ARE", "ARG", "ARM", "AUS", "AUT", "AZE" , "BEL")
+#countriesToExclude <- c("AFG", "ALB", "ASM", "BEN", "BFA" )
+countriesToExclude <- c()
+#countriesDone <- c("AFG", "AGO", "ARE", "ARG", "ARM", "AUS", "AUT", "AZE" , "BEL")
+countriesDone <- c()
 countriesToExclude <- c(countriesToExclude, countriesDone)
 
 files <- dir(file_in_path,pattern=file_in)
-
 
 #print (files)
 
@@ -84,11 +85,13 @@ pct_to_smooth <- c("pct_cli",
 for (filename in files){
   tryCatch({
   iso3=toupper(substr(filename,1,3))
+  #cat("Country:", iso3, "\n" )
+  
   if (iso3  %notin% countriesToExclude ){
     #print (toupper(iso2))
-    rowPop=popdt[popdt$iso_alpha3==iso3,]
+    rowPop=popdt[popdt$countryterritoryCode==iso3,]
     #print(rowPop)
-    iso2=toString(rowPop[['iso_alpha2']])
+    iso2=toString(rowPop[['geo_id']])
     population=rowPop[['population']]
     #print(population)
     cat("Country:", iso3, " ", iso2, "\n")
@@ -107,15 +110,21 @@ for (filename in files){
     dt1 <- dt %>% select(date, all_of(pct_to_smooth))
     dtn <- dt %>% select(date, all_of(pct_excluded))
     
+    
+    cat("Signal:")
+    
     for (pct in pct_to_smooth){
-      #cat("Signal:", pct, "\n")
-      dt1 <- smooth_column_past(df_in = dt1,
+      cat(" ", pct)
+      try(dt1 <- smooth_column_past(df_in = dt1,
                                 col_s =  pct,
                                 basis_dim = smooth_param,
                                 link_in = "log",
                                 monotone = F,
-                                conf_interval = F)
+                                conf_interval = F),
+          silent = F)
     }
+    
+    cat("\n")
     
     dt_out <- merge(dt0, dt1, by="date")
     dt_out <- merge(dt_out, dtn, by="date")

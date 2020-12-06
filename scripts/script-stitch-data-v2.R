@@ -75,6 +75,7 @@ load_and_combine <- function(code, nsum = FALSE) {
 
 interest <- list.files("../data/estimates-umd-unbatched/PlotData/", pattern="*.csv", full.names=FALSE)
 interest <- substring(interest, 1, 2)
+interest <- interest[interest != "AS"]
 interest <- interest[interest != "HK"]
 interest <- interest[interest != "TW"]
 

@@ -9,7 +9,7 @@ library(plotly)
 iso_code_country <- "ES"
 # iso_code_country <- "BR"
 country <- "esp" # "bra" "prt"
-data_df <-  read.csv(paste0("../data/UMD_updated/Full\ Survey\ Data/country/", country , "_country_full.csv"))
+data_df <-  read.csv(paste0("../data/UMD_updated/Full_Survey_Data/country/", country , "_country_full.csv"))
 #data_df <-  read.csv(paste0("../data/estimates-umd-batches/", iso_code_country , "/", iso_code_country ,"_UMD_country_data.csv"))
 data_df$date <- as.Date(data_df$date)
 colnames(data_df)
