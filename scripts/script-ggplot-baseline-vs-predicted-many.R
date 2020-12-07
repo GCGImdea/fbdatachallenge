@@ -1,5 +1,6 @@
 library(tidyverse)
 library(zoo)
+library(dplyr)
 
 path_symptom_lags <- "../data/estimates-symptom-lags/cutoffs/PlotData/"
 path_baseline <- "../data/baseline_outputs/"
@@ -125,12 +126,12 @@ for (country_iso in try_countries) {
               ## BOXPLOT ----
               
               df_col_rm <- df_col_rm %>% 
-                select(date, y, fore) %>% 
+                dplyr::select(date, y, fore) %>% 
                 inner_join(df_baseline, by = "date") %>% 
                 mutate(scaled_abs_err = abs(fore-y)/abs(strawman - y))
               
               df_no_col_rm <- df_no_col_rm %>% 
-                select(date, y, fore) %>% 
+                dplyr::select(date, y, fore) %>% 
                 inner_join(df_baseline, by = "date") %>% 
                 mutate(scaled_abs_err = abs(fore-y)/abs(strawman - y))
               
