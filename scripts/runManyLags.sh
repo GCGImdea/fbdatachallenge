@@ -1,5 +1,6 @@
 
-
+#COUNTRIESTODO='"BR", "GB", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR"'
+COUNTRIESTODO='"PT"'
 for PEN in TRUE FALSE; do
     for ALPHA in 0.5; do
 	for RMCL in TRUE FALSE; do
@@ -12,8 +13,8 @@ for PEN in TRUE FALSE; do
 				for FIRSTCUTOFF in 2020-9-10; do
 				    for LASTCUTOFF in 2020-11-10; do
 					for CUTOFFINTERVAL in 1 ; do
-
-					    sed "s/#PEN#/$PEN/g" runlag.R | sed  "s/#ALPHA#/$ALPHA/g" | sed  "s/#RMCL#/$RMCL/g" | sed  "s/#RMTH#/$RMTH/g" | sed  "s/#MILAG#/$MILAG/g"| sed  "s/#MXLAG#/$MXLAG/g"| sed  "s/#SIGTOMATCH#/$SIGTOMATCH/g"    | sed  "s/#SIGTOTRY#/$SIGTOTRY/g" | sed  "s/#FIRSTCUTOFF#/$FIRSTCUTOFF/g"| sed  "s/#LASTCUTOFF#/$LASTCUTOFF/g" | sed  "s/#CUTOFFINTERVAL#/$CUTOFFINTERVAL/g" > runlag-pen$PEN$ALPHA-rmcl$RMCL$RMTH-lag$MILAG-$MXLAG-$SIGTOMATCH-$SIGTOTRY-$FIRSTCUTOFF-$LASTCUTOFF-$CUTOFFINTERVAL.R
+					    
+					    sed "s/#PEN#/$PEN/g" runlag.R | sed  "s/#ALPHA#/$ALPHA/g" | sed  "s/#RMCL#/$RMCL/g" | sed  "s/#RMTH#/$RMTH/g" | sed  "s/#MILAG#/$MILAG/g"| sed  "s/#MXLAG#/$MXLAG/g"| sed  "s/#SIGTOMATCH#/$SIGTOMATCH/g"    | sed  "s/#SIGTOTRY#/$SIGTOTRY/g" | sed  "s/#FIRSTCUTOFF#/$FIRSTCUTOFF/g"| sed  "s/#LASTCUTOFF#/$LASTCUTOFF/g" | sed  "s/#CUTOFFINTERVAL#/$CUTOFFINTERVAL/g"| sed  "s/#COUNTRIESTODO#/$COUNTRIESTODO/g" > runlag-pen$PEN$ALPHA-rmcl$RMCL$RMTH-lag$MILAG-$MXLAG-$SIGTOMATCH-$SIGTOTRY-$FIRSTCUTOFF-$LASTCUTOFF-$CUTOFFINTERVAL.R
 					    R CMD BATCH runlag-pen$PEN$ALPHA-rmcl$RMCL$RMTH-lag$MILAG-$MXLAG-$SIGTOMATCH-$SIGTOTRY-$FIRSTCUTOFF-$LASTCUTOFF-$CUTOFFINTERVAL.R &
 					    
 					done

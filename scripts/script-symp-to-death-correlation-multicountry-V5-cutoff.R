@@ -11,16 +11,19 @@ library(mpath) # lasso/elastic-net
 library(caret)
 library(gsubfn)  
 
-use_penalty = T # T: use penalized regression (elastic-net)
+use_penalty = F # T: use penalized regression (elastic-net)
 alpha_in = 0.5 # tradeoff between Ridge and Lasso regression
-remove_correlated = T # prior removal of highly correlated predictors
+remove_correlated = F # prior removal of highly correlated predictors
 cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
 basis_dim_in=NA
-perform_smoothing = T # prior smoothing of predictors (using smooth_column-v2.R)
+perform_smoothing = F# T # prior smoothing of predictors (using smooth_column-v2.R)
 if (perform_smoothing) {
   source("smooth_column-v2.R")
   basis_dim_in = 15
 }
+
+doFarFuture=FALSE
+doNearFar=FALSE
 
 milag=7
 mxlag=60
@@ -412,7 +415,7 @@ doTest <- function(m, testSignals, testResp, cutoff, metricDF) {
     testSignals <-
       testSignals[, (names(testSignals) %in% c(labels(m$terms),"date"))]
   }
- 
+  
   # get only complete cases (remove rows with NAs)
   testResp<-testResp[complete.cases(testResp), ] 
   testSignals <- testSignals[complete.cases(testSignals), ]
@@ -542,7 +545,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("PT","BR") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+countriesToDo <-c("PT") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -574,7 +577,7 @@ for (file in files) {
       
       # I think the following line should not be done commented out
       # x_df <- x_df[complete.cases(x_df), ]
-          
+      
       # ## remove "..._smooth", "..._high/low"
       # x_df <- data_df[, str_detect(colnames(data_df), "pct_")]
       # #x_df <- x_df[, !str_detect(colnames(x_df), "smooth")]
@@ -586,9 +589,9 @@ for (file in files) {
       # 
       # colnames(x_df)
       
-     
       
-     
+      
+      
       
       # y_df <-
       #   read.csv(
@@ -613,16 +616,16 @@ for (file in files) {
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
       
-      firstCutoff <- as.Date("2020-9-26")
-      lastCutoff <- as.Date("2020-9-26")
+      firstCutoff <- as.Date("2020-10-11")
+      lastCutoff <- as.Date("2020-11-11")
       cutoffinterval <- 1
       
       fileid <- paste0(iso_code_country,"-",basefileid,"-",as.Date(firstCutoff),"-",as.Date(lastCutoff),"-",cutoffinterval,"-",
-                         ("pct_cough" %in% signals_to_try),"-",("cases" %in% signals_to_try), "-"
-                         ("p_cases" %in% signals_to_try),"-",("pct_cough_past_smooth" %in% signals_to_try))
+                       ("pct_cough" %in% signals_to_try),"-",("cases" %in% signals_to_try), "-"
+                       ("p_cases" %in% signals_to_try),"-",("pct_cough_past_smooth" %in% signals_to_try))
       
-        
-     
+      
+      
       cutoff <- lastCutoff
       cutoffs <- vector()
       while (cutoff >= firstCutoff) {
@@ -639,7 +642,7 @@ for (file in files) {
       toWrite <- data.frame()
       metricsToWrite<-data.frame()
       for (cutoff in cutoffs) {
-           cutoff=as.Date(cutoff)
+        cutoff=as.Date(cutoff)
         tryCatch({
           # dplyr::select training set
           y_df_train <-
@@ -674,14 +677,14 @@ for (file in files) {
               # do smoothing (now in "signal_smooth")
               # basis_dim_in = floor(min(sum(!is.na(x_df[ , col_s]))/4, 40))
               x_df <- smooth_column(df_in = x_df, 
-                                          col_s, 
-                                          basis_dim = basis_dim_in, 
-                                          link_in = "identity", 
-                                          monotone = F,
-                                          compute_CI = F)
+                                    col_s, 
+                                    basis_dim = basis_dim_in, 
+                                    link_in = "identity", 
+                                    monotone = F,
+                                    compute_CI = F)
               # set the smoothed values to the non-NAs in the original signal:
               x_df[ , col_s] <- ifelse(is.na(x_df[ , col_s]), 
-                                             NA, 
+                                       NA, 
                                        x_df[ , paste0(col_s, "_smooth")])
               # remove the "signal_smooth"
               x_df <- x_df %>% 
@@ -769,109 +772,150 @@ for (file in files) {
           #  print(paste("now iterating through ",unique(opt_correl_single_country$signal)))
           
           
-        
+          
           # restrict as suggested by carlos. Complete cases is done in doTest
           # Not doing it here it was already in doTest
           # leftoverFromShifted <- leftoverFromShifted[ , (names(leftoverFromShifted) %in% names)]
           # shiftedTest <- shiftedTest[ , (names(shiftedTest) %in% names)]
           tryCatch({
-          print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
-          metricDF<-data.frame()
-          metricDF[1,"cutoff"]=as.Date(cutoff)
-          metricDF[1,"predType"]="nearFuture"
-          pairDF<-doTest(m = m, 
-                       testSignals = leftoverFromShifted,
-                       testResp = y_df_test,
-                       cutoff = cutoff,
-                       metricDF = metricDF)
-          outDF<- pairDF[[1]]
-          metricDF <- pairDF[[2]]
-          if (nrow(outDF)>0){
-            strawmanPred=(y_df %>% filter(date==cutoff))$y
-            outDF["cutoff"]=as.Date(cutoff)
-            outDF["strawman"]=NA
-            outDF["scaled_abs_err"]=NA
-            for (row in 1:nrow(outDF)) {
-              ourEstimate <- outDF[row, "fore"]
-              curdate  <- outDF[row, "date"]
-              strawmandev <- abs(strawmanPred - (y_df_test %>% filter(date == curdate))$y)+10^-6
+            print(paste("prepared leftover test signals", getMinAndMaxDatesAsString(leftoverFromShifted)))
+            metricDF<-data.frame()
+            metricDF[1,"cutoff"]=as.Date(cutoff)
+            metricDF[1,"predType"]="nearFuture"
+            pairDF<-doTest(m = m, 
+                           testSignals = leftoverFromShifted,
+                           testResp = y_df_test,
+                           cutoff = cutoff,
+                           metricDF = metricDF)
+            outDF<- pairDF[[1]]
+            metricDF <- pairDF[[2]]
+            if (nrow(outDF)>0){
+              strawmanPred=(y_df %>% filter(date==cutoff))$y
+              outDF["cutoff"]=as.Date(cutoff)
+              outDF["strawman"]=NA
+              outDF["scaled_abs_err"]=NA
+              outDF["syncFore"]=NA
+              outDF["scaled_abs_err_sync"]=NA
+              today <- cutoff
+              predForToday <- -1
+              yForToday <- -1
+              if (nrow(toWrite)>0){
+                #            if (toWrite not empty AND there exists line with cutoff = today - 7 )
+                lineForToday <-(toWrite %>%filter(predType=="nearFuture" & date==today & cutoff==(today - 7)))
+                if (nrow(lineForToday)==1){# this is the prediction made for the cutoff date when cutoff was 7 days before
+                  predForToday <- lineForToday$fore
+                  yForToday <- lineForToday$y
+                } else if (nrow(lineForToday)>=1){
+                  message(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
+                  stop(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
+                } else {
+                  print("not enough data for sync")
+                }
+              }
+              for (row in 1:nrow(outDF)) {
+                ourEstimate <- outDF[row, "fore"]
+                curdate  <- outDF[row, "date"]
+                
+                
+                strawmandev <- abs(strawmanPred - (y_df_test %>% filter(date == curdate))$y)+10^-6
+                
+                modeldev <- abs(ourEstimate - (y_df_test %>% filter(date == curdate))$y)
+                scaled_abs_err <- modeldev/strawmandev
+                outDF[row,"strawman"]=strawmanPred
+                outDF[row,"scaled_abs_err"]=scaled_abs_err
+                if (predForToday >=0 & row <= 7){
+                  delta <- ourEstimate - predForToday
+                  syncFore <- yForToday + delta
+                  if (syncFore<0){
+                    print(paste("debugging negative syncFore ",syncFore, " = ",yForToday," - ", delta))
+                    print(paste("delta = ",ourEstimate, " - ",predForToday))
+                    print (paste("prediction for  = ",curdate, " done on cutoff  ",cutoff, "= ", today))
+                  }
+                  outDF[row,"syncFore"]=syncFore
+                  syncDev <- abs(syncFore - (y_df_test %>% filter(date == curdate))$y)
+                  outDF[row,"scaled_abs_err_sync"]=syncDev/strawmandev
+                }
+                
+                # message(paste(“sca 7 =“,scaled_abs_err))
+              }
+              outDF["predType"]="nearFuture"
               
-              modeldev <- abs(ourEstimate - (y_df_test %>% filter(date == curdate))$y)
-              scaled_abs_err <- modeldev/strawmandev
-              outDF[row,"strawman"]=strawmanPred
-              outDF[row,"scaled_abs_err"]=scaled_abs_err
-              # message(paste(“sca 7 =“,scaled_abs_err))
+              toWrite<-rbind(toWrite,outDF)
+              metricsToWrite<-rbind(metricsToWrite, metricDF)
+              
             }
-            outDF["predType"]="nearFuture"
-            
-            toWrite<-rbind(toWrite,outDF)
-            metricsToWrite<-rbind(metricsToWrite, metricDF)
-          }
-          
           }, error=function(cond){
             message(paste("error in country", iso_code_country, " nearFuture for cutoff ", as.Date(cutoff)))
             print(cond)
             traceback()
           })
-          tryCatch({
-            
-          # doing far future test
           
-          print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
-          metricDF<-data.frame()
-          metricDF[1,"cutoff"]=as.Date(cutoff)
-          metricDF[1,"predType"]="farFuture"
-          pairDF=doTest(m = m,
-                       testSignals = shiftedTest,
-                       testResp = y_df_test,
-                       cutoff=cutoff,
-                       metricDF = metricDF)
-          outDF<- pairDF[[1]]
-          metricDF <- pairDF[[2]]
-          if (nrow(outDF)>0){
-            outDF["cutoff"]=as.Date(cutoff)
-            outDF["strawman"]=NA
-            outDF["scaled_abs_err"]=NA
-            outDF["predType"]="farFuture"
-            metricsToWrite<-rbind(metricsToWrite, metricDF)
-            toWrite<-rbind(toWrite,outDF)
+          if (doFarFuture){
+            tryCatch({
+              
+              # doing far future test
+              
+              print(paste("prepared shifted test signals", getMinAndMaxDatesAsString(shiftedTest)))
+              metricDF<-data.frame()
+              metricDF[1,"cutoff"]=as.Date(cutoff)
+              metricDF[1,"predType"]="farFuture"
+              pairDF=doTest(m = m,
+                            testSignals = shiftedTest,
+                            testResp = y_df_test,
+                            cutoff=cutoff,
+                            metricDF = metricDF)
+              outDF<- pairDF[[1]]
+              metricDF <- pairDF[[2]]
+              if (nrow(outDF)>0){
+                outDF["cutoff"]=as.Date(cutoff)
+                outDF["strawman"]=NA
+                outDF["scaled_abs_err"]=NA
+                outDF["syncFore"]=NA
+                outDF["scaled_abs_err_sync"]=NA
+                outDF["predType"]="farFuture"
+                metricsToWrite<-rbind(metricsToWrite, metricDF)
+                toWrite<-rbind(toWrite,outDF)
+              }
+              
+            }, error=function(cond){
+              message(paste("error in country", iso_code_country, " farFuture for cutoff ", as.Date(cutoff)))
+              print(cond)
+              traceback()
+            })
           }
-          
-          }, error=function(cond){
-            message(paste("error in country", iso_code_country, " farFuture for cutoff ", as.Date(cutoff)))
-            print(cond)
-            traceback()
-          })
-          tryCatch({
-          
-          # do nearfar  test
-          
-          combinedSignals = rbind(leftoverFromShifted, shiftedTest)
-          print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
-          metricDF<-data.frame()
-          metricDF[1,"cutoff"]=as.Date(cutoff)
-          metricDF[1,"predType"]="nearFar"
-          pairDF=doTest(m = m,
-                       testSignals = combinedSignals,
-                       testResp = y_df_test,
-                       cutoff=cutoff,
-                       metricDF = metricDF)
-          outDF<- pairDF[[1]]
-          metricDF <- pairDF[[2]]
-          if (nrow(outDF)>0){
-            outDF["cutoff"]=as.Date(cutoff)
-            outDF["strawman"]=NA
-            outDF["scaled_abs_err"]=NA
-            outDF["predType"]="nearFar"
-            metricsToWrite<-rbind(metricsToWrite, metricDF)
-            toWrite<-rbind(toWrite,outDF)
+          if (doNearFar){
+            tryCatch({
+              
+              # do nearfar  test
+              
+              combinedSignals = rbind(leftoverFromShifted, shiftedTest)
+              print(paste("prepared combined signals", getMinAndMaxDatesAsString(combinedSignals)))
+              metricDF<-data.frame()
+              metricDF[1,"cutoff"]=as.Date(cutoff)
+              metricDF[1,"predType"]="nearFar"
+              pairDF=doTest(m = m,
+                            testSignals = combinedSignals,
+                            testResp = y_df_test,
+                            cutoff=cutoff,
+                            metricDF = metricDF)
+              outDF<- pairDF[[1]]
+              metricDF <- pairDF[[2]]
+              if (nrow(outDF)>0){
+                outDF["cutoff"]=as.Date(cutoff)
+                outDF["strawman"]=NA
+                outDF["scaled_abs_err"]=NA
+                outDF["syncFore"]=NA
+                outDF["scaled_abs_err_sync"]=NA
+                outDF["predType"]="nearFar"
+                metricsToWrite<-rbind(metricsToWrite, metricDF)
+                toWrite<-rbind(toWrite,outDF)
+              }
+            }, error=function(cond){
+              message(paste("error in country", iso_code_country, " nearFar for cutoff ", as.Date(cutoff)))
+              print(cond)
+              traceback()
+            })
           }
-          }, error=function(cond){
-            message(paste("error in country", iso_code_country, " nearFar for cutoff ", as.Date(cutoff)))
-            print(cond)
-            traceback()
-          })
-          
         },
         error = function(cond) {
           message(paste("error in country", iso_code_country, " for cutoff ", as.Date(cutoff)))
@@ -887,17 +931,17 @@ for (file in files) {
         toWrite["alpha_in"]<-alpha_in
         toWrite["rmcc"]<-remove_correlated
         toWrite["rmth"]<-cutoff_remove_correlated
-        towrite["smth"]<-perform_smoothing
-        towrite["basisdim"]<-basis_dim_in
+        toWrite["smth"]<-perform_smoothing
+        toWrite["basisdim"]<-basis_dim_in
         toWrite["firstcutoff"]<-firstCutoff
-        toWrite["lastcutoff"]<-firstCutoff
+        toWrite["lastcutoff"]<-lastCutoff
         toWrite["cutoffinterval"]<-cutoffinterval
         toWrite["umd"]<-("pct_cough" %in% signals_to_try)
         toWrite["ccfr"]<-("cases" %in% signals_to_try)
         toWrite["nsum"]<-("p_cases" %in% signals_to_try)
         toWrite["umd_smooth"]<-("pct_cough_past_smooth" %in% signals_to_try)
         #"","date","fore","fore_low","fore_high","cutoff","strawman","scaled_abs_err","predType","lag"
-        toWrite<-toWrite[,c(11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,6,1,10,9,2,3,4,5,7,8)]
+        toWrite<-toWrite[,c(13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,6,1,12,11,5,7,2,3,4,8,9,10)]
         write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",fileid,"-estimates-lag-daily.csv"))
         metricsToWrite["minlag"]<-milag
         metricsToWrite["maxlag"]<-mxlag
@@ -908,7 +952,7 @@ for (file in files) {
         metricsToWrite["smth"]<-perform_smoothing
         metricsToWrite["basisdim"]<-basis_dim_in
         metricsToWrite["firstcutoff"]<-firstCutoff
-        metricsToWrite["lastcutoff"]<-firstCutoff
+        metricsToWrite["lastcutoff"]<-lastCutoff
         metricsToWrite["cutoffinterval"]<-cutoffinterval
         metricsToWrite["umd"]<-("pct_cough" %in% signals_to_try)
         metricsToWrite["ccfr"]<-("cases" %in% signals_to_try)

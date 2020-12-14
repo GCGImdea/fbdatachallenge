@@ -6,8 +6,8 @@ path_symptom_lags <- "../data/estimates-symptom-lags/cutoffs/PlotData/"
 path_baseline <- "../data/baseline_outputs/"
 path_out <- "../data/estimates-symptom-lags/Plots-baseline-vs-GLM/"
 
-try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
-
+#try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
+try_countries <- c("PT")
 # set upper limit to boxplot (p_box2):
 y_lim_box = 10
 
@@ -15,7 +15,7 @@ for (country_iso in try_countries) {
   
   # ---
   # country_iso <- "DE"
-  for (pen in c(FALSE, TRUE)){
+  for (pen in c( F)){#FALSE,
     
     
     
@@ -32,7 +32,7 @@ for (country_iso in try_countries) {
               
               filename<-paste0(path_symptom_lags,
                                country_iso,
-                               "-cases-",minlag,"-60-pen",pen,"-alpha0.5-rmcc",rmcc,"-rmth0.9-2020-09-10-2020-11-10-1-",umd,"-",ccfr,as.numeric(nsum),"-FALSE-estimates-lag-daily.csv")
+                               "-cases-",minlag,"-60-pen",pen,"-alpha0.5-rmcc",rmcc,"-rmth0.9-smthTRUE15-2020-09-11-2020-11-11-1-",umd,"-",ccfr,as.numeric(nsum),"-FALSE-estimates-lag-daily.csv")
               if (file.exists(filename)){
                 df_col_rm <- read.csv(file = filename) %>%
                   mutate(date = as.Date(date)) %>% 
@@ -72,20 +72,34 @@ for (country_iso in try_countries) {
                 mutate(date = as.Date(real_date)) %>% 
                 filter(date >= min(df_no_col_rm$date) & date <= max(df_no_col_rm$date))
               
+              ######## debugging Carlos's sync method
+              # #CBM variation
+              # df_no_col_rm$fore_sync <- df_no_col_rm$fore
+              # for (p in seq(1,dim(df_no_col_rm)[1]-7))
+              # {
+              #   delta <- df_no_col_rm$fore[p+7]-df_no_col_rm$fore[p]
+              #   df_no_col_rm$fore_sync[p+7] <- df_no_col_rm$y[p]+delta
+              # }
+              # 
+              # 
+              #######3
+              
               # 5-colors palettes:
               # my.palette <- c("red", "blue", "black", "magenta", "brown")
-              my.palette <- c("#ef476f", "#ffd166", "#06d6a0", "#118ab2", "#073b4c")
+              my.palette <- c("#ef476f", "#ffd166", "#06d6a0", "#118ab2", "#073b4c", "#ffff00")
               
               colors <- c("Delphi baseline" = my.palette[3], 
                           "Delphi baseline w/ Fb. data" = my.palette[4],
                           "Official" = my.palette[5],
                           "Remove Correlated" = my.palette[1],
-                          "Retain Correlated" = my.palette[2])
+                          "Retain Correlated" = my.palette[6],
+                          "RC Sync" = my.palette[2])
               
               p1 <- ggplot() +
                 geom_line(data = df_baseline, aes(x = date, y = case_model, colour = "Delphi baseline"), size = 1, alpha = 0.6) +
                 geom_line(data = df_baseline, aes(x = date, y = case_fb_model, colour = "Delphi baseline w/ Fb. data"), size = 1, alpha = 0.6) +
                 geom_line(data = df_col_rm, aes(x = date, y = fore, colour = "Remove Correlated"), size = 1, alpha = 0.6) +
+                geom_line(data = df_col_rm, aes(x = date, y = syncFore, colour = "RC Sync"), size = 1, alpha = 0.6) +
                 geom_point(data = df_col_rm, aes(x = date, y = y, colour = "Official"), size = 2, alpha = 0.6) +
                 geom_line(data = df_no_col_rm, aes(x = date, y = fore, colour = "Retain Correlated"), size = 1, alpha = 0.6) +
                 theme_light(base_size = 15) + 
@@ -107,6 +121,8 @@ for (country_iso in try_countries) {
                 geom_line(data = df_col_rm, aes(x = date, 
                                                 y = rollmean(fore, k = k, fill = NA, align = "right"), 
                                                 colour = "Remove Correlated"), size = 1, alpha = 0.6) +
+                geom_line(data = df_col_rm, aes(x = date, y = rollmean(syncFore, k = k, fill = NA, align = "right"), 
+                                                colour = "RC Sync"), size = 1, alpha = 0.6) +
                 geom_point(data = df_col_rm, aes(x = date, 
                                                  y = rollmean(y, k = k, fill = NA, align = "right"), 
                                                  colour = "Official"), size = 2, alpha = 0.6) +
@@ -126,9 +142,10 @@ for (country_iso in try_countries) {
               ## BOXPLOT ----
               
               df_col_rm <- df_col_rm %>% 
-                dplyr::select(date, y, fore) %>% 
+                dplyr::select(date, y, fore,syncFore) %>% 
                 inner_join(df_baseline, by = "date") %>% 
-                mutate(scaled_abs_err = abs(fore-y)/abs(strawman - y))
+                mutate(scaled_abs_err = abs(fore-y)/abs(strawman - y))%>%
+                mutate(scaled_abs_err_sync = abs(syncFore-y)/abs(strawman - y))
               
               df_no_col_rm <- df_no_col_rm %>% 
                 dplyr::select(date, y, fore) %>% 
@@ -139,6 +156,7 @@ for (country_iso in try_countries) {
               df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
                 rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
                 rbind(data.frame(SAE = df_col_rm$scaled_abs_err, Model = "Remove Correlated")) %>% 
+                rbind(data.frame(SAE = df_col_rm$scaled_abs_err_sync, Model = "RC Sync")) %>% 
                 rbind(data.frame(SAE = df_no_col_rm$scaled_abs_err, Model = "Retain Correlated"))
               
               p_box1 <-  ggplot(df_box, aes(y = SAE, x = Model)) +
@@ -154,6 +172,7 @@ for (country_iso in try_countries) {
               df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
                 # rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
                 rbind(data.frame(SAE = df_col_rm$scaled_abs_err, Model = "Remove Correlated")) %>% 
+                rbind(data.frame(SAE = df_col_rm$scaled_abs_err_sync, Model = "Remove Correlated Sync")) %>% 
                 rbind(data.frame(SAE = df_no_col_rm$scaled_abs_err, Model = "Retain Correlated"))
               
               p_box2 <-  ggplot(df_box, aes(y = SAE, x = Model)) +
