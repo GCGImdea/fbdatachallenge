@@ -1,5 +1,5 @@
 
-COUNTRIESTODO='"BR", "GB", "DE"' #, "EC", "ES", "IT", "CL", "FR"'
+COUNTRIESTODO='"CL", "FR"'
 #COUNTRIESTODO='"PT"'
 for PEN in TRUE FALSE; do
     for ALPHA in 0.5; do
