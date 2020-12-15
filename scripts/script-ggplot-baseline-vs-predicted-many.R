@@ -15,7 +15,7 @@ for (country_iso in try_countries) {
   
   # ---
   # country_iso <- "DE"
-  for (pen in c( F)){#FALSE,
+  for (pen in c(FALSE, TRUE)){
     
     
     
