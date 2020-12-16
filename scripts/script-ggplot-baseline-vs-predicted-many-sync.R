@@ -7,9 +7,22 @@ path_baseline <- "../data/baseline_outputs/"
 path_out <- "../data/estimates-symptom-lags/Plots-baseline-vs-GLM/"
 
 try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
-#try_countries <- c("PT")
+#try_countries <- c("FR")
 # set upper limit to boxplot (p_box2):
 y_lim_box = 10
+
+
+computeHighNotch <-function(column){
+  return (median(column, na.rm=TRUE) + 1.58*IQR(column,na.rm=TRUE)/sqrt(sum(!is.na(column))))
+#  column[is.na(column)]=0
+#  return (median(column, na.rm=TRUE) + 1.58*IQR(column,na.rm=TRUE)/sqrt(length(column)))
+}
+colClasses = c("character", "logical","logical","logical","numeric","logical","logical","logical","numeric","numeric","numeric","numeric","numeric","numeric")
+colNames = "country, penalty, rmcorcols, smooth, smoothbasisdim, use_umd, use_ccfr, use_nsum, mnlag, lag, saeForeMedian, saeForeHighNotch, saeSyncMedian, saeSyncHighNotch"
+
+
+
+globalstats<- read.csv(text=colNames, colClasses=colClasses)
 
 for (country_iso in try_countries) {
   
@@ -19,9 +32,9 @@ for (country_iso in try_countries) {
     for (rmcc in c(FALSE, TRUE)){
       for (smth in c(FALSE, TRUE)){
         if (smth){
-          basisdim="15"
+          basisdim=15
         } else {
-          basisdim="NA"
+          basisdim=NA
         }
         for (umd in c(TRUE)){
           for (ccfr in c(FALSE, TRUE)){
@@ -140,18 +153,24 @@ for (country_iso in try_countries) {
                       mutate(diffsync = c_scaled_abs_err_sync - scaled_abs_err_sync)
                     write.csv(df_check,file = paste0(fileid,"-check-sae.csv"))
                     
+                    ourMedian<-median(df_computed_sae$scaled_abs_err)
+                    ourHighNotch<-computeHighNotch(df_computed_sae$scaled_abs_err)
+                    syncMedian<-median(df_computed_sae$scaled_abs_err_sync)
+                    syncHighNotch<-computeHighNotch(df_computed_sae$scaled_abs_err_sync)
                     
-                    
-                    
+                  #  read.csv(text="country, penalty, rmcorcols, smooth, smoothbasisdim, use_umd, use_ccfr, use_nsum, mnlag, lag, saeForeMedian, saeForeHighNotch, saeSyncMedian, saeSyncHighNotch")
+                    globalstats <- globalstats %>% add_row(country=country_iso, penalty=pen, rmcorcols=rmcc, smooth=smth, smoothbasisdim=basisdim, use_umd=umd, use_ccfr=ccfr, use_nsum=nsum, mnlag=minlag, lag=lag_in, saeForeMedian=ourMedian, saeForeHighNotch=ourHighNotch, saeSyncMedian=syncMedian, saeSyncHighNotch=syncHighNotch)
                     df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
                      # rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
                       rbind(data.frame(SAE = df_computed_sae$scaled_abs_err, Model = "Our Estimate")) %>% 
                       rbind(data.frame(SAE = df_computed_sae$scaled_abs_err_sync, Model = "Our Sync")) 
-                      
+                      # notches are median +/- 1.58*IQR/sqrt(n)
                       p_box1 <-  ggplot(df_box, aes(y = SAE, x = Model)) +
                       geom_boxplot(notch=TRUE) +
                       theme_light(base_size = 15) +
                       geom_hline(yintercept=1, linetype="dashed", color = "red") +
+                      annotate("point", x = "Our Estimate", y = ourHighNotch, colour = "blue", label="test" , size=0.1)+
+                      annotate("point", x = "Our Sync", y = syncHighNotch, colour = "blue", label="test",size=0.1 )+
                       labs(x = "Model", y = "Scaled absolute error", 
                            title = paste0(country_iso, ": lag ", lag_in))
                     # print(p_box1)
@@ -172,9 +191,16 @@ for (country_iso in try_countries) {
                       geom_boxplot(notch = TRUE) +
                       theme_light(base_size = 15) +
                       geom_hline(yintercept=1, linetype="dashed", color = "red") +
-                      ylim(NA, y_lim_box) +
+                      #ylim(NA, y_lim_box) +
+                        coord_cartesian(ylim = c(NA, y_lim_box))+
+                      annotate("point", x = "Our Estimate", y = ourHighNotch, colour = "blue", label="test", size=0.1 )+
+                      annotate("point", x = "Our Sync", y = syncHighNotch, colour = "blue", label="test", size=0.1 )+
+                    #  annotate("point", x = "Our Sync", y = median(df_computed_sae$scaled_abs_err_sync, na.rm = TRUE), colour = "red", label="test" )+
+                      annotate("point", x = "Our Sync", y = median(df_computed_sae$scaled_abs_err_sync, na.rm = TRUE), colour = "green", label="test" )+
+                      annotate("text", x = "Our Sync", y = syncHighNotch, colour = "blue", label=syncHighNotch )+
                       labs(x = "Model", y = "Scaled absolute error", 
-                           title = paste0(country_iso, ": lag ", lag_in))
+                           title = paste0(country_iso, ": lag ", lag_in)
+                             )
                     # print(p_box2)
                     tryCatch({
                     ggsave(plot = p_box2,
@@ -198,6 +224,6 @@ for (country_iso in try_countries) {
   # ---
   
 } # country
-
+write.csv(globalstats, paste0(path_out,"/predictorPerformance.csv"))
 
 
