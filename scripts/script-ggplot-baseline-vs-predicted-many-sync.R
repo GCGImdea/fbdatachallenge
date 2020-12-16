@@ -144,6 +144,9 @@ for (country_iso in try_countries) {
                       mutate(scaled_abs_err = abs(fore-y)/abs(strawman - y))%>%
                       mutate(scaled_abs_err_sync = abs(syncFore-y)/abs(strawman - y))
                     
+                    # we need to filter df_computed_sae so that we have no more leading NAs on sync
+                    
+                    
                     df_check<- df %>% 
                       dplyr::select(date, y, fore,syncFore,scaled_abs_err,scaled_abs_err_sync) %>% 
                       inner_join(df_baseline, by = "date") %>%  
