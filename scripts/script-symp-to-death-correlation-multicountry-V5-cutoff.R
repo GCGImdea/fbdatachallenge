@@ -568,6 +568,8 @@ for (file in files) {
       y_df <- all_df %>% dplyr::select(date,y)
       colnames(y_df) <- c("date","y")
       
+ 
+      
       x_df <- all_df %>% dplyr::select(date)
       for (signal in signals_to_try)
       {
@@ -612,6 +614,27 @@ for (file in files) {
       # #########
       # # filter out NAs
       # y_df <- y_df[complete.cases(y_df), ]
+      
+      
+      #CBM. Producing maxrange vector for 1 to milag days ahead
+      # The idea is that forecasts should not be outside the observed range.
+      maxdate <- max(y_df$date)
+      
+      maxrange <- rep(0,milag)
+      for (day in (y_df %>% filter(date <= (maxdate-milag)))$date)
+      {
+        tuple <- y_df %>% filter(date==day)
+        for (ahead in seq(1, milag))
+        {
+          tuplea <- y_df %>% filter(date==(day+ahead))
+          amplitude <- abs(tuplea$y-tuple$y)
+          if (! is.na(amplitude))
+          {
+            maxrange[ahead]<-max(maxrange[ahead],amplitude)
+          }
+          
+        }
+      }
       
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
