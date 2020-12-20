@@ -569,7 +569,7 @@ for (file in files) {
       y_df <- all_df %>% dplyr::select(date,y)
       colnames(y_df) <- c("date","y")
       
- 
+      
       
       x_df <- all_df %>% dplyr::select(date)
       for (signal in signals_to_try)
@@ -843,15 +843,17 @@ for (file in files) {
                 today <- cutoff
                 predForToday <- -1
                 yForToday <- -1
-                lineForToday <-(toWrite %>%filter(predType=="nearFuture" & date==today & cutoff==(today - row)))
-                if (nrow(lineForToday)==1){# this is the prediction made for the cutoff date when cutoff was 7 days before
-                  predForToday <- lineForToday$fore
-                  yForToday <- lineForToday$y
-                } else if (nrow(lineForToday)>=1){
-                  message(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
-                  stop(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
-                } else {
-                  print("not enough data for sync")
+                if (nrow(toWrite)>0){
+                  lineForToday <-(toWrite %>%filter(predType=="nearFuture" & date==today & cutoff==(today - row)))
+                  if (nrow(lineForToday)==1){# this is the prediction made for the cutoff date when cutoff was 7 days before
+                    predForToday <- lineForToday$fore
+                    yForToday <- lineForToday$y
+                  } else if (nrow(lineForToday)>=1){
+                    message(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
+                    stop(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
+                  } else {
+                    print("not enough data for sync")
+                  }
                 }
                 # end of moved code
                 
@@ -980,6 +982,7 @@ for (file in files) {
         toWrite["rmcc"]<-remove_correlated
         toWrite["rmth"]<-cutoff_remove_correlated
         toWrite["smth"]<-perform_smoothing
+        toWrite["limitRange"]<-limit_range
         toWrite["basisdim"]<-basis_dim_in
         toWrite["firstcutoff"]<-firstCutoff
         toWrite["lastcutoff"]<-lastCutoff
@@ -988,8 +991,9 @@ for (file in files) {
         toWrite["ccfr"]<-("cases" %in% signals_to_try)
         toWrite["nsum"]<-("p_cases" %in% signals_to_try)
         toWrite["umd_smooth"]<-("pct_cough_past_smooth" %in% signals_to_try)
+        
         #"","date","fore","fore_low","fore_high","cutoff","strawman","scaled_abs_err","predType","lag"
-        toWrite<-toWrite[,c(13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,6,1,12,11,5,7,2,3,4,8,9,10)]
+        toWrite<-toWrite[,c(13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,6,1,12,11,5,7,2,3,4,8,9,10)]
         write.csv(toWrite,file = paste0("../data/estimates-symptom-lags/cutoffs/PlotData/",fileid,"-estimates-lag-daily.csv"))
         metricsToWrite["minlag"]<-milag
         metricsToWrite["maxlag"]<-mxlag
@@ -998,6 +1002,7 @@ for (file in files) {
         metricsToWrite["rmcc"]<-remove_correlated
         metricsToWrite["rmth"]<-cutoff_remove_correlated
         metricsToWrite["smth"]<-perform_smoothing
+        metricsToWrite["limitRange"]<-limit_range
         metricsToWrite["basisdim"]<-basis_dim_in
         metricsToWrite["firstcutoff"]<-firstCutoff
         metricsToWrite["lastcutoff"]<-lastCutoff

@@ -7,7 +7,7 @@ path_baseline <- "../data/baseline_outputs/"
 path_out <- "../data/estimates-symptom-lags/Plots-baseline-vs-GLM/"
 
 #try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
-try_countries <- c("FR")
+try_countries <- c("PT")
 # set upper limit to boxplot (p_box2):
 y_lim_box = 10
 
@@ -28,8 +28,8 @@ for (country_iso in try_countries) {
   
   # ---
   # country_iso <- "DE"
-  for (pen in c( TRUE)){#FALSE,
-    for (rmcc in c( TRUE)){#FALSE,
+  for (pen in c( FALSE)){#FALSE,
+    for (rmcc in c( FALSE)){#FALSE,
       for (smth in c(FALSE)){#, TRUE
         if (smth){
           basisdim=15
@@ -39,14 +39,14 @@ for (country_iso in try_countries) {
         for (umd in c(TRUE)){
           for (ccfr in c(FALSE)){#, TRUE
             for (nsum in c(0)){#, 1
-              for (minlag in c(14)){#7, 
+              for (minlag in c(7)){#7, 
                 for (useBaselineStrawman in c(FALSE)){
                   
                   
                   
                   filename<-paste0(path_symptom_lags,
                                    country_iso,
-                                   "-cases-",minlag,"-60-pen",pen,"-alpha0.5-rmcc",rmcc,"-rmth0.9-smth",smth,basisdim,"-2020-09-10-2020-11-10-1-",umd,"-",ccfr,as.numeric(nsum),"-FALSE-estimates-lag-daily.csv")
+                                   "-cases-",minlag,"-60-pen",pen,"-alpha0.5-rmcc",rmcc,"-rmth0.9-smth",smth,basisdim,"-2020-11-01-2020-11-11-1-",umd,"-",ccfr,as.numeric(nsum),"-FALSE-estimates-lag-daily.csv")
                   print(paste("doing",filename))
                   if (file.exists(filename)){
                     dfall <- read.csv(file = filename) %>%
