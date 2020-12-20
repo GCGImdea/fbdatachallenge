@@ -1,0 +1,2 @@
+"","cutoff","predType","startDate","endDate","mape","mae","mse","rmse","smape","minlag","maxlag","penalty","alpha_in","rmcc","rmth","smth","basisdim","firstcutoff","lastcutoff","cutoffinterval","umd","ccfr","nsum","umd_smooth"
+"1",2020-10-28,"nearFuture",2020-10-29,2020-11-11,0.979513917864291,4404.76700536895,21512219.9420435,4638.12677080343,1.9352826064559,14,60,FALSE,0.5,FALSE,0.9,TRUE,15,2020-09-10,2020-11-10,1,TRUE,TRUE,FALSE,FALSE
