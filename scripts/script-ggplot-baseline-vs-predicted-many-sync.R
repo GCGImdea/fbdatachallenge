@@ -40,19 +40,20 @@ for (country_iso in try_countries) {
           for (ccfr in c(FALSE)){#, TRUE
             for (nsum in c(0)){#, 1
               for (minlag in c(14)){#7, 
-                for (useBaselineStrawman in c(TRUE, FALSE)){
-                  for (lag_in in 7:7) {
-                    
-                    
-                    filename<-paste0(path_symptom_lags,
-                                     country_iso,
-                                     "-cases-",minlag,"-60-pen",pen,"-alpha0.5-rmcc",rmcc,"-rmth0.9-smth",smth,basisdim,"-2020-09-10-2020-11-10-1-",umd,"-",ccfr,as.numeric(nsum),"-FALSE-estimates-lag-daily.csv")
-                    print(paste("doing",filename))
-                    if (file.exists(filename)){
-                      df <- read.csv(file = filename) %>%
-                        mutate(date = as.Date(date)) %>% 
-                        mutate(cutoff = as.Date(cutoff)) %>% 
-                        filter(lag == lag_in & predType == "nearFuture") 
+                for (useBaselineStrawman in c(FALSE)){
+                  
+                  
+                  
+                  filename<-paste0(path_symptom_lags,
+                                   country_iso,
+                                   "-cases-",minlag,"-60-pen",pen,"-alpha0.5-rmcc",rmcc,"-rmth0.9-smth",smth,basisdim,"-2020-09-10-2020-11-10-1-",umd,"-",ccfr,as.numeric(nsum),"-FALSE-estimates-lag-daily.csv")
+                  print(paste("doing",filename))
+                  if (file.exists(filename)){
+                    dfall <- read.csv(file = filename) %>%
+                      mutate(date = as.Date(date)) %>% 
+                      mutate(cutoff = as.Date(cutoff))
+                    for (lag_in in 1:minlag) {
+                      df <- dfall %>% filter(lag == lag_in & predType == "nearFuture") 
                       
                       
                       
@@ -183,7 +184,7 @@ for (country_iso in try_countries) {
                       
                       #  read.csv(text="country, penalty, rmcorcols, smooth, smoothbasisdim, use_umd, use_ccfr, use_nsum, mnlag, lag, saeForeMedian, saeForeHighNotch, saeSyncMedian, saeSyncHighNotch")
                       globalstats <- globalstats %>% add_row(useBLStraw=useBaselineStrawman, country=country_iso, penalty=pen, rmcorcols=rmcc, smooth=smth, smoothbasisdim=basisdim, use_umd=umd, use_ccfr=ccfr, use_nsum=nsum, mnlag=minlag, lag=lag_in, saeForeMedian=ourMedian, saeForeHighNotch=ourHighNotch, saeSyncMedian=syncMedian, saeSyncHighNotch=syncHighNotch)
-                      df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
+                      df_box <- # data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
                         # rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
                         rbind(data.frame(SAE = df_computed_sae$scaled_abs_err, Model = "Our Estimate")) %>% 
                         rbind(data.frame(SAE = df_computed_sae$scaled_abs_err_sync, Model = "Our Sync")) 
@@ -205,7 +206,7 @@ for (country_iso in try_countries) {
                       },error=function(cond){
                         print(paste("error",cond," for b1 and file ",fileid))
                       })
-                      df_box <- data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
+                      df_box <- #data.frame(SAE = df_baseline$case_sae, Model = "Delphi baseline") %>% 
                         # rbind(data.frame(SAE = df_baseline$case_fb_model, Model = "Delphi baseline w/ Fb. data")) %>% 
                         rbind(data.frame(SAE = df_computed_sae$scaled_abs_err, Model = "Our Estimate")) %>% 
                         rbind(data.frame(SAE = df_computed_sae$scaled_abs_err_sync, Model = "Our Sync")) 
@@ -232,11 +233,12 @@ for (country_iso in try_countries) {
                       },error=function(cond){
                         print(paste("error",cond,"for b2 and file ",fileid))
                       })
-                    } else {
-                      print(paste("no file with name",filename))
                     }
-                    
+                  } else {
+                    print(paste("no file with name",filename))
                   }
+                  
+                  
                 }
               }
             }

@@ -17,6 +17,7 @@ remove_correlated = F # prior removal of highly correlated predictors
 cutoff_remove_correlated = 0.9 # cutoff for remove_correlated
 basis_dim_in=NA
 perform_smoothing = F# T # prior smoothing of predictors (using smooth_column-v2.R)
+limit_range=T
 if (perform_smoothing) {
   source("smooth_column-v2.R")
   basis_dim_in = 15
@@ -639,7 +640,7 @@ for (file in files) {
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
       
-      firstCutoff <- as.Date("2020-10-11")
+      firstCutoff <- as.Date("2020-11-01")
       lastCutoff <- as.Date("2020-11-11")
       cutoffinterval <- 1
       
@@ -819,12 +820,30 @@ for (file in files) {
               outDF["scaled_abs_err"]=NA
               outDF["syncFore"]=NA
               outDF["scaled_abs_err_sync"]=NA
-              today <- cutoff
-              predForToday <- -1
-              yForToday <- -1
-              if (nrow(toWrite)>0){
-                #            if (toWrite not empty AND there exists line with cutoff = today - 7 )
-                lineForToday <-(toWrite %>%filter(predType=="nearFuture" & date==today & cutoff==(today - 7)))
+              # Davide and Carlos moved following code inside the for loop for Xprize
+              # today <- cutoff
+              # predForToday <- -1
+              # yForToday <- -1
+              # if (nrow(toWrite)>0){
+              #   #            if (toWrite not empty AND there exists line with cutoff = today - 7 )
+              #   lineForToday <-(toWrite %>%filter(predType=="nearFuture" & date==today & cutoff==(today - 7)))
+              #   if (nrow(lineForToday)==1){# this is the prediction made for the cutoff date when cutoff was 7 days before
+              #     predForToday <- lineForToday$fore
+              #     yForToday <- lineForToday$y
+              #   } else if (nrow(lineForToday)>=1){
+              #     message(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
+              #     stop(paste("there should not be multiple lines for today, got",nrow(lineForToday)))
+              #   } else {
+              #     print("not enough data for sync")
+              #   }
+              # }
+              # end of moved code
+              for (row in 1:nrow(outDF)) {
+                # this is the code we moved
+                today <- cutoff
+                predForToday <- -1
+                yForToday <- -1
+                lineForToday <-(toWrite %>%filter(predType=="nearFuture" & date==today & cutoff==(today - row)))
                 if (nrow(lineForToday)==1){# this is the prediction made for the cutoff date when cutoff was 7 days before
                   predForToday <- lineForToday$fore
                   yForToday <- lineForToday$y
@@ -834,8 +853,11 @@ for (file in files) {
                 } else {
                   print("not enough data for sync")
                 }
-              }
-              for (row in 1:nrow(outDF)) {
+                # end of moved code
+                
+                
+                
+                
                 ourEstimate <- outDF[row, "fore"]
                 curdate  <- outDF[row, "date"]
                 
@@ -848,6 +870,9 @@ for (file in files) {
                 outDF[row,"scaled_abs_err"]=scaled_abs_err
                 if (predForToday >=0 & row <= 7){
                   delta <- ourEstimate - predForToday
+                  if (limit_range){
+                    delta<- delta/abs(delta)*min(abs(delta), maxrange[row])
+                  }
                   syncFore <- yForToday + delta
                   if (syncFore<0){
                     print(paste("debugging negative syncFore ",syncFore, " = ",yForToday," - ", delta))
