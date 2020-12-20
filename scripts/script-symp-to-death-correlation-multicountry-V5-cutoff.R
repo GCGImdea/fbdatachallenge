@@ -546,7 +546,7 @@ files <- dir(file_in_path, pattern = file_in_pattern)
 countriesToExclude <- c("") # c("AT","BG")
 countriesDone <- c("") # c("AE","AF","AM","AO","AR","AU","AZ","BD","BE","BO","BR","BY","CA","CL","CO","CR","DE","DO","DZ","EG","FR","GB","GH","GR","GT","HN","HR","HU","ID","IL","IN","IQ","JP","KE","KR","KW","LB","LY","MA","MD","MX","NG","NI","NL","NP","NZ","PA","PH","PK","PL","PR","PS","PT","QA","RO","RS","RU","SA","SD","SE","SG","SV","TR","UA","UZ","VE","ZA")
 countriesToExclude <- c(countriesToExclude, countriesDone)
-countriesToDo <-c("PT") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
+countriesToDo <-c("FR") #c("BR", "DE", "EC", "PT", "UA", "ES", "IT", "CL", "FR", "GB")
 opt_correls <- data.frame()
 
 excludeVsChoose=FALSE # true for excluding countries and false for choosing them
@@ -640,7 +640,7 @@ for (file in files) {
       ### compute cutoffs, start from last date in signals and progress backwards every 15 days until firstCutoff
       
       
-      firstCutoff <- as.Date("2020-11-01")
+      firstCutoff <- as.Date("2020-10-01")
       lastCutoff <- as.Date("2020-11-11")
       cutoffinterval <- 1
       
@@ -873,7 +873,10 @@ for (file in files) {
                 if (predForToday >=0 & row <= 7){
                   delta <- ourEstimate - predForToday
                   if (limit_range){
+                    if (abs(delta) > maxrange[row])
+                      print(paste("trimmed ",delta, " to ", maxrange[row]))
                     delta<- delta/abs(delta)*min(abs(delta), maxrange[row])
+
                   }
                   syncFore <- yForToday + delta
                   if (syncFore<0){
