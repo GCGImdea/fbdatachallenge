@@ -6,8 +6,8 @@ path_symptom_lags <- "../data/estimates-symptom-lags/cutoffs/PlotData/"
 path_baseline <- "../data/baseline_outputs/"
 path_out <- "../data/estimates-symptom-lags/Plots-baseline-vs-GLM/"
 
-try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
-#try_countries <- c("FR")
+#try_countries <- c("BR", "GB", "DE", "EC", "PT", "UA", "ES", "CL", "FR")
+try_countries <- c("FR")
 # set upper limit to boxplot (p_box2):
 y_lim_box = 10
 
@@ -28,18 +28,18 @@ for (country_iso in try_countries) {
   
   # ---
   # country_iso <- "DE"
-  for (pen in c(FALSE, TRUE)){
-    for (rmcc in c(FALSE, TRUE)){
-      for (smth in c(FALSE, TRUE)){
+  for (pen in c( TRUE)){#FALSE,
+    for (rmcc in c( TRUE)){#FALSE,
+      for (smth in c(FALSE)){#, TRUE
         if (smth){
           basisdim=15
         } else {
           basisdim=NA
         }
         for (umd in c(TRUE)){
-          for (ccfr in c(FALSE, TRUE)){
-            for (nsum in c(0, 1)){
-              for (minlag in c(7, 14)){
+          for (ccfr in c(FALSE)){#, TRUE
+            for (nsum in c(0)){#, 1
+              for (minlag in c(14)){#7, 
                 
                 for (lag_in in 7:7) {
                   
