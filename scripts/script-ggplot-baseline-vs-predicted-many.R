@@ -142,7 +142,9 @@ for (country_iso in try_countries) {
               ## BOXPLOT ----
               
               df_col_rm <- df_col_rm %>% 
+
                 dplyr::select(date, y, fore,syncFore) %>% 
+
                 inner_join(df_baseline, by = "date") %>% 
                 mutate(scaled_abs_err = abs(fore-y)/abs(strawman - y))%>%
                 mutate(scaled_abs_err_sync = abs(syncFore-y)/abs(strawman - y))
